@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout | R Street Moda Masculina</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black:#0a0a0a; --white:#ffffff; --gold:#c8a96e; --gold-d:#8a6f3e;
+    --gold-bg:rgba(200,169,110,0.08); --gray-900:#111; --gray-800:#1a1a1a;
+    --gray-700:#242424; --gray-400:#888; --gray-200:#ccc;
+    --border:rgba(255,255,255,0.07); --green:#4caf50; --red:#e63946;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; min-height:100vh; }
+
+  nav {
+    background:rgba(10,10,10,0.97); backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(200,169,110,0.15);
+    padding:18px 60px; display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:100;
+  }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:5px; color:var(--white); text-decoration:none; }
+  .nav-logo span { color:var(--gold); }
+
+  /* STEPS */
+  .steps-bar {
+    background:var(--gray-900); padding:20px 60px;
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; gap:0;
+  }
+  .step-item {
+    display:flex; align-items:center; gap:10px;
+    font-size:12px; font-weight:600; letter-spacing:1px; text-transform:uppercase;
+    color:var(--gray-400); padding:0 20px;
+  }
+  .step-item.active { color:var(--gold); }
+  .step-item.done { color:var(--green); }
+  .step-num {
+    width:28px; height:28px; border-radius:50%;
+    border:2px solid currentColor; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; flex-shrink:0;
+  }
+  .step-item.done .step-num { background:var(--green); border-color:var(--green); color:var(--black); }
+  .step-item.active .step-num { background:var(--gold); border-color:var(--gold); color:var(--black); }
+  .step-sep { width:60px; height:1px; background:var(--border); }
+
+  /* LAYOUT */
+  .checkout-layout {
+    max-width:1100px; margin:0 auto; padding:48px 60px 80px;
+    display:grid; grid-template-columns:1fr 380px; gap:40px; align-items:start;
+  }
+
+  /* FORM */
+  .form-card {
+    background:var(--gray-900); border:1px solid var(--border);
+    border-radius:4px; padding:32px; margin-bottom:20px;
+  }
+  .form-card-title {
+    font-family:'Bebas Neue',sans-serif; font-size:28px;
+    margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:12px;
+  }
+  .form-card-icon { font-size:22px; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group.full { grid-column:1/-1; }
+  label { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gray-400); }
+  input, select {
+    background:var(--gray-800); border:1px solid var(--border);
+    color:var(--white); padding:12px 14px; border-radius:3px;
+    font-size:14px; outline:none; transition:border-color 0.2s;
+    font-family:'Inter',sans-serif; width:100%;
+  }
+  input:focus, select:focus { border-color:var(--gold); }
+  input::placeholder { color:var(--gray-400); }
+  select option { background:var(--gray-800); }
+  .form-hint { font-size:11px; color:var(--gray-400); margin-top:2px; }
+  .input-row { display:flex; gap:10px; }
+  .input-row input:first-child { flex:0 0 120px; }
+
+  /* FRETE */
+  .frete-calc { display:flex; gap:10px; align-items:flex-end; }
+  .frete-calc input { flex:1; }
+  .btn-calcular {
+    background:var(--gray-700); border:1px solid var(--border); color:var(--white);
+    padding:12px 18px; border-radius:3px; font-size:13px; font-weight:600;
+    cursor:pointer; white-space:nowrap; transition:all 0.2s; font-family:'Inter',sans-serif;
+  }
+  .btn-calcular:hover { border-color:var(--gold); color:var(--gold); }
+  .frete-options { margin-top:14px; display:none; flex-direction:column; gap:8px; }
+  .frete-options.show { display:flex; }
+  .frete-option {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; border:1px solid var(--border); border-radius:3px;
+    cursor:pointer; transition:all 0.2s; background:var(--gray-800);
+  }
+  .frete-option:hover, .frete-option.selected { border-color:var(--gold); background:var(--gold-bg); }
+  .frete-option input[type=radio] { accent-color:var(--gold); margin-right:10px; }
+  .frete-option-label { font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; }
+  .frete-option-price { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); }
+  .frete-option-days { font-size:11px; color:var(--gray-400); }
+  .frete-loading { font-size:13px; color:var(--gray-400); padding:12px 0; display:none; }
+
+  /* PAYMENT */
+  .payment-methods { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .pay-method {
+    border:1.5px solid var(--border); border-radius:3px; padding:16px 12px;
+    text-align:center; cursor:pointer; transition:all 0.2s; background:var(--gray-800);
+  }
+  .pay-method:hover, .pay-method.selected { border-color:var(--gold); background:var(--gold-bg); }
+  .pay-method-icon { font-size:28px; margin-bottom:6px; }
+  .pay-method-label { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--gray-200); }
+  .pay-method.selected .pay-method-label { color:var(--gold); }
+
+  /* ORDER SUMMARY */
+  .order-summary {
+    background:var(--gray-900); border:1px solid var(--border);
+    border-radius:4px; padding:28px; position:sticky; top:90px;
+  }
+  .os-title {
+    font-family:'Bebas Neue',sans-serif; font-size:26px;
+    margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid var(--border);
+  }
+  .os-items { margin-bottom:20px; display:flex; flex-direction:column; gap:12px; }
+  .os-item { display:flex; gap:12px; align-items:center; }
+  .os-item-img {
+    width:50px; height:62px; background:var(--gray-800); border-radius:2px;
+    overflow:hidden; border:1px solid var(--border); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+  }
+  .os-item-img img { width:100%; height:100%; object-fit:cover; }
+  .os-item-info { flex:1; min-width:0; }
+  .os-item-name { font-size:13px; font-weight:600; line-height:1.3; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .os-item-meta { font-size:11px; color:var(--gray-400); }
+  .os-item-price { font-family:'Bebas Neue',sans-serif; font-size:18px; color:var(--gold); white-space:nowrap; }
+  .os-divider { border:none; border-top:1px solid var(--border); margin:12px 0; }
+  .os-row { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
+  .os-row .label { color:var(--gray-400); }
+  .os-total { display:flex; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px solid rgba(200,169,110,0.3); }
+  .os-total .label { font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--gold); }
+  .os-total .val { font-family:'Bebas Neue',sans-serif; font-size:32px; color:var(--gold); }
+
+  /* SECURITY BADGES */
+  .security-badges { display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+  .sec-badge { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--gray-400); }
+  .sec-badge-icon { font-size:14px; }
+
+  /* BTN FINALIZAR */
+  .btn-finalizar {
+    width:100%; padding:18px; background:var(--gold); border:none;
+    color:var(--black); font-size:15px; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; cursor:pointer; border-radius:2px;
+    transition:all 0.3s; margin-top:20px; font-family:'Inter',sans-serif;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .btn-finalizar:hover { background:var(--gold-d); color:var(--white); }
+  .btn-finalizar:disabled { opacity:0.5; cursor:not-allowed; }
+  .btn-finalizar .spinner {
+    width:18px; height:18px; border:2px solid rgba(0,0,0,0.3);
+    border-top-color:currentColor; border-radius:50%;
+    animation:spin 0.7s linear infinite; display:none;
+  }
+  .btn-finalizar.loading .spinner { display:block; }
+  .btn-finalizar.loading .btn-text { display:none; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  /* ALERT */
+  .alert { padding:14px 16px; border-radius:3px; font-size:13px; margin-bottom:16px; display:flex; gap:10px; align-items:flex-start; line-height:1.5; }
+  .alert-error { background:rgba(230,57,70,0.1); border:1px solid rgba(230,57,70,0.3); color:#ef9a9a; }
+  .alert-info { background:var(--gold-bg); border:1px solid rgba(200,169,110,0.2); color:var(--gold); }
+
+  footer { background:var(--gray-900); border-top:1px solid var(--border); padding:32px 60px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; }
+  .footer-logo span { color:var(--gold); }
+  .footer-copy { font-size:12px; color:var(--gray-400); }
+
+  @media(max-width:900px){
+    nav { padding:14px 20px; }
+    .steps-bar { padding:14px 20px; gap:4px; }
+    .step-item span:not(.step-num) { display:none; }
+    .checkout-layout { grid-template-columns:1fr; padding:24px 20px 60px; }
+    .order-summary { position:static; }
+    .form-grid { grid-template-columns:1fr; }
+    .payment-methods { grid-template-columns:1fr 1fr 1fr; }
+    footer { padding:24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">R<span>.</span>Street</a>
+  <a href="carrinho.html" style="color:var(--gray-400);text-decoration:none;font-size:13px;border:1px solid rgba(255,255,255,0.12);padding:8px 18px;border-radius:2px">← Voltar ao Carrinho</a>
+</nav>
+
+<!-- STEPS -->
+<div class="steps-bar">
+  <div class="step-item done">
+    <div class="step-num">✓</div>
+    <span>Carrinho</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item active">
+    <div class="step-num">2</div>
+    <span>Dados & Entrega</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item">
+    <div class="step-num">3</div>
+    <span>Pagamento</span>
+  </div>
+  <div class="step-sep"></div>
+  <div class="step-item">
+    <div class="step-num">4</div>
+    <span>Confirmação</span>
+  </div>
+</div>
+
+<div class="checkout-layout">
+  <!-- FORM -->
+  <div>
+    <div id="alertArea"></div>
+
+    <!-- DADOS PESSOAIS -->
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">👤</span> Dados Pessoais</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Nome Completo *</label>
+          <input type="text" id="f-nome" placeholder="Seu nome completo" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label>E-mail *</label>
+          <input type="email" id="f-email" placeholder="seu@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Telefone / WhatsApp *</label>
+          <input type="tel" id="f-telefone" placeholder="(19) 99999-9999" oninput="maskPhone(this)" autocomplete="tel">
+        </div>
+        <div class="form-group">
+          <label>CPF <span style="color:var(--gray-400);font-weight:400">(opcional)</span></label>
+          <input type="text" id="f-cpf" placeholder="000.000.000-00" oninput="maskCPF(this)">
+        </div>
+      </div>
+    </div>
+
+    <!-- ENDEREÇO -->
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">📍</span> Endereço de Entrega</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>CEP *</label>
+          <div class="frete-calc">
+            <input type="text" id="f-cep" placeholder="00000-000" oninput="maskCEP(this)" maxlength="9">
+            <button class="btn-calcular" onclick="buscarCEP()">Buscar</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <input type="text" id="f-estado" placeholder="SP" maxlength="2" style="text-transform:uppercase">
+        </div>
+        <div class="form-group full">
+          <label>Rua / Logradouro *</label>
+          <input type="text" id="f-rua" placeholder="Nome da rua">
+        </div>
+        <div class="form-group">
+          <label>Número *</label>
+          <input type="text" id="f-numero" placeholder="123">
+        </div>
+        <div class="form-group">
+          <label>Complemento</label>
+          <input type="text" id="f-complemento" placeholder="Apto, bloco...">
+        </div>
+        <div class="form-group">
+          <label>Bairro *</label>
+          <input type="text" id="f-bairro" placeholder="Seu bairro">
+        </div>
+        <div class="form-group">
+          <label>Cidade *</label>
+          <input type="text" id="f-cidade" placeholder="Sua cidade">
+        </div>
+      </div>
+
+      <!-- OPÇÕES DE FRETE -->
+      <div style="margin-top:20px">
+        <label>Opção de Entrega</label>
+        <div class="frete-loading" id="freteLoading">⏳ Calculando frete...</div>
+        <div class="frete-options" id="freteOptions">
+          <label class="frete-option" onclick="selectFrete(this, 15.90, 'PAC - 8 dias úteis')">
+            <input type="radio" name="frete" value="15.90">
+            <div class="frete-option-label">
+              <span>📦</span>
+              <div>
+                <div>PAC</div>
+                <div class="frete-option-days">8 dias úteis</div>
+              </div>
+            </div>
+            <div class="frete-option-price">R$ 15,90</div>
+          </label>
+          <label class="frete-option" onclick="selectFrete(this, 28.90, 'SEDEX - 2 dias úteis')">
+            <input type="radio" name="frete" value="28.90">
+            <div class="frete-option-label">
+              <span>⚡</span>
+              <div>
+                <div>SEDEX</div>
+                <div class="frete-option-days">2 dias úteis</div>
+              </div>
+            </div>
+            <div class="frete-option-price">R$ 28,90</div>
+          </label>
+          <label class="frete-option" onclick="selectFrete(this, 0, 'Retirada na Loja')">
+            <input type="radio" name="frete" value="0">
+            <div class="frete-option-label">
+              <span>🏪</span>
+              <div>
+                <div>Retirada na Loja</div>
+                <div class="frete-option-days">Av. 9 de Julho, 530</div>
+              </div>
+            </div>
+            <div class="frete-option-price" style="color:var(--green)">Grátis</div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGAMENTO -->
+    <div class="form-card">
+      <div class="form-card-title"><span class="form-card-icon">💳</span> Forma de Pagamento</div>
+      <div class="alert alert-info">
+        <span>🔒</span>
+        <span>Você será redirecionado para o ambiente seguro do <strong>Mercado Pago</strong> para finalizar o pagamento.</span>
+      </div>
+      <div class="payment-methods">
+        <div class="pay-method selected" onclick="selectPayment(this, 'credit_card')">
+          <div class="pay-method-icon">💳</div>
+          <div class="pay-method-label">Cartão de Crédito</div>
+        </div>
+        <div class="pay-method" onclick="selectPayment(this, 'debit_card')">
+          <div class="pay-method-icon">🏦</div>
+          <div class="pay-method-label">Débito</div>
+        </div>
+        <div class="pay-method" onclick="selectPayment(this, 'pix')">
+          <div class="pay-method-icon">⚡</div>
+          <div class="pay-method-label">PIX</div>
+        </div>
+        <div class="pay-method" onclick="selectPayment(this, 'bolbradesco')">
+          <div class="pay-method-icon">📄</div>
+          <div class="pay-method-label">Boleto</div>
+        </div>
+        <div class="pay-method" onclick="selectPayment(this, 'account_money')">
+          <div class="pay-method-icon">💰</div>
+          <div class="pay-method-label">Conta MP</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDER SUMMARY -->
+  <div>
+    <div class="order-summary">
+      <div class="os-title">Seu Pedido</div>
+      <div class="os-items" id="osSummaryItems"></div>
+      <hr class="os-divider">
+      <div class="os-row"><span class="label">Subtotal</span><span id="osSubtotal">R$ 0,00</span></div>
+      <div class="os-row"><span class="label">Frete</span><span id="osFrete">—</span></div>
+      <div class="os-total">
+        <span class="label">Total</span>
+        <span class="val" id="osTotal">R$ 0,00</span>
+      </div>
+
+      <button class="btn-finalizar" id="btnFinalizar" onclick="finalizarCompra()">
+        <div class="spinner"></div>
+        <span class="btn-text">🔒 Finalizar Compra</span>
+      </button>
+
+      <div class="security-badges">
+        <div class="sec-badge"><span class="sec-badge-icon">🔒</span> Pagamento 100% seguro via Mercado Pago</div>
+        <div class="sec-badge"><span class="sec-badge-icon">🛡</span> Seus dados estão protegidos</div>
+        <div class="sec-badge"><span class="sec-badge-icon">↩️</span> Política de troca em 7 dias</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">R<span>.</span>Street</div>
+  <div class="footer-copy">© 2024 R Street Moda Masculina · São José do Rio Pardo - SP</div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════
+// URL DO BACKEND — troque pelo seu Render.com
+// ═══════════════════════════════════════════
+const BACKEND_URL = 'https://rstreet-backend.onrender.com';
+
+// ─── ESTADO ─────────────────────────────────
+let freteVal = 0;
+let freteLabel = '';
+let paymentMethod = 'credit_card';
+
+// ─── CART ───────────────────────────────────
+function getCart() { return JSON.parse(localStorage.getItem('rstreet_cart') || '[]'); }
+function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+
+// ─── RENDER SUMMARY ─────────────────────────
+function renderSummary() {
+  const cart = getCart();
+  if (cart.length === 0) { window.location.href = 'carrinho.html'; return; }
+
+  document.getElementById('osSummaryItems').innerHTML = cart.map(item => `
+    <div class="os-item">
+      <div class="os-item-img">
+        ${item.imagem ? `<img src="${item.imagem}" alt="${item.nome}">` : '👕'}
+      </div>
+      <div class="os-item-info">
+        <div class="os-item-name">${item.nome}</div>
+        <div class="os-item-meta">${item.marca} · Qtd: ${item.qty}${item.tamanho ? ' · ' + item.tamanho : ''}</div>
+      </div>
+      <div class="os-item-price">${fmt(item.preco * item.qty)}</div>
+    </div>
+  `).join('');
+
+  updateTotals();
+}
+
+function updateTotals() {
+  const cart = getCart();
+  const subtotal = cart.reduce((s,i) => s + i.preco * i.qty, 0);
+  const total = subtotal + freteVal;
+  document.getElementById('osSubtotal').textContent = fmt(subtotal);
+  document.getElementById('osFrete').textContent = freteVal > 0 ? fmt(freteVal) : freteLabel || '—';
+  document.getElementById('osTotal').textContent = fmt(total);
+}
+
+// ─── FRETE ──────────────────────────────────
+function selectFrete(el, valor, label) {
+  document.querySelectorAll('.frete-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  freteVal = valor;
+  freteLabel = valor === 0 ? 'Grátis' : fmt(valor);
+  updateTotals();
+}
+
+async function buscarCEP() {
+  const cep = document.getElementById('f-cep').value.replace(/\D/g,'');
+  if (cep.length !== 8) return showAlert('Digite um CEP válido.', 'error');
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const d = await res.json();
+    if (d.erro) return showAlert('CEP não encontrado.', 'error');
+    document.getElementById('f-rua').value = d.logradouro || '';
+    document.getElementById('f-bairro').value = d.bairro || '';
+    document.getElementById('f-cidade').value = d.localidade || '';
+    document.getElementById('f-estado').value = d.uf || '';
+    document.getElementById('f-numero').focus();
+    document.getElementById('freteOptions').classList.add('show');
+  } catch {
+    showAlert('Erro ao buscar CEP. Preencha o endereço manualmente.', 'error');
+    document.getElementById('freteOptions').classList.add('show');
+  }
+}
+
+// ─── PAYMENT ────────────────────────────────
+function selectPayment(el, method) {
+  document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected');
+  paymentMethod = method;
+}
+
+// ─── MASKS ──────────────────────────────────
+function maskPhone(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+  else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+  el.value = v;
+}
+function maskCPF(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 9) v = `${v.slice(0,3)}.${v.slice(3,6)}.${v.slice(6,9)}-${v.slice(9)}`;
+  else if (v.length > 6) v = `${v.slice(0,3)}.${v.slice(3,6)}.${v.slice(6)}`;
+  else if (v.length > 3) v = `${v.slice(0,3)}.${v.slice(3)}`;
+  el.value = v;
+}
+function maskCEP(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,8);
+  if (v.length > 5) v = `${v.slice(0,5)}-${v.slice(5)}`;
+  el.value = v;
+}
+
+// ─── VALIDAÇÃO ──────────────────────────────
+function validate() {
+  const fields = [
+    { id:'f-nome', label:'Nome completo' },
+    { id:'f-email', label:'E-mail' },
+    { id:'f-telefone', label:'Telefone' },
+    { id:'f-cep', label:'CEP' },
+    { id:'f-rua', label:'Endereço' },
+    { id:'f-numero', label:'Número' },
+    { id:'f-bairro', label:'Bairro' },
+    { id:'f-cidade', label:'Cidade' },
+  ];
+  for (const f of fields) {
+    if (!document.getElementById(f.id).value.trim()) {
+      showAlert(`Por favor, preencha o campo: ${f.label}`, 'error');
+      document.getElementById(f.id).focus();
+      return false;
+    }
+  }
+  if (!freteLabel) {
+    showAlert('Selecione uma opção de entrega.', 'error');
+    return false;
+  }
+  return true;
+}
+
+// ─── FINALIZAR ──────────────────────────────
+async function finalizarCompra() {
+  if (!validate()) return;
+  const cart = getCart();
+  if (!cart.length) return;
+
+  const btn = document.getElementById('btnFinalizar');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  clearAlert();
+
+  const subtotal = cart.reduce((s,i) => s + i.preco * i.qty, 0);
+  const total = subtotal + freteVal;
+
+  const pedido = {
+    cliente: {
+      nome: document.getElementById('f-nome').value.trim(),
+      email: document.getElementById('f-email').value.trim(),
+      telefone: document.getElementById('f-telefone').value.trim(),
+      cpf: document.getElementById('f-cpf').value.trim(),
+    },
+    endereco: {
+      cep: document.getElementById('f-cep').value.trim(),
+      rua: document.getElementById('f-rua').value.trim(),
+      numero: document.getElementById('f-numero').value.trim(),
+      complemento: document.getElementById('f-complemento').value.trim(),
+      bairro: document.getElementById('f-bairro').value.trim(),
+      cidade: document.getElementById('f-cidade').value.trim(),
+      estado: document.getElementById('f-estado').value.trim(),
+    },
+    itens: cart.map(i => ({
+      id: i.id,
+      nome: i.nome,
+      quantidade: i.qty,
+      preco_unitario: i.preco,
+    })),
+    frete: { valor: freteVal, tipo: freteLabel },
+    total,
+    metodo_pagamento: paymentMethod,
+  };
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/pagamento/criar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pedido),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.erro || 'Erro ao criar pagamento');
+    // Salva pedido no localStorage para a página de confirmação
+    localStorage.setItem('rstreet_pedido', JSON.stringify({ ...pedido, pedido_id: data.pedido_id }));
+    // Redireciona para o Mercado Pago
+    window.location.href = data.init_point;
+  } catch (err) {
+    showAlert('Erro ao processar pedido: ' + err.message + '. Tente novamente ou entre em contato via WhatsApp.', 'error');
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+// ─── ALERT ──────────────────────────────────
+function showAlert(msg, type) {
+  document.getElementById('alertArea').innerHTML =
+    `<div class="alert alert-${type}"><span>${type==='error'?'❌':'💡'}</span><span>${msg}</span></div>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function clearAlert() { document.getElementById('alertArea').innerHTML = ''; }
+
+// ─── INIT ───────────────────────────────────
+renderSummary();
+</script>
+</body>
+</html>

@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo | R Street Moda Masculina</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --white: #ffffff;
+    --gold: #c8a96e;
+    --gold-light: #e8d5b0;
+    --gold-dark: #8a6f3e;
+    --gray-900: #111111;
+    --gray-800: #1a1a1a;
+    --gray-700: #242424;
+    --gray-600: #2e2e2e;
+    --gray-400: #888888;
+    --gray-200: #cccccc;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--white); font-family: 'Inter', sans-serif; }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,0.96);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(200,169,110,0.15);
+    padding: 18px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 5px; color: var(--white); text-decoration: none; }
+  .nav-logo span { color: var(--gold); }
+  .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
+  .nav-links a { color: var(--gray-200); text-decoration: none; font-size: 13px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; transition: color 0.3s; }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-links a.active { color: var(--gold); }
+  .nav-back { background: transparent; border: 1px solid rgba(200,169,110,0.4); color: var(--gold); padding: 8px 20px; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; border-radius: 2px; transition: all 0.3s; }
+  .nav-back:hover { background: var(--gold); color: var(--black); }
+
+  /* HEADER BANNER */
+  .catalog-header {
+    background: var(--gray-900);
+    padding: 80px 60px 60px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(200,169,110,0.1);
+  }
+  .catalog-header::before {
+    content: 'CATÁLOGO';
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 200px;
+    color: rgba(255,255,255,0.02);
+    right: -20px; top: 50%;
+    transform: translateY(-50%);
+    letter-spacing: 20px;
+    pointer-events: none;
+  }
+  .catalog-header-label { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+  .catalog-header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 7vw, 90px); line-height: 1; margin-bottom: 16px; }
+  .catalog-header-title span { color: var(--gold); }
+  .catalog-header-sub { font-size: 15px; color: var(--gray-400); font-weight: 300; max-width: 500px; }
+
+  /* TOOLBAR */
+  .toolbar {
+    background: var(--gray-900);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 20px 60px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    position: sticky; top: 65px; z-index: 90;
+  }
+  .search-wrap {
+    position: relative; flex: 1; min-width: 220px;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--white);
+    padding: 10px 16px 10px 42px;
+    font-size: 14px;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.3s;
+    font-family: 'Inter', sans-serif;
+  }
+  .search-wrap input:focus { border-color: var(--gold); }
+  .search-wrap input::placeholder { color: var(--gray-400); }
+  .search-icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--gray-400); font-size: 16px; pointer-events: none;
+  }
+  .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filter-btn {
+    background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--gray-200);
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Inter', sans-serif;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--black);
+  }
+  .sort-select {
+    background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--white);
+    padding: 10px 16px;
+    font-size: 13px;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    min-width: 160px;
+  }
+  .sort-select option { background: var(--gray-800); }
+  .result-count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--gray-400);
+    white-space: nowrap;
+  }
+  .result-count span { color: var(--gold); font-weight: 600; }
+
+  /* LAYOUT */
+  .catalog-layout {
+    display: flex;
+    min-height: calc(100vh - 220px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--gray-900);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    padding: 32px 24px;
+  }
+  .sidebar-section { margin-bottom: 36px; }
+  .sidebar-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .sidebar-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    transition: color 0.2s;
+  }
+  .sidebar-option:hover { color: var(--gold); }
+  .sidebar-option.active { color: var(--gold); }
+  .sidebar-option-label { font-size: 13px; font-weight: 500; }
+  .sidebar-option-count {
+    font-size: 11px;
+    color: var(--gray-400);
+    background: var(--gray-800);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .sidebar-option.active .sidebar-option-count {
+    background: rgba(200,169,110,0.2);
+    color: var(--gold);
+  }
+  .price-range-wrap { padding: 8px 0; }
+  .price-range-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-400); margin-bottom: 10px; }
+  .price-range-labels span { color: var(--gold); font-weight: 600; }
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--gold);
+    height: 4px;
+    cursor: pointer;
+  }
+
+  /* GRID */
+  .catalog-main {
+    flex: 1;
+    padding: 32px 40px;
+    min-width: 0;
+  }
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  /* PRODUCT CARD */
+  .product-card {
+    background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: all 0.35s ease;
+    cursor: pointer;
+    position: relative;
+  }
+  .product-card:hover {
+    border-color: rgba(200,169,110,0.35);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  }
+  .product-img-wrap {
+    position: relative;
+    overflow: hidden;
+    background: var(--gray-700);
+    aspect-ratio: 3/4;
+  }
+  .product-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+    filter: brightness(0.9);
+  }
+  .product-card:hover .product-img { transform: scale(1.06); filter: brightness(1); }
+
+  .product-img-placeholder {
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-600);
+    font-size: 48px;
+    gap: 12px;
+    background: linear-gradient(135deg, var(--gray-800), var(--gray-700));
+  }
+  .product-img-placeholder span {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gray-400);
+    text-transform: uppercase;
+  }
+
+  .product-badge {
+    position: absolute; top: 12px; left: 12px;
+    font-size: 9px; font-weight: 800; letter-spacing: 2px;
+    padding: 4px 10px; border-radius: 2px; text-transform: uppercase;
+  }
+  .badge-new { background: var(--gold); color: var(--black); }
+  .badge-sale { background: #e63946; color: #fff; }
+  .badge-out { background: rgba(255,255,255,0.1); color: var(--gray-200); }
+
+  .product-actions {
+    position: absolute; top: 12px; right: 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    opacity: 0; transform: translateX(10px);
+    transition: all 0.3s;
+  }
+  .product-card:hover .product-actions { opacity: 1; transform: translateX(0); }
+  .action-btn {
+    width: 36px; height: 36px;
+    background: rgba(10,10,10,0.85);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px;
+    transition: all 0.2s;
+    backdrop-filter: blur(8px);
+  }
+  .action-btn:hover { background: var(--gold); border-color: var(--gold); }
+
+  .product-body { padding: 16px 18px 18px; }
+  .product-brand {
+    font-size: 10px; letter-spacing: 3px; color: var(--gold);
+    text-transform: uppercase; font-weight: 700; margin-bottom: 4px;
+  }
+  .product-name { font-size: 15px; font-weight: 600; color: var(--white); margin-bottom: 6px; line-height: 1.3; }
+  .product-ref { font-size: 11px; color: var(--gray-400); margin-bottom: 10px; }
+  .product-sizes { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
+  .size-tag {
+    font-size: 10px; font-weight: 600; color: var(--gray-400);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 2px 8px; border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .size-tag.available { color: var(--gray-200); border-color: rgba(255,255,255,0.2); }
+  .product-footer { display: flex; align-items: center; justify-content: space-between; }
+  .product-price { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--gold); letter-spacing: 1px; }
+  .product-price-old { font-size: 12px; color: var(--gray-400); text-decoration: line-through; margin-bottom: 2px; }
+  .product-stock { font-size: 11px; color: var(--gray-400); }
+  .product-stock.low { color: #e63946; }
+  .product-stock.ok { color: #4caf50; }
+
+  .btn-whatsapp {
+    background: #25d366;
+    border: none;
+    color: #fff;
+    padding: 8px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-whatsapp:hover { background: #1db954; transform: scale(1.05); }
+  .btn-cart {
+    background: var(--gold);
+    border: none;
+    color: var(--black);
+    padding: 7px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+  .btn-cart:hover { background: var(--gold-dark, #8a6f3e); color: var(--white); }
+  .btn-cart.added { background: var(--green, #4caf50); color: var(--white); }
+
+  /* LOADING */
+  .loading-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 100px 40px; grid-column: 1/-1;
+  }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid rgba(200,169,110,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 20px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; color: var(--gray-400); letter-spacing: 2px; text-transform: uppercase; }
+
+  /* EMPTY */
+  .empty-state {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--gray-400);
+  }
+  .empty-state-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
+  .empty-state-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--gray-200); margin-bottom: 8px; }
+  .empty-state-sub { font-size: 14px; }
+
+  /* sem modal - usamos produto.html separado */
+
+  /* FOOTER */
+  footer {
+    background: var(--gray-900);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 40px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-logo-sm { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 4px; }
+  .footer-logo-sm span { color: var(--gold); }
+  .footer-copy { font-size: 13px; color: var(--gray-400); }
+  .footer-links-sm { display: flex; gap: 20px; }
+  .footer-links-sm a { color: var(--gray-400); text-decoration: none; font-size: 13px; transition: color 0.3s; }
+  .footer-links-sm a:hover { color: var(--gold); }
+
+  /* PAGINATION */
+  .pagination {
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    padding: 40px 0 20px;
+  }
+  .page-btn {
+    width: 40px; height: 40px;
+    background: var(--gray-800);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--gray-200);
+    border-radius: 2px;
+    cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .page-btn:hover, .page-btn.active {
+    background: var(--gold); border-color: var(--gold); color: var(--black);
+  }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ABAS DO PAINEL MOBILE */
+  .mobile-filter-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .mobile-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--gray-400);
+    padding: 10px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+  }
+  .mobile-tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* FILTROS MOBILE */
+  .filter-mobile-btn {
+    display: none;
+    background: var(--gray-800);
+    border: 1px solid rgba(200,169,110,0.3);
+    color: var(--gold);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+  .mobile-filters-panel {
+    display: none;
+    background: var(--gray-900);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: sticky;
+    top: 120px;
+    z-index: 89;
+  }
+  .mobile-filters-panel.open { display: block; }
+  .mobile-filters-inner { padding: 16px 20px; }
+  .mobile-filters-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .mobile-filter-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 900px) {
+    nav { padding: 16px 20px; }
+    nav .nav-links { display: none; }
+    nav .nav-back { display: none; }
+    .catalog-header { padding: 40px 20px 28px; }
+    .catalog-header-title { font-size: 48px; }
+    .toolbar {
+      padding: 12px 16px;
+      top: 57px;
+      gap: 8px;
+    }
+    .toolbar .filter-group { display: none; }
+    .toolbar .sort-select { display: none; }
+    .toolbar .result-count { font-size: 12px; }
+    .filter-mobile-btn { display: block; }
+    .catalog-layout { flex-direction: column; }
+    .sidebar { display: none; }
+    .catalog-main { padding: 16px; }
+    .products-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .product-name { font-size: 13px; }
+    .product-price { font-size: 20px; }
+    .product-body { padding: 12px 12px 14px; }
+    .btn-whatsapp { padding: 6px 10px; font-size: 10px; }
+    .modal { grid-template-columns: 1fr; }
+    .modal-img { min-height: 280px; }
+    footer { padding: 32px 20px; }
+    .pagination { padding: 24px 0 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">R<span>.</span>Street</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Início</a></li>
+    <li><a href="catalogo.html" class="active">Catálogo</a></li>
+    <li><a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a></li>
+  </ul>
+  <a href="index.html" class="nav-back">← Voltar ao Site</a>
+  <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn">🛒 <span id="navCartCount">0</span></a>
+</nav>
+
+<!-- HEADER -->
+<div class="catalog-header">
+  <div class="catalog-header-label">R Street Moda Masculina</div>
+  <h1 class="catalog-header-title">Nosso<br><span>Catálogo</span></h1>
+  <p class="catalog-header-sub">Explore nossa coleção completa. Produtos atualizados em tempo real.</p>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar produto..." oninput="applyFilters()">
+  </div>
+  <div class="filter-group" id="brandFilters">
+    <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
+    <button class="filter-btn" onclick="setBrandFilter('Acostamento', this)">Acostamento</button>
+    <button class="filter-btn" onclick="setBrandFilter('TXC', this)">TXC</button>
+    <button class="filter-btn" onclick="setBrandFilter('Freeway', this)">Freeway</button>
+    <button class="filter-btn" onclick="setBrandFilter('Ogochi', this)">Ogochi</button>
+  </div>
+  <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+    <option value="default">Ordenar por</option>
+    <option value="preco_asc">Menor Preço</option>
+    <option value="preco_desc">Maior Preço</option>
+    <option value="nome">Nome A-Z</option>
+    <option value="novos">Mais Novos</option>
+  </select>
+  <div class="result-count">Mostrando <span id="resultCount">0</span> produtos</div>
+  <!-- Botão filtrar só aparece no celular -->
+  <button class="filter-mobile-btn" id="filterMobileBtn" onclick="toggleMobileFilters()">⚙️ Filtrar</button>
+</div>
+
+<!-- PAINEL DE FILTROS MOBILE -->
+<div class="mobile-filters-panel" id="mobileFiltersPanel">
+  <div class="mobile-filters-inner">
+
+    <!-- ABAS -->
+    <div class="mobile-filter-tabs">
+      <button class="mobile-tab active" onclick="showMobileTab('marcas', this)">Marcas</button>
+      <button class="mobile-tab" onclick="showMobileTab('categorias', this)">Categorias</button>
+      <button class="mobile-tab" onclick="showMobileTab('ordenar', this)">Ordenar</button>
+    </div>
+
+    <!-- ABA MARCAS -->
+    <div class="mobile-tab-content" id="mtab-marcas">
+      <div class="mobile-filter-row" id="mobileBrandFilters">
+        <button class="filter-btn active" onclick="setBrandFilterMobile('todos', this)">Todos</button>
+        <button class="filter-btn" onclick="setBrandFilterMobile('Acostamento', this)">Acostamento</button>
+        <button class="filter-btn" onclick="setBrandFilterMobile('TXC', this)">TXC</button>
+        <button class="filter-btn" onclick="setBrandFilterMobile('Freeway', this)">Freeway</button>
+        <button class="filter-btn" onclick="setBrandFilterMobile('Ogochi', this)">Ogochi</button>
+      </div>
+    </div>
+
+    <!-- ABA CATEGORIAS -->
+    <div class="mobile-tab-content" id="mtab-categorias" style="display:none">
+      <div class="mobile-filter-row" id="mobileCatFilters">
+        <button class="filter-btn active" onclick="setCategoryFilterMobile('todos', this)">Todos</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Camisa', this)">Camisas</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Calça', this)">Calças</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Camiseta', this)">Camisetas</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Bermuda', this)">Bermudas</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Tênis', this)">Tênis</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Acessório', this)">Acessórios</button>
+      </div>
+      <div style="margin-top:12px">
+        <div class="mobile-filters-title">Disponibilidade</div>
+        <div class="mobile-filter-row" id="mobileStockFilters">
+          <button class="filter-btn active" onclick="setStockFilterMobile('todos', this)">Todos</button>
+          <button class="filter-btn" onclick="setStockFilterMobile('estoque', this)">Em estoque</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA ORDENAR -->
+    <div class="mobile-tab-content" id="mtab-ordenar" style="display:none">
+      <div class="mobile-filter-row" id="mobileOrderFilters">
+        <button class="filter-btn active" onclick="setOrderMobile('default', this)">Padrão</button>
+        <button class="filter-btn" onclick="setOrderMobile('preco_asc', this)">Menor Preço</button>
+        <button class="filter-btn" onclick="setOrderMobile('preco_desc', this)">Maior Preço</button>
+        <button class="filter-btn" onclick="setOrderMobile('nome', this)">Nome A-Z</button>
+        <button class="filter-btn" onclick="setOrderMobile('novos', this)">Mais Novos</button>
+      </div>
+    </div>
+
+    <button class="filter-btn" style="width:100%;margin-top:16px;background:var(--gold);color:var(--black);border-color:var(--gold);padding:12px" onclick="toggleMobileFilters()">✓ Aplicar Filtros</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="catalog-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">Categoria</div>
+      <div class="sidebar-option active" onclick="setCategoryFilter('todos', this)">
+        <span class="sidebar-option-label">Todos</span>
+        <span class="sidebar-option-count" id="cat-todos">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Camisa', this)">
+        <span class="sidebar-option-label">Camisas</span>
+        <span class="sidebar-option-count" id="cat-Camisa">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Calça', this)">
+        <span class="sidebar-option-label">Calças</span>
+        <span class="sidebar-option-count" id="cat-Calça">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Camiseta', this)">
+        <span class="sidebar-option-label">Camisetas</span>
+        <span class="sidebar-option-count" id="cat-Camiseta">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Bermuda', this)">
+        <span class="sidebar-option-label">Bermudas</span>
+        <span class="sidebar-option-count" id="cat-Bermuda">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Tênis', this)">
+        <span class="sidebar-option-label">Tênis</span>
+        <span class="sidebar-option-count" id="cat-Tênis">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Acessório', this)">
+        <span class="sidebar-option-label">Acessórios</span>
+        <span class="sidebar-option-count" id="cat-Acessório">0</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Disponibilidade</div>
+      <div class="sidebar-option active" onclick="setStockFilter('todos', this)">
+        <span class="sidebar-option-label">Todos</span>
+      </div>
+      <div class="sidebar-option" onclick="setStockFilter('estoque', this)">
+        <span class="sidebar-option-label">Em estoque</span>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Faixa de Preço</div>
+      <div class="price-range-wrap">
+        <div class="price-range-labels">
+          R$ 0 — <span id="priceLabel">R$ 1000</span>
+        </div>
+        <input type="range" id="priceRange" min="0" max="1000" value="1000" step="10" oninput="updatePrice(this.value)">
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="catalog-main">
+    <div class="products-grid" id="productsGrid">
+      <div class="loading-wrap">
+        <div class="spinner"></div>
+        <div class="loading-text">Carregando produtos...</div>
+      </div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+</div>
+
+<!-- Página de produto: produto.html?id=X -->
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo-sm">R<span>.</span>Street</div>
+  <div class="footer-copy">© 2024 R Street Moda Masculina · São José do Rio Pardo - SP</div>
+  <div class="footer-links-sm">
+    <a href="index.html">Site</a>
+    <a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+    <a href="admin.html">Admin</a>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIGURAÇÃO — edite aqui com seus dados
+// ═══════════════════════════════════════════════
+const SUPABASE_URL      = 'https://dxttqvmrpfwxsgrpancz.supabase.co';  // ← cole sua URL
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4dHRxdm1ycGZ3eHNncnBhbmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NDQ2ODMsImV4cCI6MjA5ODEyMDY4M30.rIkhwOxmJSwFADpqHsp_9Y6FWeIixOLMNK0IByYNnng';                // ← cole sua chave
+const WHATSAPP_NUMBER   = '5519993111599';
+// ═══════════════════════════════════════════════
+
+// ─────────────────────────────────────────────
+// ESTADO GLOBAL
+// ─────────────────────────────────────────────
+let allProducts = [];
+let filtered = [];
+let currentBrand = 'todos';
+let currentCategory = 'todos';
+let currentStock = 'todos';
+let currentMaxPrice = 1000;
+let currentPage = 1;
+const PER_PAGE = 12;
+
+// ─────────────────────────────────────────────
+// CARREGAR DO SUPABASE
+// ─────────────────────────────────────────────
+async function loadProducts() {
+  // Se não tem credenciais salvas, cai nos dados de exemplo
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.info('Supabase não configurado — abrindo admin.html para configurar.');
+    allProducts = getDemoProducts();
+    updateMaxPrice();
+    updateCategoryCounts();
+    applyFilters();
+    checkURLParams();
+    return;
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&order=criado_em.desc`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!res.ok) throw new Error('Erro ' + res.status);
+    allProducts = await res.json();
+  } catch (err) {
+    console.warn('Falha ao buscar do Supabase, usando dados de exemplo:', err.message);
+    allProducts = getDemoProducts();
+  }
+
+  updateMaxPrice();
+  updateCategoryCounts();
+  applyFilters();
+  checkURLParams();
+}
+
+// ─────────────────────────────────────────────
+// DADOS DE EXEMPLO (enquanto Supabase não está configurado)
+// ─────────────────────────────────────────────
+function getDemoProducts() {
+  return [
+    { id:1, nome:'Camisa Slim Fit Manga Longa', marca:'Acostamento', categoria:'Camisa', preco:189.90, preco_antigo:null, referencia:'ACO-001', tamanhos:['P','M','G','GG'], estoque:15, ativo:true, descricao:'Camisa slim fit confeccionada em tecido premium. Ideal para ocasiões casuais e sociais.' },
+    { id:2, nome:'Camiseta Básica Logo', marca:'Acostamento', categoria:'Camiseta', preco:89.90, preco_antigo:119.90, referencia:'ACO-002', tamanhos:['P','M','G','GG','XGG'], estoque:30, ativo:true, descricao:'Camiseta básica com logo bordado. Tecido 100% algodão.' },
+    { id:3, nome:'Calça Jeans Country Slim', marca:'TXC', categoria:'Calça', preco:259.90, preco_antigo:null, referencia:'TXC-001', tamanhos:['38','40','42','44','46'], estoque:8, ativo:true, descricao:'Calça jeans slim com lavagem especial. Perfeita para o estilo country e casual.' },
+    { id:4, nome:'Camisa Xadrez Flanela', marca:'TXC', categoria:'Camisa', preco:179.90, preco_antigo:229.90, referencia:'TXC-002', tamanhos:['M','G','GG'], estoque:5, ativo:true, descricao:'Camisa xadrez em flanela macia. Estilo country autêntico.' },
+    { id:5, nome:'Camiseta Street Print', marca:'Freeway', categoria:'Camiseta', preco:119.90, preco_antigo:null, referencia:'FRW-001', tamanhos:['P','M','G','GG'], estoque:20, ativo:true, descricao:'Camiseta com estampa street art exclusiva. 100% algodão penteado.' },
+    { id:6, nome:'Bermuda Cargo Street', marca:'Freeway', categoria:'Bermuda', preco:199.90, preco_antigo:249.90, referencia:'FRW-002', tamanhos:['38','40','42','44'], estoque:12, ativo:true, descricao:'Bermuda cargo com múltiplos bolsos. Estilo street wear.' },
+    { id:7, nome:'Calça Social Premium', marca:'Ogochi', categoria:'Calça', preco:299.90, preco_antigo:null, referencia:'OGO-001', tamanhos:['40','42','44','46','48'], estoque:10, ativo:true, descricao:'Calça social de corte clássico. Tecido de alta qualidade com caimento perfeito.' },
+    { id:8, nome:'Camisa Polo Ogochi', marca:'Ogochi', categoria:'Camisa', preco:159.90, preco_antigo:199.90, referencia:'OGO-002', tamanhos:['P','M','G','GG'], estoque:18, ativo:true, descricao:'Polo clássica confeccionada em piquet premium. Versátil e elegante.' },
+    { id:9, nome:'Camiseta Oversized Logo', marca:'Acostamento', categoria:'Camiseta', preco:109.90, preco_antigo:null, referencia:'ACO-003', tamanhos:['M','G','GG','XGG'], estoque:25, ativo:true, descricao:'Camiseta oversized com logo estampado. Tendência da moda urbana.' },
+    { id:10, nome:'Jaqueta Jeans Destroyed', marca:'Freeway', categoria:'Camisa', preco:379.90, preco_antigo:449.90, referencia:'FRW-003', tamanhos:['P','M','G'], estoque:4, ativo:true, descricao:'Jaqueta jeans com lavagem destroyed. Peça icônica do street wear.' },
+    { id:11, nome:'Bermuda Jeans Slim', marca:'TXC', categoria:'Bermuda', preco:189.90, preco_antigo:null, referencia:'TXC-003', tamanhos:['38','40','42','44','46'], estoque:14, ativo:true, descricao:'Bermuda jeans slim com lavagem clara. Conforto e estilo.' },
+    { id:12, nome:'Camisa Casual Listrada', marca:'Ogochi', categoria:'Camisa', preco:169.90, preco_antigo:219.90, referencia:'OGO-003', tamanhos:['P','M','G','GG'], estoque:9, ativo:true, descricao:'Camisa casual com listras finas. Tecido respirável.' },
+    { id:13, nome:'Camiseta Estampa Geométrica', marca:'Acostamento', categoria:'Camiseta', preco:99.90, preco_antigo:null, referencia:'ACO-004', tamanhos:['P','M','G','GG','XGG'], estoque:0, ativo:true, descricao:'Camiseta com estampa geométrica exclusiva.' },
+    { id:14, nome:'Calça Sarja Slim', marca:'Ogochi', categoria:'Calça', preco:249.90, preco_antigo:299.90, referencia:'OGO-004', tamanhos:['40','42','44','46'], estoque:7, ativo:true, descricao:'Calça sarja slim com caimento impecável. Ideal para o dia a dia.' },
+    { id:15, nome:'Camiseta Tie Dye', marca:'Freeway', categoria:'Camiseta', preco:129.90, preco_antigo:null, referencia:'FRW-004', tamanhos:['P','M','G','GG'], estoque:11, ativo:true, descricao:'Camiseta tie dye artesanal. Única e exclusiva.' },
+    { id:16, nome:'Camisa Linho Verão', marca:'TXC', categoria:'Camisa', preco:219.90, preco_antigo:279.90, referencia:'TXC-004', tamanhos:['M','G','GG'], estoque:6, ativo:true, descricao:'Camisa de linho leve e fresca. Perfeita para o verão.' },
+  ];
+}
+
+// ─────────────────────────────────────────────
+// FILTROS
+// ─────────────────────────────────────────────
+function setBrandFilter(brand, el) {
+  currentBrand = brand;
+  document.querySelectorAll('#brandFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentPage = 1;
+  applyFilters();
+}
+
+function setCategoryFilter(cat, el) {
+  currentCategory = cat;
+  document.querySelectorAll('.sidebar-option').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  currentPage = 1;
+  applyFilters();
+}
+
+function setStockFilter(val, el) {
+  currentStock = val;
+  currentPage = 1;
+  applyFilters();
+}
+
+function updatePrice(val) {
+  currentMaxPrice = parseInt(val);
+  document.getElementById('priceLabel').textContent = 'R$ ' + val;
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const sort = document.getElementById('sortSelect').value;
+
+  filtered = allProducts.filter(p => {
+    if (!p.ativo) return false;
+    if (currentBrand !== 'todos' && p.marca !== currentBrand) return false;
+    if (currentCategory !== 'todos' && !p.categoria?.includes(currentCategory)) return false;
+    if (currentStock === 'estoque' && p.estoque <= 0) return false;
+    if (p.preco > currentMaxPrice) return false;
+    if (search && !p.nome.toLowerCase().includes(search) && !p.marca.toLowerCase().includes(search) && !p.referencia?.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  if (sort === 'preco_asc') filtered.sort((a,b) => a.preco - b.preco);
+  else if (sort === 'preco_desc') filtered.sort((a,b) => b.preco - a.preco);
+  else if (sort === 'nome') filtered.sort((a,b) => a.nome.localeCompare(b.nome));
+  else if (sort === 'novos') filtered.sort((a,b) => b.id - a.id);
+
+  document.getElementById('resultCount').textContent = filtered.length;
+  renderPage();
+  renderPagination();
+}
+
+function updateMaxPrice() {
+  if (!allProducts.length) return;
+  const max = Math.ceil(Math.max(...allProducts.map(p => p.preco)) / 50) * 50;
+  document.getElementById('priceRange').max = max;
+  document.getElementById('priceRange').value = max;
+  currentMaxPrice = max;
+  document.getElementById('priceLabel').textContent = 'R$ ' + max;
+}
+
+function updateCategoryCounts() {
+  const active = allProducts.filter(p => p.ativo);
+  document.getElementById('cat-todos').textContent = active.length;
+  ['Camisa','Calça','Camiseta','Bermuda','Tênis','Acessório'].forEach(cat => {
+    const el = document.getElementById('cat-' + cat);
+    if (el) el.textContent = active.filter(p => p.categoria?.includes(cat)).length;
+  });
+}
+
+// ─────────────────────────────────────────────
+// RENDERIZAÇÃO
+// ─────────────────────────────────────────────
+function renderPage() {
+  const grid = document.getElementById('productsGrid');
+  const start = (currentPage - 1) * PER_PAGE;
+  const page = filtered.slice(start, start + PER_PAGE);
+
+  if (page.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🔍</div>
+        <div class="empty-state-title">Nenhum produto encontrado</div>
+        <div class="empty-state-sub">Tente ajustar os filtros ou buscar por outro termo.</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = page.map(p => renderCard(p)).join('');
+}
+
+function renderCard(p) {
+  const badges = [];
+  if (p.estoque === 0) badges.push('<div class="product-badge badge-out">Esgotado</div>');
+  else if (p.preco_antigo) badges.push('<div class="product-badge badge-sale">Oferta</div>');
+  else if (p.id > allProducts.length - 4) badges.push('<div class="product-badge badge-new">Novo</div>');
+
+  const sizes = (p.tamanhos || []).map(s =>
+    `<span class="size-tag available">${s}</span>`
+  ).join('');
+
+  const oldPrice = p.preco_antigo
+    ? `<div class="product-price-old">R$ ${p.preco_antigo.toFixed(2).replace('.',',')}</div>` : '';
+
+  const stockInfo = p.estoque === 0
+    ? `<span class="product-stock low">Esgotado</span>`
+    : p.estoque <= 5
+    ? `<span class="product-stock low">Últimas ${p.estoque} unid.</span>`
+    : `<span class="product-stock ok">Em estoque</span>`;
+
+  const imgContent = p.imagem_url
+    ? `<img class="product-img" src="${p.imagem_url}" alt="${p.nome}" loading="lazy">`
+    : `<div class="product-img-placeholder">👕<span>${p.marca}</span></div>`;
+
+  const wppMsg = encodeURIComponent(`Olá! Tenho interesse no produto: *${p.nome}* (Ref: ${p.referencia || p.id}) - Valor: R$ ${p.preco.toFixed(2).replace('.',',')}`);
+
+  return `
+  <div class="product-card" onclick="window.location.href='produto.html?id=${p.id}'" style="cursor:pointer">
+    <div class="product-img-wrap">
+      ${imgContent}
+      ${badges.join('')}
+      <div class="product-actions">
+        <a class="action-btn" href="produto.html?id=${p.id}" title="Ver detalhes" onclick="event.stopPropagation()">🔍</a>
+        <a class="action-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp">💬</a>
+      </div>
+    </div>
+    <div class="product-body">
+      <div class="product-brand">${p.marca}</div>
+      <div class="product-name">${p.nome}</div>
+      <div class="product-ref">Ref: ${p.referencia || '#' + p.id}</div>
+      <div class="product-sizes">${sizes}</div>
+      <div class="product-footer">
+        <div>
+          ${oldPrice}
+          <div class="product-price">R$ ${p.preco.toFixed(2).replace('.',',')}</div>
+          ${stockInfo}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <button class="btn-cart" onclick="event.stopPropagation(); addToCart(${p.id})" id="cart-btn-${p.id}">🛒 Carrinho</button>
+          <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────
+// CARRINHO
+// ─────────────────────────────────────────────
+function addToCart(id) {
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  const imgs = Array.isArray(p.imagens) && p.imagens.length ? p.imagens : p.imagem_url ? [p.imagem_url] : [];
+  const existing = cart.find(i => i.id === p.id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({
+      id: p.id, nome: p.nome, marca: p.marca,
+      preco: p.preco, tamanho: '', referencia: p.referencia || '',
+      imagem: imgs[0] || '', qty: 1,
+    });
+  }
+  localStorage.setItem('rstreet_cart', JSON.stringify(cart));
+  // Atualiza contador
+  updateCartNav();
+  // Feedback no botão
+  const btn = document.getElementById('cart-btn-' + id);
+  if (btn) {
+    btn.textContent = '✅ Adicionado';
+    btn.classList.add('added');
+    setTimeout(() => {
+      btn.textContent = '🛒 Carrinho';
+      btn.classList.remove('added');
+    }, 2000);
+  }
+}
+
+// ─────────────────────────────────────────────
+// PAGINAÇÃO
+// ─────────────────────────────────────────────
+function renderPagination() {
+  const total = Math.ceil(filtered.length / PER_PAGE);
+  const pag = document.getElementById('pagination');
+  if (total <= 1) { pag.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || Math.abs(i - currentPage) <= 1) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 2) {
+      html += `<span style="color:var(--gray-400);padding:0 4px">…</span>`;
+    }
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>›</button>`;
+  pag.innerHTML = html;
+}
+
+function goPage(p) {
+  const total = Math.ceil(filtered.length / PER_PAGE);
+  if (p < 1 || p > total) return;
+  currentPage = p;
+  renderPage();
+  renderPagination();
+  document.querySelector('.catalog-layout').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─────────────────────────────────────────────
+// URL PARAMS (vindo do site principal)
+// ─────────────────────────────────────────────
+function checkURLParams() {
+  const params = new URLSearchParams(window.location.search);
+  const marca = params.get('marca');
+  if (marca) {
+    const btn = Array.from(document.querySelectorAll('#brandFilters .filter-btn'))
+      .find(b => b.textContent.trim() === marca);
+    if (btn) setBrandFilter(marca, btn);
+  }
+}
+
+// ─── FILTROS MOBILE ─────────────────────────────────
+function toggleMobileFilters() {
+  const panel = document.getElementById('mobileFiltersPanel');
+  panel.classList.toggle('open');
+  const btn = document.getElementById('filterMobileBtn');
+  btn.textContent = panel.classList.contains('open') ? '✕ Fechar' : '⚙️ Filtrar';
+}
+
+function showMobileTab(tab, el) {
+  document.querySelectorAll('.mobile-tab-content').forEach(t => t.style.display = 'none');
+  document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('mtab-' + tab).style.display = 'block';
+  el.classList.add('active');
+}
+
+function setBrandFilterMobile(brand, el) {
+  document.querySelectorAll('#mobileBrandFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentBrand = brand;
+  currentPage = 1;
+  applyFilters();
+}
+
+function setCategoryFilterMobile(cat, el) {
+  document.querySelectorAll('#mobileCatFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentCategory = cat;
+  currentPage = 1;
+  applyFilters();
+}
+
+function setStockFilterMobile(val, el) {
+  document.querySelectorAll('#mobileStockFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  currentStock = val;
+  currentPage = 1;
+  applyFilters();
+}
+
+function setOrderMobile(val, el) {
+  document.querySelectorAll('#mobileOrderFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sortSelect').value = val;
+  applyFilters();
+}
+
+function applyFiltersMobile() {
+  applyFilters();
+}
+
+function applyFiltersMobile() {
+  const val = document.getElementById('sortSelectMobile').value;
+  document.getElementById('sortSelect').value = val;
+  applyFilters();
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+// Atualiza contador do carrinho na nav
+function updateCartNav() {
+  const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  const total = cart.reduce((s,i) => s + i.qty, 0);
+  const el = document.getElementById('navCartCount');
+  if (el) el.textContent = total;
+}
+updateCartNav();
+loadProducts();
+</script>
+</body>
+</html>

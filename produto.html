@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produto | R Street Moda Masculina</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black:#0a0a0a; --white:#ffffff; --gold:#c8a96e; --gold-d:#8a6f3e;
+    --gold-bg:rgba(200,169,110,0.08); --gray-900:#111; --gray-800:#1a1a1a;
+    --gray-700:#242424; --gray-400:#888; --gray-200:#ccc;
+    --border:rgba(255,255,255,0.07); --green:#4caf50; --red:#e63946;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; min-height:100vh; }
+
+  nav {
+    background:rgba(10,10,10,0.97); backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(200,169,110,0.15);
+    padding:18px 60px; display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:100;
+  }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:5px; color:var(--white); text-decoration:none; }
+  .nav-logo span { color:var(--gold); }
+  .nav-links { display:flex; gap:24px; list-style:none; align-items:center; }
+  .nav-links a { color:var(--gray-200); text-decoration:none; font-size:13px; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; transition:color 0.2s; }
+  .nav-links a:hover { color:var(--gold); }
+  .btn-back { display:inline-flex; align-items:center; gap:8px; color:var(--gray-400); text-decoration:none; font-size:13px; font-weight:500; letter-spacing:1px; text-transform:uppercase; transition:color 0.2s; border:1px solid rgba(255,255,255,0.12); padding:8px 18px; border-radius:2px; }
+  .btn-back:hover { color:var(--gold); border-color:var(--gold); }
+
+  .breadcrumb { padding:20px 60px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; font-size:12px; color:var(--gray-400); }
+  .breadcrumb a { color:var(--gray-400); text-decoration:none; transition:color 0.2s; }
+  .breadcrumb a:hover { color:var(--gold); }
+  .breadcrumb-sep { color:var(--gray-700); }
+  .breadcrumb-current { color:var(--white); font-weight:500; }
+
+  .product-page {
+    max-width:1200px; margin:0 auto; padding:48px 60px 80px;
+    display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:start;
+  }
+
+  .gallery { position:sticky; top:90px; }
+  .gallery-main {
+    position:relative; background:var(--gray-800); aspect-ratio:3/4;
+    overflow:hidden; border:1px solid var(--border); border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .gallery-main img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s ease; }
+  .gallery-main:hover img { transform:scale(1.04); }
+  .gallery-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:var(--gray-400); font-size:72px; }
+  .gallery-placeholder span { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--gray-400); font-family:'Inter',sans-serif; }
+  .gallery-badge { position:absolute; top:16px; left:16px; font-size:10px; font-weight:800; letter-spacing:2px; padding:5px 12px; border-radius:2px; text-transform:uppercase; }
+  .badge-new { background:var(--gold); color:var(--black); }
+  .badge-sale { background:var(--red); color:#fff; }
+  .badge-out { background:rgba(255,255,255,0.1); color:var(--gray-200); }
+
+  .gallery-thumbs { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .thumb { width:72px; height:90px; background:var(--gray-800); border:2px solid var(--border); border-radius:3px; overflow:hidden; cursor:pointer; transition:border-color 0.2s; flex-shrink:0; }
+  .thumb.active { border-color:var(--gold); }
+  .thumb:hover { border-color:rgba(200,169,110,0.5); }
+  .thumb img { width:100%; height:100%; object-fit:cover; }
+
+  .product-info {}
+  .product-brand-tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:3px; color:var(--gold); text-transform:uppercase; border:1px solid rgba(200,169,110,0.3); padding:4px 12px; border-radius:2px; background:var(--gold-bg); margin-bottom:16px; }
+  .product-name { font-family:'Bebas Neue',sans-serif; font-size:clamp(36px,5vw,56px); line-height:1.0; margin-bottom:10px; }
+  .product-ref { font-size:12px; color:var(--gray-400); margin-bottom:20px; letter-spacing:1px; }
+
+  .price-block { margin-bottom:28px; }
+  .price-old { font-size:14px; color:var(--gray-400); text-decoration:line-through; margin-bottom:4px; }
+  .price-current { font-family:'Bebas Neue',sans-serif; font-size:52px; color:var(--gold); line-height:1; letter-spacing:1px; }
+  .price-discount { display:inline-block; background:var(--red); color:#fff; font-size:11px; font-weight:700; letter-spacing:1px; padding:3px 10px; border-radius:2px; margin-left:12px; vertical-align:middle; }
+
+  .stock-info { display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:28px; }
+  .stock-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .stock-dot.ok { background:var(--green); box-shadow:0 0 6px var(--green); }
+  .stock-dot.low { background:#ff9800; box-shadow:0 0 6px #ff9800; }
+  .stock-dot.out { background:var(--red); box-shadow:0 0 6px var(--red); }
+  .stock-text.ok { color:var(--green); }
+  .stock-text.low { color:#ff9800; }
+  .stock-text.out { color:var(--red); }
+
+  .section-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--gray-400); margin-bottom:12px; }
+  .sizes-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:32px; }
+  .size-btn { border:1.5px solid rgba(255,255,255,0.15); background:transparent; color:var(--gray-200); padding:10px 18px; border-radius:2px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; font-family:'Inter',sans-serif; min-width:52px; text-align:center; }
+  .size-btn:hover { border-color:rgba(200,169,110,0.6); color:var(--gold); }
+  .size-btn.selected { border-color:var(--gold); color:var(--gold); background:var(--gold-bg); }
+
+  .product-actions { display:flex; flex-direction:column; gap:12px; margin-bottom:32px; }
+  .btn-wpp { display:flex; align-items:center; justify-content:center; gap:10px; background:#25d366; color:#fff; border:none; padding:16px 28px; border-radius:3px; font-size:15px; font-weight:700; letter-spacing:1px; cursor:pointer; transition:all 0.25s; text-decoration:none; font-family:'Inter',sans-serif; }
+  .btn-wpp:hover { background:#1db954; transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,211,102,0.3); }
+  .btn-secondary-act { display:flex; align-items:center; justify-content:center; gap:8px; background:transparent; color:var(--gray-200); border:1px solid rgba(255,255,255,0.15); padding:14px 28px; border-radius:3px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.25s; font-family:'Inter',sans-serif; }
+  .btn-secondary-act:hover { border-color:var(--gold); color:var(--gold); }
+
+  .divider { border:none; border-top:1px solid var(--border); margin:28px 0; }
+  .product-desc { font-size:15px; color:var(--gray-200); line-height:1.8; font-weight:300; margin-bottom:24px; }
+
+  .details-list { display:flex; flex-direction:column; gap:0; }
+  .detail-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+  .detail-item:last-child { border-bottom:none; }
+  .detail-key { font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--gray-400); }
+  .detail-val { font-size:14px; color:var(--white); font-weight:500; }
+
+  .share-row { display:flex; align-items:center; gap:12px; margin-top:24px; }
+  .share-label { font-size:12px; color:var(--gray-400); letter-spacing:1px; text-transform:uppercase; font-weight:600; }
+  .share-btn { width:36px; height:36px; border-radius:2px; background:var(--gray-800); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:all 0.2s; text-decoration:none; color:var(--white); }
+  .share-btn:hover { border-color:var(--gold); background:var(--gold-bg); }
+
+  .related-section { padding:60px 60px 80px; border-top:1px solid var(--border); }
+  .related-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:32px; }
+  .related-title { font-family:'Bebas Neue',sans-serif; font-size:36px; }
+  .related-link { color:var(--gold); text-decoration:none; font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; }
+  .related-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .related-card { background:var(--gray-800); border:1px solid var(--border); border-radius:4px; overflow:hidden; cursor:pointer; transition:all 0.3s; text-decoration:none; color:inherit; display:block; }
+  .related-card:hover { border-color:rgba(200,169,110,0.3); transform:translateY(-3px); }
+  .related-img { aspect-ratio:3/4; background:var(--gray-700); display:flex; align-items:center; justify-content:center; font-size:40px; overflow:hidden; }
+  .related-img img { width:100%; height:100%; object-fit:cover; }
+  .related-body { padding:12px 14px; }
+  .related-brand { font-size:9px; letter-spacing:3px; color:var(--gold); text-transform:uppercase; font-weight:700; margin-bottom:3px; }
+  .related-name { font-size:13px; font-weight:600; margin-bottom:6px; line-height:1.3; }
+  .related-price { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--gold); }
+
+  .loading-screen { min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; text-align:center; }
+  .spinner { width:48px; height:48px; border:3px solid rgba(200,169,110,0.2); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-text { font-size:13px; color:var(--gray-400); letter-spacing:2px; text-transform:uppercase; }
+
+  .not-found { min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; padding:40px; }
+  .not-found-icon { font-size:72px; opacity:0.4; }
+  .not-found-title { font-family:'Bebas Neue',sans-serif; font-size:48px; }
+  .not-found-sub { font-size:15px; color:var(--gray-400); }
+
+  footer { background:var(--gray-900); border-top:1px solid var(--border); padding:32px 60px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; }
+  .footer-logo span { color:var(--gold); }
+  .footer-copy { font-size:12px; color:var(--gray-400); }
+
+  .toast-wrap { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+  .toast { background:var(--gray-900); border:1px solid rgba(200,169,110,0.3); border-radius:6px; padding:12px 18px; font-size:13px; display:flex; align-items:center; gap:8px; box-shadow:0 8px 32px rgba(0,0,0,0.4); animation:slideIn 0.3s ease; }
+  @keyframes slideIn { from{transform:translateX(120%)} to{transform:translateX(0)} }
+
+  @media(max-width:900px){
+    nav { padding:14px 20px; }
+    .nav-links { display:none; }
+    .breadcrumb { padding:14px 20px; }
+    .product-page { grid-template-columns:1fr; padding:24px 20px 60px; gap:32px; }
+    .gallery { position:static; }
+    .related-section { padding:40px 20px 60px; }
+    .related-grid { grid-template-columns:repeat(2,1fr); }
+    footer { padding:24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">R<span>.</span>Street</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Início</a></li>
+    <li><a href="catalogo.html">Catálogo</a></li>
+  </ul>
+  <a href="catalogo.html" class="btn-back">← Catálogo</a>
+</nav>
+
+<div class="breadcrumb">
+  <a href="index.html">Início</a>
+  <span class="breadcrumb-sep">›</span>
+  <a href="catalogo.html">Catálogo</a>
+  <span class="breadcrumb-sep">›</span>
+  <span class="breadcrumb-current" id="breadcrumbName">Produto</span>
+</div>
+
+<div id="mainContent">
+  <div class="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text">Carregando produto...</div>
+  </div>
+</div>
+
+<div class="related-section" id="relatedSection" style="display:none">
+  <div class="related-header">
+    <div class="related-title">Você também pode gostar</div>
+    <a href="catalogo.html" class="related-link">Ver tudo →</a>
+  </div>
+  <div class="related-grid" id="relatedGrid"></div>
+</div>
+
+<footer>
+  <div class="footer-logo">R<span>.</span>Street</div>
+  <div class="footer-copy">© 2024 R Street Moda Masculina · São José do Rio Pardo - SP</div>
+</footer>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIGURAÇÃO — edite aqui com seus dados
+// ═══════════════════════════════════════════════
+const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';  // ← cole sua URL
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4dHRxdm1ycGZ3eHNncnBhbmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NDQ2ODMsImV4cCI6MjA5ODEyMDY4M30.rIkhwOxmJSwFADpqHsp_9Y6FWeIixOLMNK0IByYNnng';                // ← cole sua chave
+const WHATSAPP     = '5519993111599';
+// ═══════════════════════════════════════════════
+
+let product = null;
+let allProducts = [];
+let selectedSize = null;
+
+const productId = parseInt(new URLSearchParams(window.location.search).get('id'));
+
+async function init() {
+  // Sem credenciais configuradas → usa dados de exemplo
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    allProducts = getDemoProducts();
+    product = allProducts.find(p => p.id === productId) || null;
+    finish();
+    return;
+  }
+
+  try {
+    // Busca só este produto pelo ID + alguns produtos relacionados
+    const [r1, r2] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&id=eq.${productId}`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      }),
+      fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&ativo=eq.true&order=criado_em.desc&limit=20`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      })
+    ]);
+    if (!r1.ok) throw new Error('HTTP ' + r1.status);
+    const arr = await r1.json();
+    product = arr[0] || null;
+    if (r2.ok) allProducts = await r2.json();
+  } catch (err) {
+    console.warn('Supabase erro:', err.message);
+    allProducts = getDemoProducts();
+    product = allProducts.find(p => p.id === productId) || null;
+  }
+
+  finish();
+}
+
+function finish() {
+  if (!product) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="not-found">
+        <div class="not-found-icon">🔍</div>
+        <div class="not-found-title">Produto não encontrado</div>
+        <div class="not-found-sub">Este produto pode ter sido removido ou o link está incorreto.</div>
+        <a href="catalogo.html" style="margin-top:16px;color:var(--gold);text-decoration:none;font-weight:600;border:1px solid rgba(200,169,110,0.4);padding:12px 28px;border-radius:2px;display:inline-block;">← Voltar ao catálogo</a>
+      </div>`;
+    return;
+  }
+  renderProduct();
+  renderRelated();
+  document.title = product.nome + ' | R Street';
+  document.getElementById('breadcrumbName').textContent = product.nome;
+}
+
+function renderProduct() {
+  const p = product;
+  let badge = '';
+  if (p.estoque === 0) badge = '<div class="gallery-badge badge-out">Esgotado</div>';
+  else if (p.preco_antigo) badge = '<div class="gallery-badge badge-sale">Oferta</div>';
+  else badge = '<div class="gallery-badge badge-new">Novo</div>';
+
+  const imgs = Array.isArray(p.imagens) && p.imagens.length ? p.imagens
+    : p.imagem_url ? [p.imagem_url] : [];
+
+  const mainImg = imgs.length
+    ? `<img id="mainImg" src="${imgs[0]}" alt="${p.nome}">`
+    : `<div class="gallery-placeholder">👕<span>${p.marca || 'R Street'}</span></div>`;
+
+  const thumbs = imgs.length > 1 ? `
+    <div class="gallery-thumbs">
+      ${imgs.map((url, i) => `
+        <div class="thumb ${i===0?'active':''}" onclick="changeImg('${url}', this)">
+          <img src="${url}" alt="foto ${i+1}">
+        </div>`).join('')}
+    </div>` : '';
+
+  const discount = p.preco_antigo ? Math.round((1 - p.preco / p.preco_antigo) * 100) : 0;
+
+  const stockClass = p.estoque === 0 ? 'out' : p.estoque <= 5 ? 'low' : 'ok';
+  const stockText  = p.estoque === 0 ? 'Esgotado'
+    : p.estoque <= 5 ? `Últimas ${p.estoque} unidades`
+    : `Em estoque (${p.estoque} unidades)`;
+
+  const sizes = (p.tamanhos || []).map(s =>
+    `<button class="size-btn" onclick="selectSize('${s}', this)">${s}</button>`).join('');
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="product-page">
+      <div class="gallery">
+        <div class="gallery-main">
+          ${mainImg}
+          ${badge}
+        </div>
+        ${thumbs}
+      </div>
+      <div class="product-info">
+        <div class="product-brand-tag">${p.marca || 'R Street'}</div>
+        <h1 class="product-name">${p.nome}</h1>
+        <div class="product-ref">Ref: ${p.referencia || '#'+p.id}${p.categoria ? ' · '+p.categoria : ''}</div>
+
+        <div class="price-block">
+          ${p.preco_antigo ? `<div class="price-old">De R$ ${fmt(p.preco_antigo)}</div>` : ''}
+          <div class="price-current">
+            R$ ${fmt(p.preco)}
+            ${discount ? `<span class="price-discount">-${discount}%</span>` : ''}
+          </div>
+        </div>
+
+        <div class="stock-info">
+          <div class="stock-dot ${stockClass}"></div>
+          <span class="stock-text ${stockClass}">${stockText}</span>
+        </div>
+
+        ${sizes ? `<div class="section-label">Tamanho</div><div class="sizes-grid">${sizes}</div>` : ''}
+
+        <div class="product-actions">
+          <button class="btn-wpp" onclick="adicionarCarrinho()" id="btnCarrinho"
+            style="background:var(--gold);color:var(--black);border:none;font-size:15px;font-weight:700;letter-spacing:1px;padding:16px 28px;border-radius:3px;cursor:pointer;transition:all 0.25s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;width:100%">
+            <span style="font-size:20px">🛒</span> Adicionar ao Carrinho
+          </button>
+          <a id="wppBtn" href="${buildWppLink()}" target="_blank" class="btn-wpp">
+            <span style="font-size:20px">💬</span> Pedir pelo WhatsApp
+          </a>
+          <button class="btn-secondary-act" onclick="copyLink()">🔗 Copiar link do produto</button>
+        </div>
+
+        <hr class="divider">
+
+        ${p.descricao ? `<p class="product-desc">${p.descricao}</p>` : ''}
+
+        <div class="details-list">
+          ${p.marca ? `<div class="detail-item"><span class="detail-key">Marca</span><span class="detail-val">${p.marca}</span></div>` : ''}
+          ${p.categoria ? `<div class="detail-item"><span class="detail-key">Categoria</span><span class="detail-val">${p.categoria}</span></div>` : ''}
+          ${p.referencia ? `<div class="detail-item"><span class="detail-key">Referência</span><span class="detail-val">${p.referencia}</span></div>` : ''}
+          ${(p.tamanhos||[]).length ? `<div class="detail-item"><span class="detail-key">Tamanhos</span><span class="detail-val">${p.tamanhos.join(' · ')}</span></div>` : ''}
+        </div>
+
+        <div class="share-row">
+          <span class="share-label">Compartilhar</span>
+          <a class="share-btn" href="https://wa.me/?text=${encodeURIComponent('Olha esse produto da R Street: '+window.location.href)}" target="_blank">💬</a>
+          <button class="share-btn" onclick="copyLink()">🔗</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function changeImg(url, el) {
+  const m = document.getElementById('mainImg');
+  if (m) m.src = url;
+  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function selectSize(size, el) {
+  selectedSize = size;
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  const btn = document.getElementById('wppBtn');
+  if (btn) btn.href = buildWppLink();
+}
+
+function buildWppLink() {
+  if (!product) return '#';
+  const msg = `Olá! Tenho interesse no produto:\n*${product.nome}*${selectedSize ? `\nTamanho: *${selectedSize}*` : ''}\nReferência: ${product.referencia || '#'+product.id}\nValor: R$ ${fmt(product.preco)}\n\nPode me ajudar?`;
+  return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+}
+
+function renderRelated() {
+  const rel = allProducts
+    .filter(p => p.id !== product.id && p.ativo !== false &&
+      (p.marca === product.marca || p.categoria === product.categoria))
+    .slice(0, 4);
+  if (!rel.length) return;
+  document.getElementById('relatedSection').style.display = 'block';
+  document.getElementById('relatedGrid').innerHTML = rel.map(p => {
+    const imgs = Array.isArray(p.imagens) && p.imagens.length ? p.imagens : p.imagem_url ? [p.imagem_url] : [];
+    return `<a class="related-card" href="produto.html?id=${p.id}">
+      <div class="related-img">${imgs.length ? `<img src="${imgs[0]}" alt="${p.nome}">` : '👕'}</div>
+      <div class="related-body">
+        <div class="related-brand">${p.marca}</div>
+        <div class="related-name">${p.nome}</div>
+        <div class="related-price">R$ ${fmt(p.preco)}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+function adicionarCarrinho() {
+  if (!product) return;
+  const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  const imgs = Array.isArray(product.imagens) && product.imagens.length ? product.imagens : product.imagem_url ? [product.imagem_url] : [];
+  const existing = cart.find(i => i.id === product.id && i.tamanho === (selectedSize || ''));
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({
+      id: product.id,
+      nome: product.nome,
+      marca: product.marca,
+      preco: product.preco,
+      tamanho: selectedSize || '',
+      referencia: product.referencia || '',
+      imagem: imgs[0] || '',
+      qty: 1,
+    });
+  }
+  localStorage.setItem('rstreet_cart', JSON.stringify(cart));
+  const btn = document.getElementById('btnCarrinho');
+  if (btn) {
+    btn.innerHTML = '<span style="font-size:20px">✅</span> Adicionado!';
+    btn.style.background = 'var(--green)';
+    setTimeout(() => {
+      btn.innerHTML = '<span style="font-size:20px">🛒</span> Adicionar ao Carrinho';
+      btn.style.background = 'var(--gold)';
+    }, 2000);
+  }
+  toast('✅ Produto adicionado ao carrinho!');
+}
+
+function fmt(v) { return Number(v).toFixed(2).replace('.',','); }
+
+function copyLink() {
+  navigator.clipboard.writeText(window.location.href)
+    .then(() => toast('✅ Link copiado!'))
+    .catch(() => toast('❌ Não foi possível copiar.'));
+}
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<span>${msg}</span>`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function getDemoProducts() {
+  return [
+    { id:1, nome:'Camisa Slim Fit Manga Longa', marca:'Acostamento', categoria:'Camisa', preco:189.90, preco_antigo:null, referencia:'ACO-001', tamanhos:['P','M','G','GG'], estoque:15, ativo:true, descricao:'Camisa slim fit confeccionada em tecido premium de alta qualidade. Corte moderno que valoriza a silhueta. Ideal para ocasiões casuais e sociais.', imagens:[] },
+    { id:2, nome:'Camiseta Básica Logo', marca:'Acostamento', categoria:'Camiseta', preco:89.90, preco_antigo:119.90, referencia:'ACO-002', tamanhos:['P','M','G','GG','XGG'], estoque:30, ativo:true, descricao:'Camiseta básica com logo bordado. Tecido 100% algodão penteado.', imagens:[] },
+    { id:3, nome:'Calça Jeans Country Slim', marca:'TXC', categoria:'Calça', preco:259.90, preco_antigo:null, referencia:'TXC-001', tamanhos:['38','40','42','44','46'], estoque:8, ativo:true, descricao:'Calça jeans slim com lavagem especial. Perfeita para o estilo country e casual.', imagens:[] },
+    { id:4, nome:'Camisa Xadrez Flanela', marca:'TXC', categoria:'Camisa', preco:179.90, preco_antigo:229.90, referencia:'TXC-002', tamanhos:['M','G','GG'], estoque:5, ativo:true, descricao:'Camisa xadrez em flanela macia. Estilo country autêntico.', imagens:[] },
+    { id:5, nome:'Camiseta Street Print', marca:'Freeway', categoria:'Camiseta', preco:119.90, preco_antigo:null, referencia:'FRW-001', tamanhos:['P','M','G','GG'], estoque:20, ativo:true, descricao:'Camiseta com estampa street art exclusiva. 100% algodão penteado.', imagens:[] },
+    { id:6, nome:'Bermuda Cargo Street', marca:'Freeway', categoria:'Bermuda', preco:199.90, preco_antigo:249.90, referencia:'FRW-002', tamanhos:['38','40','42','44'], estoque:12, ativo:true, descricao:'Bermuda cargo com múltiplos bolsos.', imagens:[] },
+    { id:7, nome:'Calça Social Premium', marca:'Ogochi', categoria:'Calça', preco:299.90, preco_antigo:null, referencia:'OGO-001', tamanhos:['40','42','44','46','48'], estoque:10, ativo:true, descricao:'Calça social de corte clássico. Tecido de alta qualidade com caimento perfeito.', imagens:[] },
+    { id:8, nome:'Camisa Polo Ogochi', marca:'Ogochi', categoria:'Camisa', preco:159.90, preco_antigo:199.90, referencia:'OGO-002', tamanhos:['P','M','G','GG'], estoque:18, ativo:true, descricao:'Polo clássica confeccionada em piquet premium.', imagens:[] },
+  ];
+}
+
+init();
+</script>
+</body>
+</html>

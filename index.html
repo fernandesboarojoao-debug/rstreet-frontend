@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R Street Moda Masculina | São José do Rio Pardo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --white: #ffffff;
+    --gold: #c8a96e;
+    --gold-light: #e8d5b0;
+    --gold-dark: #8a6f3e;
+    --gray-900: #111111;
+    --gray-800: #1a1a1a;
+    --gray-700: #242424;
+    --gray-600: #2e2e2e;
+    --gray-400: #888888;
+    --gray-200: #cccccc;
+    --accent: #c8a96e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── CURSOR ── */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.1s ease;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 40px; height: 40px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.15s ease;
+    mix-blend-mode: difference;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 24px 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.4s ease;
+  }
+  nav.scrolled {
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(20px);
+    padding: 16px 60px;
+    border-bottom: 1px solid rgba(200,169,110,0.2);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 6px;
+    color: var(--white);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-logo span { color: var(--gold); }
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--gray-200);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0; right: 100%;
+    height: 1px;
+    background: var(--gold);
+    transition: right 0.3s ease;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-links a:hover::after { right: 0; }
+  .nav-cta {
+    background: var(--gold);
+    color: var(--black) !important;
+    padding: 10px 24px;
+    border-radius: 2px;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    letter-spacing: 2px !important;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+  .nav-cta::after { display: none !important; }
+  .nav-cta:hover {
+    background: var(--gold-dark) !important;
+    color: var(--white) !important;
+    transform: translateY(-1px);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.8) 100%),
+      url('https://images.unsplash.com/photo-1490114538077-0a7f8cb49891?w=1920&q=80') center/cover no-repeat;
+    transform: scale(1.05);
+    transition: transform 8s ease;
+    will-change: transform;
+  }
+  .hero-bg.loaded { transform: scale(1); }
+
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(200,169,110,0.08) 0%, transparent 70%);
+  }
+
+  .hero-lines {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .hero-line {
+    position: absolute;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(200,169,110,0.3), transparent);
+    animation: lineFade 3s ease-in-out infinite;
+  }
+  .hero-line:nth-child(1) { left: 20%; height: 60%; top: 20%; animation-delay: 0s; }
+  .hero-line:nth-child(2) { left: 80%; height: 40%; top: 30%; animation-delay: 1s; }
+  .hero-line:nth-child(3) { left: 50%; height: 50%; top: 10%; animation-delay: 2s; }
+
+  @keyframes lineFade {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 0 60px;
+    max-width: 900px;
+  }
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.3s;
+  }
+  .hero-eyebrow span {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+  }
+  .hero-eyebrow-line {
+    height: 1px;
+    width: 60px;
+    background: var(--gold);
+  }
+
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(72px, 12vw, 160px);
+    line-height: 0.9;
+    letter-spacing: -2px;
+    margin-bottom: 32px;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeUp 0.8s ease forwards 0.5s;
+  }
+  .hero-title .line-gold { color: var(--gold); display: block; }
+  .hero-title .line-outline {
+    -webkit-text-stroke: 1px rgba(255,255,255,0.4);
+    color: transparent;
+    display: block;
+  }
+
+  .hero-desc {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--gray-200);
+    max-width: 480px;
+    margin-bottom: 48px;
+    font-weight: 300;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.7s;
+  }
+
+  .hero-buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.8s ease forwards 0.9s;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--black);
+    padding: 16px 40px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-primary:hover {
+    background: var(--gold-dark);
+    color: var(--white);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(200,169,110,0.4);
+  }
+  .btn-secondary {
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--white);
+    padding: 16px 40px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+  .btn-secondary:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: translateY(-2px);
+  }
+
+  .hero-scroll {
+    position: absolute;
+    bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeIn 1s ease forwards 1.5s;
+    cursor: pointer;
+  }
+  .hero-scroll span {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gray-400);
+  }
+  .scroll-line {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { transform: scaleY(1); opacity: 1; }
+    50% { transform: scaleY(0.6); opacity: 0.5; }
+  }
+
+  .hero-stats {
+    position: absolute;
+    right: 60px;
+    bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 1.2s;
+  }
+  .hero-stat {
+    text-align: right;
+    border-right: 2px solid var(--gold);
+    padding-right: 20px;
+  }
+  .hero-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 11px;
+    color: var(--gray-400);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+
+  /* ── MARQUEE ── */
+  .marquee-wrap {
+    background: var(--gold);
+    padding: 14px 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .marquee-track {
+    display: flex;
+    white-space: nowrap;
+    animation: marqueeRun 20s linear infinite;
+  }
+  .marquee-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 24px;
+    padding: 0 24px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 4px;
+    color: var(--black);
+  }
+  .marquee-dot {
+    width: 5px; height: 5px;
+    background: var(--black);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  @keyframes marqueeRun {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ── SECTION BASE ── */
+  section { padding: 120px 60px; }
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 80px);
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+  .section-sub {
+    font-size: 16px;
+    color: var(--gray-200);
+    line-height: 1.8;
+    max-width: 560px;
+    font-weight: 300;
+  }
+
+  /* ── BRANDS ── */
+  .brands-section {
+    background: var(--gray-900);
+    position: relative;
+    overflow: hidden;
+  }
+  .brands-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+  .brands-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 80px;
+    flex-wrap: wrap;
+    gap: 32px;
+  }
+  .brands-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+  }
+  .brand-card {
+    background: var(--gray-800);
+    aspect-ratio: 4/3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s ease;
+  }
+  .brand-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(200,169,110,0.0), rgba(200,169,110,0.12));
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .brand-card:hover { transform: scale(1.02); z-index: 2; }
+  .brand-card:hover::before { opacity: 1; }
+
+  .brand-card-bg {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: grayscale(60%) brightness(0.4);
+    transition: all 0.4s;
+  }
+  .brand-card:hover .brand-card-bg {
+    filter: grayscale(0%) brightness(0.5);
+    transform: scale(1.05);
+  }
+
+  .brand-card-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 24px;
+  }
+  .brand-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px;
+    letter-spacing: 6px;
+    color: var(--white);
+    line-height: 1;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.8);
+    transition: color 0.3s;
+  }
+  .brand-card:hover .brand-name { color: var(--gold); }
+  .brand-tagline {
+    font-size: 11px;
+    color: var(--gray-400);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+    transition: color 0.3s;
+  }
+  .brand-card:hover .brand-tagline { color: var(--gold-light); }
+
+  .brand-card-tag {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: var(--gold);
+    color: var(--black);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  /* ── ABOUT ── */
+  .about-section {
+    background: var(--black);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 100px;
+    align-items: center;
+  }
+  .about-visual {
+    position: relative;
+    height: 600px;
+  }
+  .about-img-main {
+    position: absolute;
+    width: 70%;
+    height: 80%;
+    background: url('imagem-sobre-principal.jpg') center/cover; /* 📸 COLOQUE AQUI: salve sua foto com o nome imagem-sobre-principal.jpg (foto da loja ou equipe) */
+    top: 0; right: 0;
+    filter: grayscale(20%);
+  }
+  .about-img-accent {
+    position: absolute;
+    width: 50%;
+    height: 55%;
+    background: url('imagem-sobre-detalhe.jpg') center/cover; /* 📸 COLOQUE AQUI: salve sua foto com o nome imagem-sobre-detalhe.jpg (foto de detalhe da loja) */
+    bottom: 0; left: 0;
+    filter: grayscale(20%);
+    border: 4px solid var(--gold);
+  }
+  .about-badge {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px; height: 100px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    box-shadow: 0 0 0 8px var(--black);
+  }
+  .about-badge-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--black);
+    line-height: 1;
+  }
+  .about-badge-text {
+    font-size: 8px;
+    color: var(--black);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-align: center;
+    font-weight: 700;
+    line-height: 1.2;
+    max-width: 60px;
+  }
+  .about-features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 48px;
+  }
+  .about-feature {
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    transition: border-color 0.3s;
+  }
+  .about-feature:hover { border-color: rgba(200,169,110,0.4); }
+  .about-feature-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+  }
+  .about-feature-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  .about-feature-text {
+    font-size: 13px;
+    color: var(--gray-400);
+    line-height: 1.6;
+  }
+
+  /* ── HIGHLIGHTS / FEATURED PRODUCTS ── */
+  .highlights-section {
+    background: var(--gray-900);
+    position: relative;
+  }
+  .highlights-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 60px;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  .highlights-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .highlight-card {
+    background: var(--gray-800);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: all 0.4s;
+  }
+  .highlight-card:hover {
+    border-color: rgba(200,169,110,0.3);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .highlight-img {
+    height: 320px;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.6s ease;
+    filter: brightness(0.85);
+  }
+  .highlight-card:hover .highlight-img {
+    transform: scale(1.06);
+    filter: brightness(1);
+  }
+  .highlight-body {
+    padding: 20px 24px 24px;
+  }
+  .highlight-brand {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .highlight-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+  .highlight-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .highlight-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .highlight-cta {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--white);
+    padding: 8px 20px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    border-radius: 2px;
+  }
+  .highlight-cta:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--black);
+  }
+  .highlight-badge {
+    position: absolute;
+    top: 16px; left: 16px;
+    background: var(--gold);
+    color: var(--black);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 6px 12px;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+  .highlight-badge.sale { background: #e63946; color: var(--white); }
+
+  /* ── EXPERIENCE STRIP ── */
+  .experience-strip {
+    background: var(--gold);
+    padding: 80px 60px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+  }
+  .experience-item {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    position: relative;
+  }
+  .experience-item::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 20%; bottom: 20%;
+    width: 1px;
+    background: rgba(0,0,0,0.15);
+  }
+  .experience-item:last-child::after { display: none; }
+  .exp-icon { font-size: 36px; }
+  .exp-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    color: var(--black);
+    line-height: 1;
+  }
+  .exp-label {
+    font-size: 12px;
+    color: rgba(0,0,0,0.7);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* ── REVIEWS ── */
+  .reviews-section {
+    background: var(--black);
+    position: relative;
+    overflow: hidden;
+  }
+  .reviews-bg-text {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 300px;
+    color: rgba(255,255,255,0.02);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    pointer-events: none;
+    letter-spacing: 20px;
+  }
+  .reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 60px;
+  }
+  .review-card {
+    background: var(--gray-900);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 32px;
+    transition: border-color 0.3s;
+  }
+  .review-card:hover { border-color: rgba(200,169,110,0.3); }
+  .review-stars {
+    color: var(--gold);
+    font-size: 16px;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+  }
+  .review-text {
+    font-size: 15px;
+    color: var(--gray-200);
+    line-height: 1.7;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+  .review-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .review-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--black);
+    font-size: 14px;
+  }
+  .review-name { font-weight: 600; font-size: 14px; }
+  .review-date { font-size: 12px; color: var(--gray-400); }
+
+  /* ── MAP / LOCATION ── */
+  .location-section {
+    background: var(--gray-900);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: 0;
+    min-height: 500px;
+  }
+  .location-info {
+    padding: 80px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .location-map {
+    background: var(--gray-800);
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+  }
+  .location-map iframe {
+    width: 100%; height: 100%;
+    border: none;
+    filter: grayscale(60%) contrast(1.1);
+  }
+  .location-details {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .location-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .location-icon {
+    width: 44px; height: 44px;
+    background: rgba(200,169,110,0.1);
+    border: 1px solid rgba(200,169,110,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+  .location-item-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .location-item-text { font-size: 14px; color: var(--gray-400); line-height: 1.5; }
+
+  /* ── CTA BANNER ── */
+  .cta-banner {
+    background: var(--black);
+    padding: 120px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, rgba(200,169,110,0.12) 0%, transparent 70%);
+  }
+  .cta-banner-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 8vw, 100px);
+    line-height: 1;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .cta-banner-title em {
+    color: var(--gold);
+    font-style: normal;
+  }
+  .cta-banner-sub {
+    font-size: 18px;
+    color: var(--gray-200);
+    margin-bottom: 48px;
+    font-weight: 300;
+    position: relative;
+  }
+  .cta-banner-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--gray-900);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 80px 60px 40px;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px;
+    margin-bottom: 60px;
+  }
+  .footer-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 6px;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+  .footer-logo span { color: var(--gold); }
+  .footer-desc {
+    font-size: 14px;
+    color: var(--gray-400);
+    line-height: 1.7;
+    max-width: 280px;
+    margin-bottom: 24px;
+  }
+  .footer-social {
+    display: flex;
+    gap: 12px;
+  }
+  .social-btn {
+    width: 40px; height: 40px;
+    border: 1px solid rgba(255,255,255,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+    text-decoration: none;
+    color: var(--gray-400);
+    font-size: 16px;
+    transition: all 0.3s;
+  }
+  .social-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(200,169,110,0.1);
+  }
+  .footer-col-title {
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .footer-links a {
+    text-decoration: none;
+    color: var(--gray-400);
+    font-size: 14px;
+    transition: color 0.3s;
+  }
+  .footer-links a:hover { color: var(--gold); }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-copy {
+    font-size: 13px;
+    color: var(--gray-400);
+  }
+  .footer-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--gray-400);
+  }
+  .rating-stars { color: var(--gold); }
+
+  /* ── SCROLL ANIMATIONS ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.8s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-left {
+    opacity: 0;
+    transform: translateX(-40px);
+    transition: all 0.8s ease;
+  }
+  .reveal-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  .reveal-right {
+    opacity: 0;
+    transform: translateX(40px);
+    transition: all 0.8s ease;
+  }
+  .reveal-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    nav.scrolled { padding: 14px 24px; }
+    .nav-links { display: none; }
+    section { padding: 80px 24px; }
+    .hero-content { padding: 0 24px; }
+    .hero-stats { display: none; }
+    .hero-title { font-size: 64px; }
+    .hero-desc { font-size: 14px; }
+    .brands-grid { grid-template-columns: 1fr 1fr; }
+    .brand-name { font-size: 28px; }
+    .highlights-grid { grid-template-columns: 1fr; }
+    .about-section { grid-template-columns: 1fr; padding: 80px 24px; gap: 48px; }
+    .about-visual { height: 400px; }
+    .about-features { grid-template-columns: 1fr 1fr; }
+    .experience-strip { grid-template-columns: 1fr 1fr; padding: 60px 24px; }
+    .experience-item { padding: 20px; }
+    .exp-num { font-size: 36px; }
+    .reviews-grid { grid-template-columns: 1fr; }
+    .location-section { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+    .cta-banner { padding: 80px 24px; }
+    footer { padding: 60px 24px 32px; }
+    .marquee-item { font-size: 14px; }
+    .hero-buttons { flex-direction: column; }
+    .btn-primary, .btn-secondary { width: 100%; justify-content: center; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">R<span>.</span>Street</a>
+  <ul class="nav-links">
+    <li><a href="#">Início</a></li>
+    <li><a href="#marcas">Marcas</a></li>
+    <li><a href="#sobre">Sobre</a></li>
+    <li><a href="#destaques">Coleção</a></li>
+    <li><a href="#contato">Contato</a></li>
+    <li><a href="catalogo.html" class="nav-cta">Ver Catálogo</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-lines">
+    <div class="hero-line"></div>
+    <div class="hero-line"></div>
+    <div class="hero-line"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-line"></div>
+      <span>São José do Rio Pardo · SP</span>
+    </div>
+    <h1 class="hero-title">
+      <span class="line-gold">Moda</span>
+      <span>Masculi</span><span class="line-outline">na</span>
+    </h1>
+    <p class="hero-desc">Estilo, atitude e qualidade em cada peça. As melhores marcas do Brasil reunidas em um só lugar para compor seu look com personalidade.</p>
+    <div class="hero-buttons">
+      <a href="catalogo.html" class="btn-primary">
+        Ver Catálogo
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#sobre" class="btn-secondary">Nossa História</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-num">5.0</div>
+      <div class="hero-stat-label">Avaliação</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">4+</div>
+      <div class="hero-stat-label">Marcas</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">100%</div>
+      <div class="hero-stat-label">Qualidade</div>
+    </div>
+  </div>
+  <div class="hero-scroll" onclick="scrollToNext()">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track" id="marqueeTrack">
+    <div class="marquee-item">Acostamento <div class="marquee-dot"></div></div>
+    <div class="marquee-item">TXC <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Freeway <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Ogochi <div class="marquee-dot"></div></div>
+    <div class="marquee-item">R Street <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Moda Masculina <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Acostamento <div class="marquee-dot"></div></div>
+    <div class="marquee-item">TXC <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Freeway <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Ogochi <div class="marquee-dot"></div></div>
+    <div class="marquee-item">R Street <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Moda Masculina <div class="marquee-dot"></div></div>
+  </div>
+</div>
+
+<!-- BRANDS -->
+<section class="brands-section" id="marcas">
+  <div class="brands-header reveal">
+    <div>
+      <div class="section-label">Nossas Marcas</div>
+      <h2 class="section-title">Marcas que<br>Representamos</h2>
+    </div>
+    <p class="section-sub">Trabalhamos com as marcas mais reconhecidas do mercado de moda masculina brasileira, garantindo qualidade e estilo em cada peça.</p>
+  </div>
+  <div class="brands-grid reveal">
+    <div class="brand-card" onclick="filterBrand('Acostamento')">
+      <div class="brand-card-bg" style="background-image: url('marca-acostamento.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome marca-acostamento.jpg -->
+      <div class="brand-card-content">
+        <div class="brand-name">Acosta<br>mento</div>
+        <div class="brand-tagline">Estilo Urbano</div>
+      </div>
+      <div class="brand-card-tag">Premium</div>
+    </div>
+    <div class="brand-card" onclick="filterBrand('TXC')">
+      <div class="brand-card-bg" style="background-image: url('marca-txc.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome marca-txc.jpg -->
+      <div class="brand-card-content">
+        <div class="brand-name">TXC</div>
+        <div class="brand-tagline">Country & Lifestyle</div>
+      </div>
+      <div class="brand-card-tag">Destaque</div>
+    </div>
+    <div class="brand-card" onclick="filterBrand('Freeway')">
+      <div class="brand-card-bg" style="background-image: url('marca-freeway.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome marca-freeway.jpg -->
+      <div class="brand-card-content">
+        <div class="brand-name">Free<br>way</div>
+        <div class="brand-tagline">Street Fashion</div>
+      </div>
+    </div>
+    <div class="brand-card" onclick="filterBrand('Ogochi')">
+      <div class="brand-card-bg" style="background-image: url('marca-ogochi.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome marca-ogochi.jpg -->
+      <div class="brand-card-content">
+        <div class="brand-name">Ogochi</div>
+        <div class="brand-tagline">Tradição e Qualidade</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about-section" id="sobre">
+  <div class="about-visual reveal-left">
+    <div class="about-img-main"></div>
+    <div class="about-img-accent"></div>
+    <div class="about-badge">
+      <div class="about-badge-num">5.0</div>
+      <div class="about-badge-text">Google Reviews</div>
+    </div>
+  </div>
+  <div class="reveal-right">
+    <div class="section-label">Sobre a R Street</div>
+    <h2 class="section-title">Nossa<br>História</h2>
+    <p class="section-sub">A R Street nasceu com um propósito: trazer moda masculina de qualidade para São José do Rio Pardo. Somos referência em estilo, atendimento e variedade de marcas reconhecidas no mercado nacional.</p>
+    <p class="section-sub" style="margin-top: 20px;">Localizada no coração do Centro, nossa loja oferece uma experiência de compra diferenciada, com atendimento personalizado e as melhores peças da estação para compor seu look.</p>
+    <div class="about-features">
+      <div class="about-feature">
+        <div class="about-feature-icon">👑</div>
+        <div class="about-feature-title">Marcas Premium</div>
+        <div class="about-feature-text">Acostamento, TXC, Freeway e Ogochi</div>
+      </div>
+      <div class="about-feature">
+        <div class="about-feature-icon">⭐</div>
+        <div class="about-feature-title">5,0 no Google</div>
+        <div class="about-feature-text">Avaliação máxima com 7 avaliações</div>
+      </div>
+      <div class="about-feature">
+        <div class="about-feature-icon">📍</div>
+        <div class="about-feature-title">Centro da Cidade</div>
+        <div class="about-feature-text">Av. 9 de Julho, 530 - Centro</div>
+      </div>
+      <div class="about-feature">
+        <div class="about-feature-icon">💬</div>
+        <div class="about-feature-title">Atendimento</div>
+        <div class="about-feature-text">(19) 99311-1599 via WhatsApp</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HIGHLIGHTS -->
+<section class="highlights-section" id="destaques">
+  <div class="highlights-header reveal">
+    <div>
+      <div class="section-label">Seleção Especial</div>
+      <h2 class="section-title">Destaques<br>da Coleção</h2>
+    </div>
+    <a href="catalogo.html" class="btn-secondary">Ver Tudo</a>
+  </div>
+  <div class="highlights-grid" id="highlightsGrid">
+    <div class="highlight-card reveal">
+      <div class="highlight-img" style="background-image: url('destaque-1.png')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome destaque-1.jpg (produto destaque Acostamento) -->
+      <div class="highlight-badge">Novo</div>
+      <div class="highlight-body">
+        <div class="highlight-brand">Freeway</div>
+        <div class="highlight-name">Tennis FreeWay</div>
+        <div class="highlight-footer">
+        
+          <a href="catalogo.html" class="highlight-cta">Ver Mais</a>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-card reveal" style="transition-delay: 0.1s">
+      <div class="highlight-img" style="background-image: url('destaque-2.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome destaque-2.jpg (produto destaque TXC) -->
+      <div class="highlight-badge">Novo</div>
+      <div class="highlight-body">
+        <div class="highlight-brand">Freeway</div>
+        <div class="highlight-name">Carteiras Freeway</div>
+        <div class="highlight-footer">
+         
+          <a href="catalogo.html" class="highlight-cta">Ver Mais</a>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-card reveal" style="transition-delay: 0.2s">
+      <div class="highlight-img" style="background-image: url('destaque-3.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome destaque-3.jpg (produto destaque Freeway) -->
+      <div class="highlight-body">
+        <div class="highlight-brand">Freeway</div>
+        <div class="highlight-name">Cintos Freeway</div>
+        <div class="highlight-footer">
+        <div class="highlight-badge">Novo</div>
+          <a href="catalogo.html" class="highlight-cta">Ver Mais</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE STRIP -->
+<div class="experience-strip reveal">
+  <div class="experience-item">
+    <div class="exp-icon">⭐</div>
+    <div class="exp-num">5.0</div>
+    <div class="exp-label">Avaliação Google</div>
+  </div>
+  <div class="experience-item">
+    <div class="exp-icon">👕</div>
+    <div class="exp-num">4</div>
+    <div class="exp-label">Marcas Premium</div>
+  </div>
+  <div class="experience-item">
+    <div class="exp-icon">📦</div>
+    <div class="exp-num">100+</div>
+    <div class="exp-label">Produtos</div>
+  </div>
+  <div class="experience-item">
+    <div class="exp-icon">❤️</div>
+    <div class="exp-num">7</div>
+    <div class="exp-label">Clientes Satisfeitos</div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<section class="reviews-section">
+  <div class="reviews-bg-text">★★★★★</div>
+  <div class="reveal">
+    <div class="section-label">Avaliações</div>
+    <h2 class="section-title">O que Dizem<br>Nossos Clientes</h2>
+  </div>
+  <div class="reviews-grid">
+    <div class="review-card reveal">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"Roupas de qualidades. Atendimento excelente e variedade de produtos incríveis. Com certeza voltarei!"</p>
+      <div class="review-author">
+        <div class="review-avatar">IB</div>
+        <div>
+          <div class="review-name">Isaac Bernardo</div>
+          <div class="review-date">Uma semana atrás · Google</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-card reveal" style="transition-delay: 0.1s">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"Ótima loja! Encontrei exatamente o que procurava com preço justo e qualidade garantida. Recomendo!"</p>
+      <div class="review-author">
+        <div class="review-avatar">DF</div>
+        <div>
+          <div class="review-name">Diego Figueiredo</div>
+          <div class="review-date">Uma semana atrás · Google</div>
+        </div>
+      </div>
+    </div>
+    <div class="review-card reveal" style="transition-delay: 0.2s">
+      <div class="review-stars">★★★★★</div>
+      <p class="review-text">"Melhor loja de moda masculina da região! Produtos de marcas reconhecidas com excelente custo-benefício."</p>
+      <div class="review-author">
+        <div class="review-avatar">RL</div>
+        <div>
+          <div class="review-name">Ronaldo Reis Lourenço</div>
+          <div class="review-date">Uma semana atrás · Google</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LOCATION -->
+<div class="location-section" id="contato">
+  <div class="location-info reveal-left">
+    <div class="section-label">Onde Estamos</div>
+    <h2 class="section-title">Visite<br>Nossa Loja</h2>
+    <div class="location-details">
+      <div class="location-item">
+        <div class="location-icon">📍</div>
+        <div>
+          <div class="location-item-title">Endereço</div>
+          <div class="location-item-text">Av. 9 de Julho, 530 - Centro<br>São José do Rio Pardo - SP, 13720-000</div>
+        </div>
+      </div>
+      <div class="location-item">
+        <div class="location-icon">🕐</div>
+        <div>
+          <div class="location-item-title">Horário de Funcionamento</div>
+          <div class="location-item-text">Segunda a Sexta: 9h às 18h<br>Sábado: 9h às 13h</div>
+        </div>
+      </div>
+      <div class="location-item">
+        <div class="location-icon">📱</div>
+        <div>
+          <div class="location-item-title">WhatsApp</div>
+          <div class="location-item-text">(19) 99311-1599</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 36px;">
+      <a href="https://wa.me/5519993111599" class="btn-primary" target="_blank">
+        Falar no WhatsApp
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="location-map">
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3681.9!2d-46.889!3d-21.594!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDM1JzM4LjQiUyA0NsKwNTMnMjAuNCJX!5e0!3m2!1spt!2sbr!4v1600000000000!5m2!1spt!2sbr"
+      allowfullscreen="" loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+  </div>
+</div>
+
+<!-- CTA BANNER -->
+<div class="cta-banner">
+  <h2 class="cta-banner-title reveal">Venha Compor<br>Seu <em>Look</em></h2>
+  <p class="cta-banner-sub reveal">Confira nosso catálogo completo e encontre a peça perfeita para o seu estilo.</p>
+  <div class="cta-banner-buttons reveal">
+    <a href="catalogo.html" class="btn-primary">Acessar Catálogo</a>
+    <a href="https://wa.me/5519993111599" class="btn-secondary" target="_blank">Falar Conosco</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <div class="footer-logo">R<span>.</span>Street</div>
+      <p class="footer-desc">Moda masculina com estilo, qualidade e personalidade. As melhores marcas do Brasil em São José do Rio Pardo.</p>
+      <div class="footer-social">
+        <a href="https://wa.me/5519993111599" class="social-btn" target="_blank" title="WhatsApp">💬</a>
+        <a href="#" class="social-btn" title="Instagram">📸</a>
+        <a href="#" class="social-btn" title="Facebook">👍</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-col-title">Links</div>
+      <ul class="footer-links">
+        <li><a href="#">Início</a></li>
+        <li><a href="#marcas">Marcas</a></li>
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="catalogo.html">Catálogo</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Marcas</div>
+      <ul class="footer-links">
+        <li><a href="catalogo.html?marca=Acostamento">Acostamento</a></li>
+        <li><a href="catalogo.html?marca=TXC">TXC</a></li>
+        <li><a href="catalogo.html?marca=Freeway">Freeway</a></li>
+        <li><a href="catalogo.html?marca=Ogochi">Ogochi</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Contato</div>
+      <ul class="footer-links">
+        <li><a href="https://wa.me/5519993111599">(19) 99311-1599</a></li>
+        <li><a href="#">Av. 9 de Julho, 530</a></li>
+        <li><a href="#">Centro - SJRP/SP</a></li>
+        <li><a href="#">Seg-Sex: 9h-18h</a></li>
+        <li><a href="#">Sáb: 9h-13h</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2024 R Street Moda Masculina. Todos os direitos reservados.</div>
+    <div class="footer-rating">
+      <span class="rating-stars">★★★★★</span>
+      <span>5,0 no Google (7 avaliações)</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const cursorRing = document.getElementById('cursorRing');
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+  document.addEventListener('mousemove', e => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    cursor.style.left = mouseX - 6 + 'px';
+    cursor.style.top = mouseY - 6 + 'px';
+  });
+
+  function animateRing() {
+    ringX += (mouseX - ringX) * 0.15;
+    ringY += (mouseY - ringY) * 0.15;
+    cursorRing.style.left = ringX - 20 + 'px';
+    cursorRing.style.top = ringY - 20 + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a, button, .brand-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.transform = 'scale(2)';
+      cursorRing.style.transform = 'scale(1.5)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.transform = 'scale(1)';
+      cursorRing.style.transform = 'scale(1)';
+    });
+  });
+
+  // Navbar
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Hero bg
+  setTimeout(() => {
+    document.getElementById('heroBg').classList.add('loaded');
+  }, 100);
+
+  // Scroll animations
+  const reveals = document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Scroll to next
+  function scrollToNext() {
+    window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+  }
+
+  // Brand filter
+  function filterBrand(brand) {
+    window.location.href = 'catalogo.html?marca=' + encodeURIComponent(brand);
+  }
+
+  // Counter animation
+  function animateCounter(el, target, suffix='') {
+    let current = 0;
+    const step = target / 60;
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = (Number.isInteger(target) ? Math.round(current) : current.toFixed(1)) + suffix;
+      if (current >= target) clearInterval(timer);
+    }, 16);
+  }
+
+  const counterObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.exp-num').forEach(el => {
+          const text = el.textContent;
+          const num = parseFloat(text);
+          const suffix = text.replace(/[\d.]/g, '');
+          animateCounter(el, num, suffix);
+        });
+        counterObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll('.experience-strip').forEach(el => counterObserver.observe(el));
+</script>
+</body>
+</html>
