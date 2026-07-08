@@ -509,7 +509,8 @@ function validate() {
     }
   }
   if (!freteLabel) {
-    showAlert('Coloque seu CEP e clique em buscar.', 'error');
+    const freteAberto = document.getElementById('freteOptions').classList.contains('show');
+    showAlert(freteAberto ? 'Selecione uma forma de entrega.' : 'Coloque seu CEP e clique em buscar.', 'error');
     return false;
   }
   return true;
