@@ -240,6 +240,26 @@ async function init() {
   finish();
 }
 
+async function refreshProduct() {
+  if (!SUPABASE_URL || !SUPABASE_KEY || !productId) return;
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&id=eq.${productId}`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      }),
+      fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&ativo=eq.true&order=criado_em.desc&limit=20`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      })
+    ]);
+    if (!r1.ok) return;
+    const arr = await r1.json();
+    product = arr[0] || null;
+    if (r2.ok) allProducts = await r2.json();
+    syncCartWithStock();
+    finish();
+  } catch {}
+}
+
 function finish() {
   if (!product) {
     document.getElementById('mainContent').innerHTML = `
@@ -320,8 +340,9 @@ function renderProduct() {
 
         <div class="product-actions">
           <button class="btn-wpp" onclick="adicionarCarrinho()" id="btnCarrinho"
-            style="background:var(--gold);color:var(--black);border:none;font-size:15px;font-weight:700;letter-spacing:1px;padding:16px 28px;border-radius:3px;cursor:pointer;transition:all 0.25s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;width:100%">
-            <span style="font-size:20px">🛒</span> Adicionar ao Carrinho
+            ${p.estoque <= 0 ? 'disabled' : ''}
+            style="background:var(--gold);color:var(--black);border:none;font-size:15px;font-weight:700;letter-spacing:1px;padding:16px 28px;border-radius:3px;cursor:${p.estoque <= 0 ? 'not-allowed' : 'pointer'};transition:all 0.25s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;${p.estoque <= 0 ? 'opacity:0.45;' : ''}">
+            <span style="font-size:20px">🛒</span> ${p.estoque <= 0 ? 'Produto esgotado' : 'Adicionar ao Carrinho'}
           </button>
           <a id="wppBtn" href="${buildWppLink()}" target="_blank" class="btn-wpp">
             <span style="font-size:20px">💬</span> Pedir pelo WhatsApp
@@ -392,10 +413,18 @@ function renderRelated() {
 
 function adicionarCarrinho() {
   if (!product) return;
+  if (product.estoque <= 0) {
+    toast('Produto esgotado.');
+    return;
+  }
   const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
   const imgs = Array.isArray(product.imagens) && product.imagens.length ? product.imagens : product.imagem_url ? [product.imagem_url] : [];
   const existing = cart.find(i => i.id === product.id && i.tamanho === (selectedSize || ''));
   if (existing) {
+    if (existing.qty >= product.estoque) {
+      toast(`Temos apenas ${product.estoque} unidade(s) disponível(is).`);
+      return;
+    }
     existing.qty += 1;
   } else {
     cart.push({
@@ -407,6 +436,7 @@ function adicionarCarrinho() {
       referencia: product.referencia || '',
       imagem: imgs[0] || '',
       qty: 1,
+      estoque: product.estoque,
     });
   }
   localStorage.setItem('rstreet_cart', JSON.stringify(cart));
@@ -420,6 +450,22 @@ function adicionarCarrinho() {
     }, 2000);
   }
   toast('✅ Produto adicionado ao carrinho!');
+}
+
+function syncCartWithStock() {
+  const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  let changed = false;
+  const next = cart.map(item => {
+    const productRow = allProducts.find(p => p.id === item.id) || (product && product.id === item.id ? product : null);
+    if (!productRow) return item;
+    const estoque = Math.max(0, Number(productRow.estoque) || 0);
+    const qty = Math.min(item.qty, estoque);
+    if (qty !== item.qty || item.estoque !== estoque) changed = true;
+    return { ...item, qty, estoque };
+  }).filter(item => item.qty > 0);
+  if (changed || next.length !== cart.length) {
+    localStorage.setItem('rstreet_cart', JSON.stringify(next));
+  }
 }
 
 function fmt(v) { return Number(v).toFixed(2).replace('.',','); }
@@ -452,6 +498,10 @@ function getDemoProducts() {
 }
 
 init();
+window.addEventListener('storage', e => {
+  if (e.key === 'rstreet_products_changed') refreshProduct();
+});
+setInterval(refreshProduct, 15000);
 </script>
 </body>
 </html>

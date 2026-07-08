@@ -867,6 +867,51 @@ function notifyCatalogChanged() {
   localStorage.setItem('rstreet_products_changed', String(Date.now()));
 }
 
+const PEDIDOS_VISTOS_KEY = 'rstreet_pedidos_vistos';
+
+function getPedidosVistos() {
+  return JSON.parse(localStorage.getItem(PEDIDOS_VISTOS_KEY) || '[]');
+}
+
+function setPedidoVisto(id) {
+  const vistos = new Set(getPedidosVistos().map(String));
+  vistos.add(String(id));
+  localStorage.setItem(PEDIDOS_VISTOS_KEY, JSON.stringify([...vistos]));
+}
+
+function isPedidoVisto(pedido) {
+  return getPedidosVistos().includes(String(pedido.id));
+}
+
+function isPedidoPago(pedido) {
+  return ['pago', 'approved'].includes(String(pedido.status || '').toLowerCase());
+}
+
+async function uploadProductPhotos() {
+  if (!uploadedPhotos.length) {
+    const url = document.getElementById('f-imagem').value.trim();
+    return url ? [url] : [];
+  }
+
+  const urls = [];
+  for (const photo of uploadedPhotos) {
+    if (!photo.dataUrl || !photo.dataUrl.startsWith('data:')) {
+      urls.push(photo.dataUrl || photo.url);
+      continue;
+    }
+
+    const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dataUrl: photo.dataUrl, name: photo.name || 'produto.jpg' })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    urls.push(data.url);
+  }
+  return urls;
+}
+
 async function supabaseProductRequest(path, opts = {}) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     ...opts,
@@ -1086,29 +1131,30 @@ async function saveProduct() {
     preco_antigo: parseFloat(document.getElementById('f-preco-antigo').value) || null,
     estoque: parseInt(document.getElementById('f-estoque').value) || 0,
     referencia: document.getElementById('f-ref').value.trim() || null,
-    imagem_url: uploadedPhotos.length
-      ? uploadedPhotos[0].dataUrl
-      : (document.getElementById('f-imagem').value.trim() || null),
-    imagens: uploadedPhotos.length
-      ? uploadedPhotos.map(p => p.dataUrl)
-      : (document.getElementById('f-imagem').value.trim() ? [document.getElementById('f-imagem').value.trim()] : []),
+    imagem_url: null,
+    imagens: [],
     descricao: document.getElementById('f-desc').value.trim() || null,
     tamanhos: currentSizes,
     ativo: document.getElementById('f-ativo-toggle').classList.contains('on')
   };
 
   try {
+    const imageUrls = await uploadProductPhotos();
+    payload.imagem_url = imageUrls[0] || null;
+    payload.imagens = imageUrls;
+
     if (editingId) {
-      await sbFetch(`/produtos?id=eq.${editingId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+      await saveProductRemote(payload, editingId);
       const idx = allProducts.findIndex(p => p.id === editingId);
       if (idx >= 0) allProducts[idx] = { ...allProducts[idx], ...payload };
       toast('Produto atualizado!', 'success');
     } else {
-      const res = await sbFetch('/produtos', { method: 'POST', body: JSON.stringify(payload) });
+      const res = await saveProductRemote(payload);
       const created = Array.isArray(res) ? res[0] : res;
       allProducts.unshift(created || { ...payload, id: Date.now() });
       toast('Produto criado!', 'success');
     }
+    notifyCatalogChanged();
   } catch {
     // fallback local
     if (editingId) {
@@ -1133,6 +1179,7 @@ async function deleteProduct(id) {
     await sbFetch(`/produtos?id=eq.${id}`, { method: 'DELETE' });
   } catch {}
   allProducts = allProducts.filter(p => p.id !== id);
+  notifyCatalogChanged();
   updateStats(); renderRecentTable(); renderAdminTable();
   toast('Produto excluído.', 'success');
 }
@@ -1145,6 +1192,7 @@ async function toggleProductStatus(id) {
     await sbFetch(`/produtos?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ ativo: newStatus }) });
   } catch {}
   p.ativo = newStatus;
+  notifyCatalogChanged();
   updateStats(); renderAdminTable();
   toast(`Produto ${newStatus ? 'ativado' : 'desativado'}.`, 'success');
 }
@@ -1263,6 +1311,7 @@ async function confirmImport() {
   importRows = [];
 
   updateStats(); renderRecentTable(); renderAdminTable();
+  notifyCatalogChanged();
   toast(`Importação concluída: ${success} novos, ${updated} atualizados${errors ? `, ${errors} offline` : ''}.`, 'success');
 }
 
@@ -1374,9 +1423,6 @@ function showTab(name) {
     // Só carrega se ainda não carregou
     if (!allPedidos.length) loadPedidos();
     else renderPedidosTable();
-    // Zera badge ao entrar
-    const badge = document.getElementById('badge-pedidos');
-    if (badge) badge.style.display = 'none';
   }
 }
 
@@ -1401,12 +1447,13 @@ function updatePedidosStats() {
   const pagos     = allPedidos.filter(p => p.status === 'pago').length;
   const pendentes = allPedidos.filter(p => p.status === 'pendente' || p.status === 'em_analise').length;
   const recusados = allPedidos.filter(p => p.status === 'recusado' || p.status === 'cancelado').length;
+  const naoVistos = allPedidos.filter(p => !isPedidoVisto(p)).length;
   document.getElementById('ped-total').textContent     = allPedidos.length;
   document.getElementById('ped-pagos').textContent     = pagos;
   document.getElementById('ped-pendentes').textContent = pendentes;
   document.getElementById('ped-recusados').textContent = recusados;
   const badge = document.getElementById('badge-pedidos');
-  if (pendentes > 0) { badge.textContent = pendentes; badge.style.display = 'inline'; }
+  if (naoVistos > 0) { badge.textContent = naoVistos; badge.style.display = 'inline'; }
   else badge.style.display = 'none';
 }
 
@@ -1417,6 +1464,13 @@ function renderPedidosTable() {
     if (search && !p.cliente_nome?.toLowerCase().includes(search) && !p.cliente_email?.toLowerCase().includes(search)) return false;
     if (status && p.status !== status) return false;
     return true;
+  });
+  lista.sort((a, b) => {
+    const pagoDiff = Number(isPedidoPago(b)) - Number(isPedidoPago(a));
+    if (pagoDiff) return pagoDiff;
+    const vistoDiff = Number(isPedidoVisto(a)) - Number(isPedidoVisto(b));
+    if (vistoDiff) return vistoDiff;
+    return new Date(b.criado_em || 0) - new Date(a.criado_em || 0);
   });
   const STATUS_LABEL = {
     pago:       '<span class="badge badge-active">✅ Pago</span>',
@@ -1431,8 +1485,8 @@ function renderPedidosTable() {
     return;
   }
   document.getElementById('pedidosTableBody').innerHTML = lista.map(p => `
-    <tr>
-      <td style="font-weight:600;color:var(--gold)">#${p.id}</td>
+    <tr class="${isPedidoVisto(p) ? 'pedido-viewed' : 'pedido-unseen'} ${isPedidoPago(p) ? 'pedido-paid' : ''}">
+      <td style="font-weight:600;color:var(--gold)"><span class="pedido-seen-dot"></span>#${p.id}</td>
       <td class="td-name">${p.cliente_nome}<small>${p.cliente_email}</small></td>
       <td style="font-size:12px;color:var(--gray1)">${p.frete_tipo || '—'}</td>
       <td class="price-cell">R$ ${Number(p.total).toFixed(2).replace('.',',')}</td>
@@ -1450,11 +1504,12 @@ function renderPedidosTable() {
 async function verPedido(id) {
   const p = allPedidos.find(x => x.id === id);
   if (!p) return;
+  setPedidoVisto(id);
+  updatePedidosStats();
+  renderPedidosTable();
   let itens = [];
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/itens_pedido?pedido_id=eq.${id}&select=*`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
-    });
+    const res = await fetch(`${BACKEND_BASE}/admin/pedidos/${id}/itens`);
     if (res.ok) itens = await res.json();
   } catch {}
   document.getElementById('pedModalTitle').textContent = `Pedido #${p.id}`;
@@ -1614,11 +1669,14 @@ async function verificarPedidosNovos() {
     if (ultimoPedidoId > 0 && maisRecente > ultimoPedidoId) {
       const novos = pedidos.filter(p => p.id > ultimoPedidoId);
       novos.forEach(p => {
-        allPedidos.unshift(p);
+        if (!allPedidos.some(existing => existing.id === p.id)) allPedidos.unshift(p);
         toastPedido(`🛒 Novo pedido de ${p.cliente_nome}! R$ ${Number(p.total).toFixed(2).replace('.',',')}`, p.id);
       });
       updatePedidosStats();
       renderPedidosTable();
+    } else if (!allPedidos.length) {
+      allPedidos = pedidos;
+      updatePedidosStats();
     }
 
     ultimoPedidoId = maisRecente;

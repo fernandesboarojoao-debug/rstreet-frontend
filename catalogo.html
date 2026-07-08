@@ -703,7 +703,7 @@ const PER_PAGE = 12;
 // ─────────────────────────────────────────────
 // CARREGAR DO SUPABASE
 // ─────────────────────────────────────────────
-async function loadProducts() {
+async function loadProducts(silent = false) {
   // Se não tem credenciais salvas, cai nos dados de exemplo
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.info('Supabase não configurado — abrindo admin.html para configurar.');
@@ -725,6 +725,7 @@ async function loadProducts() {
     });
     if (!res.ok) throw new Error('Erro ' + res.status);
     allProducts = await res.json();
+    syncCartWithStock();
   } catch (err) {
     console.warn('Falha ao buscar do Supabase, usando dados de exemplo:', err.message);
     allProducts = getDemoProducts();
@@ -733,7 +734,11 @@ async function loadProducts() {
   updateMaxPrice();
   updateCategoryCounts();
   applyFilters();
-  checkURLParams();
+  if (!silent) checkURLParams();
+}
+
+async function refreshProducts() {
+  await loadProducts(true);
 }
 
 // ─────────────────────────────────────────────
@@ -901,7 +906,7 @@ function renderCard(p) {
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-          <button class="btn-cart" onclick="event.stopPropagation(); addToCart(${p.id})" id="cart-btn-${p.id}">🛒 Carrinho</button>
+          <button class="btn-cart" onclick="event.stopPropagation(); addToCart(${p.id})" id="cart-btn-${p.id}" ${p.estoque <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${p.estoque <= 0 ? 'Esgotado' : '🛒 Carrinho'}</button>
           <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
         </div>
       </div>
@@ -915,16 +920,24 @@ function renderCard(p) {
 function addToCart(id) {
   const p = allProducts.find(x => x.id === id);
   if (!p) return;
+  if (p.estoque <= 0) {
+    alert('Produto esgotado.');
+    return;
+  }
   const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
   const imgs = Array.isArray(p.imagens) && p.imagens.length ? p.imagens : p.imagem_url ? [p.imagem_url] : [];
   const existing = cart.find(i => i.id === p.id);
   if (existing) {
+    if (existing.qty >= p.estoque) {
+      alert(`Temos apenas ${p.estoque} unidade(s) disponível(is).`);
+      return;
+    }
     existing.qty += 1;
   } else {
     cart.push({
       id: p.id, nome: p.nome, marca: p.marca,
       preco: p.preco, tamanho: '', referencia: p.referencia || '',
-      imagem: imgs[0] || '', qty: 1,
+      imagem: imgs[0] || '', qty: 1, estoque: p.estoque,
     });
   }
   localStorage.setItem('rstreet_cart', JSON.stringify(cart));
@@ -939,6 +952,23 @@ function addToCart(id) {
       btn.textContent = '🛒 Carrinho';
       btn.classList.remove('added');
     }, 2000);
+  }
+}
+
+function syncCartWithStock() {
+  const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  let changed = false;
+  const next = cart.map(item => {
+    const product = allProducts.find(p => p.id === item.id);
+    if (!product) return item;
+    const estoque = Math.max(0, Number(product.estoque) || 0);
+    const qty = Math.min(item.qty, estoque);
+    if (qty !== item.qty || item.estoque !== estoque) changed = true;
+    return { ...item, qty, estoque };
+  }).filter(item => item.qty > 0);
+  if (changed || next.length !== cart.length) {
+    localStorage.setItem('rstreet_cart', JSON.stringify(next));
+    updateCartNav();
   }
 }
 
@@ -1052,6 +1082,10 @@ function updateCartNav() {
 }
 updateCartNav();
 loadProducts();
+window.addEventListener('storage', e => {
+  if (e.key === 'rstreet_products_changed') refreshProducts();
+});
+setInterval(refreshProducts, 15000);
 </script>
 </body>
 </html>

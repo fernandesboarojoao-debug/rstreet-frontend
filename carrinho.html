@@ -256,6 +256,10 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
+const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4dHRxdm1ycGZ3eHNncnBhbmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NDQ2ODMsImV4cCI6MjA5ODEyMDY4M30.rIkhwOxmJSwFADpqHsp_9Y6FWeIixOLMNK0IByYNnng';
+let latestProducts = [];
+
 // ─── CARRINHO UTILS ─────────────────────────────────
 function getCart() {
   return JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
@@ -273,6 +277,36 @@ function updateCartBadge() {
   });
 }
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+
+async function loadLatestProducts() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!res.ok) return;
+    latestProducts = await res.json();
+    syncCartWithStock();
+  } catch {}
+}
+
+function syncCartWithStock() {
+  const cart = getCart();
+  if (!latestProducts.length || !cart.length) return;
+  let changed = false;
+  const next = cart.map(item => {
+    const product = latestProducts.find(p => p.id === item.id);
+    if (!product) return item;
+    const estoque = product.ativo === false ? 0 : Math.max(0, Number(product.estoque) || 0);
+    const qty = Math.min(item.qty, estoque);
+    if (qty !== item.qty || item.estoque !== estoque) changed = true;
+    return { ...item, qty, estoque };
+  }).filter(item => item.qty > 0);
+  if (changed || next.length !== cart.length) {
+    saveCart(next);
+    toast('Carrinho atualizado conforme o estoque atual.');
+    render();
+  }
+}
 
 // ─── RENDER ─────────────────────────────────────────
 function render() {
@@ -342,6 +376,11 @@ function updateTotals(cart) {
 // ─── AÇÕES ──────────────────────────────────────────
 function changeQty(idx, delta) {
   const cart = getCart();
+  const max = cart[idx].estoque === undefined ? 99 : Number(cart[idx].estoque);
+  if (delta > 0 && cart[idx].qty >= max) {
+    toast(`Temos apenas ${max} unidade(s) disponível(is).`);
+    return;
+  }
   cart[idx].qty = Math.max(1, cart[idx].qty + delta);
   saveCart(cart);
   render();
@@ -349,7 +388,8 @@ function changeQty(idx, delta) {
 
 function setQty(idx, val) {
   const cart = getCart();
-  cart[idx].qty = Math.max(1, parseInt(val) || 1);
+  const max = cart[idx].estoque === undefined ? 99 : Number(cart[idx].estoque);
+  cart[idx].qty = Math.min(max, Math.max(1, parseInt(val) || 1));
   saveCart(cart);
   render();
 }
@@ -383,6 +423,11 @@ function toast(msg) {
 
 // ─── INIT ────────────────────────────────────────────
 render();
+loadLatestProducts();
+window.addEventListener('storage', e => {
+  if (e.key === 'rstreet_products_changed') loadLatestProducts();
+});
+setInterval(loadLatestProducts, 15000);
 </script>
 </body>
 </html>
