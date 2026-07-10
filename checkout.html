@@ -191,8 +191,8 @@
 <body>
 
 <nav>
-  <a href="index.html" class="nav-logo">R<span>.</span>Street</a>
-  <a href="carrinho.html" style="color:var(--gray-400);text-decoration:none;font-size:13px;border:1px solid rgba(255,255,255,0.12);padding:8px 18px;border-radius:2px">← Voltar ao Carrinho</a>
+  <a class='nav-logo' href='/'>R<span>.</span>Street</a>
+  <a href='/carrinho' style='color:var(--gray-400);text-decoration:none;font-size:13px;border:1px solid rgba(255,255,255,0.12);padding:8px 18px;border-radius:2px'>← Voltar ao Carrinho</a>
 </nav>
 
 <!-- STEPS -->
@@ -400,6 +400,22 @@ let freteVal = 0;
 let freteLabel = '';
 let paymentMethod = 'credit_card';
 
+const FRETE_REGRAS = {
+  local: [
+    { nome: 'Retirada na Loja', valor: 0, prazo: 'Av. 9 de Julho, 530', icon: '🏪' },
+    { nome: 'Entrega local', valor: 8.00, prazo: '1 dia útil', icon: '📦' },
+  ],
+  sp: [
+    { nome: 'Entrega SP', valor: 18.00, prazo: '3 a 6 dias úteis', icon: '📦' },
+  ],
+  regional: [
+    { nome: 'Entrega regional', valor: 28.00, prazo: '5 a 9 dias úteis', icon: '📦' },
+  ],
+  nacional: [
+    { nome: 'Entrega nacional', valor: 38.00, prazo: '7 a 12 dias úteis', icon: '📦' },
+  ],
+};
+
 // ─── CART ───────────────────────────────────
 function getCart() { return JSON.parse(localStorage.getItem('rstreet_cart') || '[]'); }
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
@@ -430,7 +446,7 @@ function updateTotals() {
   const subtotal = cart.reduce((s,i) => s + i.preco * i.qty, 0);
   const total = subtotal + freteVal;
   document.getElementById('osSubtotal').textContent = fmt(subtotal);
-  document.getElementById('osFrete').textContent = freteVal > 0 ? fmt(freteVal) : freteLabel || '—';
+  document.getElementById('osFrete').textContent = freteLabel ? (freteVal > 0 ? fmt(freteVal) : 'Grátis') : '—';
   document.getElementById('osTotal').textContent = fmt(total);
 }
 
@@ -439,13 +455,56 @@ function selectFrete(el, valor, label) {
   document.querySelectorAll('.frete-option').forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
   freteVal = valor;
-  freteLabel = valor === 0 ? 'Grátis' : fmt(valor);
+  freteLabel = label;
   updateTotals();
+}
+
+function resetFrete() {
+  freteVal = 0;
+  freteLabel = '';
+  document.getElementById('freteOptions').classList.remove('show');
+  document.getElementById('freteOptions').innerHTML = '';
+  updateTotals();
+}
+
+function normalizarTexto(txt) {
+  return String(txt || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function calcularFretesPorEndereco(cidade, estado) {
+  const cidadeNorm = normalizarTexto(cidade);
+  const uf = String(estado || '').toUpperCase();
+
+  if (uf === 'SP' && cidadeNorm === 'sao jose do rio pardo') return FRETE_REGRAS.local;
+  if (uf === 'SP') return FRETE_REGRAS.sp;
+  if (['MG', 'RJ', 'PR'].includes(uf)) return FRETE_REGRAS.regional;
+  return FRETE_REGRAS.nacional;
+}
+
+function renderFreteOptions(opcoes) {
+  document.getElementById('freteOptions').innerHTML = opcoes.map((op, i) => `
+    <label class="frete-option" onclick="selectFrete(this, ${op.valor.toFixed(2)}, '${op.nome.replace(/'/g, "\\'")}')">
+      <input type="radio" name="frete" value="${op.valor.toFixed(2)}">
+      <div class="frete-option-label">
+        <span>${op.icon}</span>
+        <div>
+          <div>${op.nome}</div>
+          <div class="frete-option-days">${op.prazo}</div>
+        </div>
+      </div>
+      <div class="frete-option-price"${op.valor === 0 ? ' style="color:var(--green)"' : ''}>${op.valor === 0 ? 'Grátis' : fmt(op.valor)}</div>
+    </label>
+  `).join('');
 }
 
 async function buscarCEP() {
   const cep = document.getElementById('f-cep').value.replace(/\D/g,'');
   if (cep.length !== 8) return showAlert('Digite um CEP válido.', 'error');
+  resetFrete();
   try {
     const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
     const d = await res.json();
@@ -455,9 +514,11 @@ async function buscarCEP() {
     document.getElementById('f-cidade').value = d.localidade || '';
     document.getElementById('f-estado').value = d.uf || '';
     document.getElementById('f-numero').focus();
+    renderFreteOptions(calcularFretesPorEndereco(d.localidade, d.uf));
     document.getElementById('freteOptions').classList.add('show');
   } catch {
     showAlert('Erro ao buscar CEP. Preencha o endereço manualmente.', 'error');
+    renderFreteOptions(FRETE_REGRAS.nacional);
     document.getElementById('freteOptions').classList.add('show');
   }
 }
@@ -487,6 +548,7 @@ function maskCEP(el) {
   let v = el.value.replace(/\D/g,'').slice(0,8);
   if (v.length > 5) v = `${v.slice(0,5)}-${v.slice(5)}`;
   el.value = v;
+  resetFrete();
 }
 
 // ─── VALIDAÇÃO ──────────────────────────────
