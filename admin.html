@@ -728,6 +728,18 @@ let SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
 let SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4dHRxdm1ycGZ3eHNncnBhbmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NDQ2ODMsImV4cCI6MjA5ODEyMDY4M30.rIkhwOxmJSwFADpqHsp_9Y6FWeIixOLMNK0IByYNnng'; // anon key - segura de expor
 const CREDENCIAIS = { url: SUPABASE_URL, key: SUPABASE_KEY };
 
+function getAdminToken() {
+  return sessionStorage.getItem('rstreet_admin_token') || '';
+}
+
+function authHeaders(extra = {}) {
+  const token = getAdminToken();
+  return {
+    ...extra,
+    ...(token ? { Authorization: 'Bearer ' + token } : {})
+  };
+}
+
 async function fazerLogin() {
   const senha = document.getElementById('loginInput').value;
   const erro  = document.getElementById('loginError');
@@ -748,8 +760,11 @@ async function fazerLogin() {
     });
 
     if (res.ok) {
+      const data = await res.json();
+      if (!data.token) throw new Error('Token ausente');
       const expira = Date.now() + 8 * 60 * 60 * 1000;
       sessionStorage.setItem('rstreet_auth', expira);
+      sessionStorage.setItem('rstreet_admin_token', data.token);
       document.getElementById('loginScreen').style.display = 'none';
       loadProducts();
     } else {
@@ -770,9 +785,12 @@ async function fazerLogin() {
 
 function verificarLogin() {
   const expira = parseInt(sessionStorage.getItem('rstreet_auth') || '0');
-  if (Date.now() < expira) {
+  if (Date.now() < expira && getAdminToken()) {
     document.getElementById('loginScreen').style.display = 'none';
     loadProducts();
+  } else {
+    sessionStorage.removeItem('rstreet_auth');
+    sessionStorage.removeItem('rstreet_admin_token');
   }
 }
 
@@ -853,7 +871,7 @@ async function sbFetch(path, opts = {}) {
 
   const res = await fetch(url, {
     ...opts,
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) }
+    headers: authHeaders({ 'Content-Type': 'application/json', ...(opts.headers || {}) })
   });
   if (!res.ok) {
     const err = await res.text();
@@ -902,7 +920,7 @@ async function uploadProductPhotos() {
 
     const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ dataUrl: photo.dataUrl, name: photo.name || 'produto.jpg' })
     });
     if (!res.ok) throw new Error(await res.text());
@@ -1509,7 +1527,9 @@ async function verPedido(id) {
   renderPedidosTable();
   let itens = [];
   try {
-    const res = await fetch(`${BACKEND_BASE}/admin/pedidos/${id}/itens`);
+    const res = await fetch(`${BACKEND_BASE}/admin/pedidos/${id}/itens`, {
+      headers: authHeaders({ 'Content-Type': 'application/json' })
+    });
     if (res.ok) itens = await res.json();
   } catch {}
   document.getElementById('pedModalTitle').textContent = `Pedido #${p.id}`;
@@ -1671,7 +1691,7 @@ let ultimoPedidoId = 0;
 async function verificarPedidosNovos() {
   try {
     const res = await fetch(`${BACKEND_BASE}/admin/pedidos`, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: authHeaders({ 'Content-Type': 'application/json' })
     });
     if (!res.ok) return;
     const pedidos = await res.json();

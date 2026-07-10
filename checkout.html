@@ -613,6 +613,7 @@ async function finalizarCompra() {
       nome: i.nome,
       quantidade: i.qty,
       preco_unitario: i.preco,
+      tamanho: i.tamanho || null,
     })),
     frete: { valor: freteVal, tipo: freteLabel },
     total,
