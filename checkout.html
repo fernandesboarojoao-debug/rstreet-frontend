@@ -13,6 +13,7 @@
     --border:rgba(255,255,255,0.07); --green:#4caf50; --red:#e63946;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { max-width:100%; overflow-x:hidden; }
   body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; min-height:100vh; }
 
   nav {
@@ -186,13 +187,34 @@
     .payment-methods { grid-template-columns:1fr 1fr 1fr; }
     footer { padding:24px 20px; }
   }
+
+  @media(max-width:560px){
+    nav { padding:14px 18px; gap:12px; }
+    .nav-logo { font-size:24px; letter-spacing:4px; flex-shrink:0; }
+    nav > a:last-child { display:none; }
+    .steps-bar { padding:12px 18px; }
+    .step-item { padding:0 8px; }
+    .step-sep { width:28px; }
+    .checkout-layout { padding:22px 18px 52px; gap:24px; }
+    .form-card, .order-summary { padding:22px; }
+    .form-card-title { font-size:24px; line-height:1.1; align-items:flex-start; }
+    input, select, .btn-calcular { min-height:44px; font-size:15px; }
+    .frete-calc { flex-direction:column; align-items:stretch; }
+    .payment-methods { grid-template-columns:1fr; }
+    .pay-method { min-height:68px; display:flex; align-items:center; justify-content:center; gap:12px; }
+    .pay-method-icon { margin-bottom:0; }
+    .frete-option { gap:14px; align-items:flex-start; }
+    .frete-option-price { flex-shrink:0; }
+    .btn-finalizar { min-height:50px; }
+    .footer-copy { line-height:1.6; }
+  }
 </style>
 </head>
 <body>
 
 <nav>
-  <a class='nav-logo' href='/'>R<span>.</span>Street</a>
-  <a href='/carrinho' style='color:var(--gray-400);text-decoration:none;font-size:13px;border:1px solid rgba(255,255,255,0.12);padding:8px 18px;border-radius:2px'>← Voltar ao Carrinho</a>
+  <a class='nav-logo' href='index.html'>R<span>.</span>Street</a>
+  <a href='carrinho.html' style='color:var(--gray-400);text-decoration:none;font-size:13px;border:1px solid rgba(255,255,255,0.12);padding:8px 18px;border-radius:2px'>← Voltar ao Carrinho</a>
 </nav>
 
 <!-- STEPS -->

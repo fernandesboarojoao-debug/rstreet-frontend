@@ -13,6 +13,7 @@
     --border:rgba(255,255,255,0.07); --green:#4caf50; --red:#e63946;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { max-width:100%; overflow-x:hidden; }
   body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; min-height:100vh; }
 
   nav {
@@ -186,6 +187,31 @@
     .cart-item { grid-template-columns:80px 1fr; }
     .item-controls { grid-column:1/-1; flex-direction:row; justify-content:space-between; align-items:center; }
     footer { padding:24px 20px; }
+  }
+
+  @media(max-width:560px){
+    nav { padding:14px 18px; gap:12px; }
+    .nav-logo { font-size:24px; letter-spacing:4px; flex-shrink:0; }
+    nav > a:last-child { display:none; }
+    .page-header { padding:34px 20px 28px; }
+    .page-header::before { font-size:120px; right:-70px; letter-spacing:12px; }
+    .page-title { font-size:46px; }
+    .cart-layout { padding:24px 20px 52px; }
+    .cart-empty { padding:72px 0 56px; gap:16px; }
+    .empty-icon { font-size:58px; }
+    .empty-title { font-size:36px; line-height:1; }
+    .empty-sub { max-width:280px; line-height:1.6; }
+    .btn-gold, .btn-checkout { min-height:44px; justify-content:center; }
+    .cart-summary { padding:24px; }
+    .summary-row { align-items:flex-start; flex-direction:column; gap:4px; }
+    .summary-total { gap:12px; flex-wrap:wrap; }
+    .summary-val { min-width:0; max-width:100%; text-align:left; overflow-wrap:anywhere; }
+    .total-val { min-width:0; max-width:58%; text-align:right; overflow-wrap:anywhere; }
+    .summary-shipping { overflow-wrap:anywhere; }
+    .cart-item { grid-template-columns:72px 1fr; gap:14px; }
+    .item-img { width:72px; height:92px; }
+    .item-controls { gap:12px; }
+    .footer-copy { line-height:1.6; }
   }
 </style>
 </head>

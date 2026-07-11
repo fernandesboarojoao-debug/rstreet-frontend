@@ -13,6 +13,7 @@
     --border:rgba(255,255,255,0.07); --green:#4caf50; --red:#e63946;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { max-width:100%; overflow-x:hidden; }
   body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; min-height:100vh; }
 
   nav {
@@ -160,6 +161,24 @@
     .confirm-layout { grid-template-columns:1fr; padding:24px 20px 60px; }
     .totals-card { position:static; }
     footer { padding:24px 20px; }
+  }
+
+  @media(max-width:560px){
+    nav { padding:14px 18px; }
+    .nav-logo { font-size:24px; letter-spacing:4px; }
+    .status-header { padding:48px 18px 34px; }
+    .status-icon-wrap { width:78px; height:78px; }
+    .status-icon { font-size:38px; }
+    .status-title { font-size:44px; }
+    .status-sub { font-size:14px; }
+    .confirm-layout { padding:22px 18px 52px; gap:24px; }
+    .detail-card, .totals-card, .actions-card { padding:22px; }
+    .info-row { flex-direction:column; gap:4px; }
+    .info-val { text-align:left; overflow-wrap:anywhere; }
+    .order-item { align-items:flex-start; }
+    .order-item-price { white-space:nowrap; }
+    .btn-gold, .btn-outline, .btn-wpp { min-height:44px; line-height:1.25; }
+    .footer-copy { line-height:1.6; }
   }
 </style>
 </head>

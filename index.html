@@ -966,6 +966,7 @@
     color: var(--gray-400);
   }
   .rating-stars { color: var(--gold); }
+  .nav-mobile-catalog { display: none; }
 
   /* ── SCROLL ANIMATIONS ── */
   .reveal {
@@ -998,9 +999,30 @@
 
   /* ── MOBILE ── */
   @media (max-width: 900px) {
-    nav { padding: 20px 24px; }
+    nav { padding: 18px 20px; gap: 14px; }
     nav.scrolled { padding: 14px 24px; }
     .nav-links { display: none; }
+    .nav-mobile-catalog {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      left: min(245px, calc(100vw - 112px));
+      right: auto;
+      top: 18px;
+      width: 94px;
+      min-height: 42px;
+      padding: 10px 0;
+      border-radius: 2px;
+      background: var(--gold);
+      color: var(--black);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
     section { padding: 80px 24px; }
     .hero-content { padding: 0 24px; }
     .hero-stats { display: none; }
@@ -1024,6 +1046,25 @@
     .hero-buttons { flex-direction: column; }
     .btn-primary, .btn-secondary { width: 100%; justify-content: center; text-align: center; }
   }
+
+  @media (max-width: 520px) {
+    nav, nav.scrolled { padding-left: 18px; padding-right: 18px; }
+    .nav-logo { font-size: 24px; letter-spacing: 4px; }
+    .nav-mobile-catalog { top: 16px; }
+    .hero { min-height: 100svh; }
+    .hero-content { padding: 72px 20px 32px; width: 100%; }
+    .hero-eyebrow { gap: 10px; margin-bottom: 18px; }
+    .hero-eyebrow-line { width: 42px; }
+    .hero-eyebrow span { font-size: 10px; letter-spacing: 3px; }
+    .hero-title { font-size: 58px; letter-spacing: 0; }
+    .brands-grid,
+    .about-features,
+    .experience-strip,
+    .footer-grid { grid-template-columns: 1fr; }
+    .about-visual { height: 320px; }
+    .section-title { font-size: 46px; }
+    .footer-bottom { align-items: flex-start; }
+  }
 </style>
 </head>
 <body>
@@ -1034,6 +1075,7 @@
 <!-- NAV -->
 <nav id="navbar">
   <a href="#" class="nav-logo">R<span>.</span>Street</a>
+  <a href="catalogo.html" class="nav-mobile-catalog">Catálogo</a>
   <ul class="nav-links">
     <li><a href="#">Início</a></li>
     <li><a href="#marcas">Marcas</a></li>

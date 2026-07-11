@@ -14,6 +14,7 @@
     --border: rgba(255,255,255,0.07);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { max-width:100%; overflow-x:hidden; }
   body { background:var(--bg); color:var(--white); font-family:'Inter',sans-serif; display:flex; min-height:100vh; }
 
   /* SIDEBAR */
@@ -273,11 +274,48 @@
   .photo-thumb-main { position:absolute; bottom:4px; left:4px; background:var(--gold); color:var(--bg); font-size:9px; font-weight:700; padding:2px 5px; border-radius:2px; letter-spacing:1px; }
 
   @media(max-width:900px){
-    .sidebar{display:none}
+    body{display:block}
+    .sidebar{display:flex;width:100%;height:auto;position:sticky;top:0;z-index:80;border-right:none;border-bottom:1px solid var(--border)}
+    .sidebar-logo{padding:14px 20px 10px}
+    .logo-text{font-size:22px}
+    .logo-sub{display:none}
+    .sidebar-nav{padding:8px 12px 12px;flex-direction:row;gap:6px;overflow-x:auto}
+    .nav-section-title,.sidebar-bottom{display:none}
+    .nav-item{width:auto;flex:0 0 auto;min-height:40px;padding:9px 12px;white-space:nowrap}
+    .nav-item.active{border-left:none;border-bottom:2px solid var(--gold);padding-left:12px}
+    .main{min-width:0}
     .stats-row{grid-template-columns:1fr 1fr}
     .form-grid{grid-template-columns:1fr}
     .content{padding:20px}
-    .topbar{padding:14px 20px}
+    .topbar{padding:14px 20px;top:82px;gap:12px;align-items:flex-start}
+    .topbar-actions{flex-wrap:wrap;justify-content:flex-end}
+    .table-wrap{overflow-x:auto}
+    table{min-width:760px}
+    .search-bar{flex-wrap:wrap}
+    .search-bar input,.search-bar select{min-height:40px;flex:1 1 220px}
+    .modal-bg{padding:12px}
+    .modal-box{max-height:94vh}
+    .modal-header,.modal-body{padding-left:20px;padding-right:20px}
+    .modal-footer{padding:14px 20px;flex-wrap:wrap}
+    .modal-footer .btn{flex:1 1 140px;min-height:42px}
+    .login-screen{padding:20px}
+    .login-box{width:calc(100vw - 32px);max-width:330px;padding:36px 28px}
+  }
+
+  @media(max-width:560px){
+    .stats-row{grid-template-columns:1fr}
+    .content{padding:16px}
+    .topbar{top:78px;display:block}
+    .topbar-title{margin-bottom:10px}
+    .topbar-actions{justify-content:flex-start}
+    .btn{min-height:40px}
+    .section-header{align-items:flex-start}
+    .import-card,.instructions{padding:20px}
+    .drop-zone{padding:34px 18px}
+    .step{gap:12px}
+    .toast-wrap{left:16px;right:16px;bottom:16px}
+    .toast{max-width:none;width:100%}
+    .login-box{width:calc(100vw - 32px);max-width:330px;padding:32px 24px}
   }
 
   /* LOGIN */
