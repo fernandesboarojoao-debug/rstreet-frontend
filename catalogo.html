@@ -508,13 +508,28 @@
     .catalog-header-sub { font-size: 14px; line-height: 1.55; width: min(100%, 320px); overflow-wrap: break-word; }
     .toolbar { top: 55px; }
     .filter-mobile-btn { min-height: 40px; }
-    .catalog-main { width:100%; max-width:100%; overflow:hidden; padding-left:16px; padding-right:16px; }
-    .products-grid { grid-template-columns: minmax(0, 1fr); width:100%; max-width: 328px; margin: 0; }
+    .catalog-main { width:100%; max-width:100%; overflow:hidden; padding-left:12px; padding-right:12px; }
+    .products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); width:100%; max-width:none; margin: 0; gap:8px; }
     .product-card { min-width:0; width:100%; }
+    .product-card:hover { transform:none; }
+    .product-img-wrap { aspect-ratio:3/4; }
+    .product-img-placeholder { font-size:26px; gap:6px; }
+    .product-img-placeholder span { font-size:8px; letter-spacing:1px; }
+    .product-badge { top:6px; left:6px; font-size:7px; letter-spacing:1px; padding:3px 5px; }
+    .product-actions { display:none; }
+    .product-body { padding:8px 7px 9px; }
+    .product-brand { font-size:7px; letter-spacing:1px; margin-bottom:3px; }
+    .product-name { font-size:10px; line-height:1.25; min-height:25px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .product-ref { display:none; }
+    .product-sizes { display:none; }
     .product-name, .product-ref, .product-brand { overflow-wrap:anywhere; }
-    .product-footer { align-items: stretch; gap: 10px; flex-direction:column; }
+    .product-footer { align-items: stretch; gap:6px; flex-direction:column; }
     .product-footer > div { width:100%; }
-    .btn-cart, .btn-whatsapp { min-height: 40px; width:100%; text-align:center; }
+    .product-price-old { font-size:9px; margin-bottom:0; }
+    .product-price { font-size:19px; line-height:1; }
+    .product-stock { font-size:8px; display:block; margin-top:2px; }
+    .product-footer div[style*="display:flex"] { gap:4px !important; align-items:stretch !important; }
+    .btn-cart, .btn-whatsapp { min-height:28px; width:100%; text-align:center; padding:6px 4px; font-size:8px; letter-spacing:.4px; line-height:1.1; }
     .footer-links-sm { flex-wrap: wrap; }
   }
 </style>
