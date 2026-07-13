@@ -249,6 +249,14 @@
 .tag-remove:hover { opacity:1; }
   .tag-input-inner { background:none;border:none;color:var(--white);outline:none;font-size:13px;min-width:60px;font-family:'Inter',sans-serif; }
 
+  .variant-tools { display:grid;grid-template-columns:1fr 110px 90px auto;gap:8px;align-items:end; }
+  .variant-grid { display:flex;flex-direction:column;gap:8px;margin-top:10px; }
+  .variant-row { display:grid;grid-template-columns:1fr 90px 86px 82px 36px;gap:8px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:8px; }
+  .variant-name { font-size:13px;font-weight:600; }
+  .variant-muted { color:var(--gray1);font-size:12px; }
+  .variant-empty { color:var(--gray1);font-size:12px;padding:10px 0; }
+  .variant-row input { min-height:36px;padding:8px 10px; }
+
   /* PHOTO UPLOAD */
   .photo-upload-area {
     border:2px dashed var(--gray3); border-radius:4px;
@@ -301,6 +309,9 @@
     .modal-header,.modal-body{padding-left:20px;padding-right:20px}
     .modal-footer{padding:14px 20px;flex-wrap:wrap}
     .modal-footer .btn{flex:1 1 140px;min-height:42px}
+    .variant-tools{grid-template-columns:1fr 1fr}
+    .variant-tools .btn{grid-column:1/-1}
+    .variant-row{grid-template-columns:1fr 70px 80px 74px 36px}
     .login-screen{padding:20px}
     .login-box{width:calc(100vw - 32px);max-width:330px;padding:36px 28px}
   }
@@ -318,6 +329,8 @@
     .step{gap:12px}
     .toast-wrap{left:16px;right:16px;bottom:16px}
     .toast{max-width:none;width:100%}
+    .variant-row{grid-template-columns:1fr 64px 72px 36px}
+    .variant-row .variant-status{display:none}
     .login-box{width:calc(100vw - 32px);max-width:330px;padding:32px 24px}
   }
 
@@ -713,6 +726,17 @@
           <div class="form-hint">Pressione Enter ou vírgula para adicionar</div>
         </div>
         <div class="form-group full">
+          <label>Estoque por Cor + Tamanho</label>
+          <div class="variant-tools">
+            <input type="text" id="variantColorInput" placeholder="Cor">
+            <input type="text" id="variantSizeInput" placeholder="Tamanho">
+            <input type="number" id="variantStockInput" min="0" placeholder="Qtd">
+            <button class="btn btn-outline btn-sm" type="button" onclick="addVariantFromForm()">Adicionar</button>
+          </div>
+          <div class="variant-grid" id="variantGrid"></div>
+          <div class="form-hint">Use este controle para o estoque exato de cada cor com cada tamanho.</div>
+        </div>
+        <div class="form-group full">
           <label>URL da Imagem</label>
           <input type="url" id="f-imagem" placeholder="https://...">
         </div>
@@ -838,6 +862,7 @@ function verificarLogin() {
 let allProducts = [];
 let editingId = null;
 let currentSizes = [];
+let currentVariants = [];
 let importRows = [];
 
 // ─────────────────────────────────────────────────────
@@ -1005,6 +1030,143 @@ async function saveProductRemote(payload, id = null) {
 // ─────────────────────────────────────────────────────
 // CARREGAR PRODUTOS
 // ─────────────────────────────────────────────────────
+async function productVariantsRequest(productId, opts = {}) {
+  const res = await fetch(`${BACKEND_BASE}/produtos/${productId}/variantes`, {
+    ...opts,
+    headers: authHeaders({
+      'Content-Type': 'application/json',
+      ...(opts.headers || {})
+    })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[char]);
+}
+
+function normalizeVariant(item) {
+  return {
+    id: item.id || null,
+    cor: String(item.cor || '').trim(),
+    tamanho: String(item.tamanho || '').trim(),
+    estoque: Math.max(0, parseInt(item.estoque, 10) || 0),
+    ativo: item.ativo !== false
+  };
+}
+
+function getPreparedVariants() {
+  const variants = currentVariants
+    .map(normalizeVariant)
+    .filter(v => v.cor && v.tamanho);
+  const seen = new Set();
+  for (const variant of variants) {
+    const key = `${variant.cor.toLowerCase()}|${variant.tamanho.toUpperCase()}`;
+    if (seen.has(key)) {
+      throw new Error(`Combinacao duplicada: ${variant.cor} / ${variant.tamanho}`);
+    }
+    seen.add(key);
+  }
+  return variants;
+}
+
+function applyVariantsToProductPayload(payload, variants) {
+  if (!variants.length) return payload;
+  const activeVariants = variants.filter(v => v.ativo !== false);
+  payload.estoque = activeVariants.reduce((sum, v) => sum + (parseInt(v.estoque, 10) || 0), 0);
+  payload.tamanhos = [...new Set(activeVariants.map(v => v.tamanho).filter(Boolean))];
+  const estoqueEl = document.getElementById('f-estoque');
+  if (estoqueEl) estoqueEl.value = payload.estoque;
+  return payload;
+}
+
+async function loadProductVariantsIntoModal(productId) {
+  const grid = document.getElementById('variantGrid');
+  if (grid) grid.innerHTML = '<div class="variant-empty">Carregando combinacoes...</div>';
+  try {
+    const data = await productVariantsRequest(productId);
+    currentVariants = (data || []).map(normalizeVariant);
+    renderVariantGrid();
+  } catch {
+    currentVariants = [];
+    renderVariantGrid();
+    toast('Nao foi possivel carregar as combinacoes de cor e tamanho.', 'error');
+  }
+}
+
+function renderVariantGrid() {
+  const grid = document.getElementById('variantGrid');
+  if (!grid) return;
+  if (!currentVariants.length) {
+    grid.innerHTML = '<div class="variant-empty">Nenhuma combinacao cadastrada.</div>';
+    return;
+  }
+  grid.innerHTML = currentVariants.map((variant, index) => `
+    <div class="variant-row">
+      <div>
+        <div class="variant-name">${escapeHtml(variant.cor)}</div>
+        <div class="variant-muted">${escapeHtml(variant.tamanho)}</div>
+      </div>
+      <input type="number" min="0" value="${variant.estoque}" onchange="updateVariantStock(${index}, this.value)" aria-label="Estoque">
+      <button class="btn btn-ghost btn-sm variant-status" type="button" onclick="toggleVariantActive(${index})">${variant.ativo !== false ? 'Ativa' : 'Inativa'}</button>
+      <span class="variant-muted">${variant.estoque > 0 && variant.ativo !== false ? 'Disp.' : 'Esgot.'}</span>
+      <button class="btn btn-danger btn-icon btn-sm" type="button" onclick="removeVariant(${index})" title="Remover">x</button>
+    </div>
+  `).join('');
+}
+
+function addVariantFromForm() {
+  const corEl = document.getElementById('variantColorInput');
+  const tamanhoEl = document.getElementById('variantSizeInput');
+  const estoqueEl = document.getElementById('variantStockInput');
+  const cor = (corEl?.value || '').trim();
+  const tamanho = (tamanhoEl?.value || '').trim();
+  const estoque = Math.max(0, parseInt(estoqueEl?.value, 10) || 0);
+  if (!cor || !tamanho) return toast('Informe a cor e o tamanho da combinacao.', 'error');
+
+  const key = `${cor.toLowerCase()}|${tamanho.toUpperCase()}`;
+  if (currentVariants.some(v => `${String(v.cor).toLowerCase()}|${String(v.tamanho).toUpperCase()}` === key)) {
+    return toast('Essa combinacao de cor e tamanho ja existe.', 'error');
+  }
+
+  currentVariants.push({ cor, tamanho, estoque, ativo: true });
+  if (corEl) corEl.value = '';
+  if (tamanhoEl) tamanhoEl.value = '';
+  if (estoqueEl) estoqueEl.value = '';
+  renderVariantGrid();
+}
+
+function updateVariantStock(index, value) {
+  if (!currentVariants[index]) return;
+  currentVariants[index].estoque = Math.max(0, parseInt(value, 10) || 0);
+}
+
+function toggleVariantActive(index) {
+  if (!currentVariants[index]) return;
+  currentVariants[index].ativo = currentVariants[index].ativo === false;
+  renderVariantGrid();
+}
+
+function removeVariant(index) {
+  currentVariants.splice(index, 1);
+  renderVariantGrid();
+}
+
+async function saveProductVariants(productId, variants) {
+  return productVariantsRequest(productId, {
+    method: 'PUT',
+    body: JSON.stringify({ variantes: variants })
+  });
+}
+
 async function loadProducts() {
   try {
     const data = await sbFetch('/produtos?select=*&order=criado_em.desc');
@@ -1102,8 +1264,14 @@ function buildRow(p, simple = false) {
 function openProductModal(id = null) {
   editingId = id;
   currentSizes = [];
+  currentVariants = [];
   document.getElementById('productModal').classList.add('open');
   document.getElementById('sizesWrap').innerHTML = '<input type="text" class="tag-input-inner" id="sizeInput" placeholder="P, M, G, 38..." onkeydown="handleSizeInput(event)">';
+  ['variantColorInput','variantSizeInput','variantStockInput'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  renderVariantGrid();
 
   if (id) {
     const p = allProducts.find(x => x.id === id);
@@ -1124,6 +1292,7 @@ function openProductModal(id = null) {
     currentSizes = Array.isArray(p.tamanhos) ? [...p.tamanhos] : [];
     renderSizeTags();
     loadPhotosIntoPreview(p.imagens || (p.imagem_url ? [p.imagem_url] : []));
+    loadProductVariantsIntoModal(id);
   } else {
     document.getElementById('modalTitle').textContent = 'Novo Produto';
     ['f-nome','f-marca','f-categoria','f-preco','f-preco-antigo','f-estoque','f-ref','f-imagem','f-desc'].forEach(id => {
@@ -1198,23 +1367,27 @@ async function saveProduct() {
   };
 
   try {
+    const variantsToSave = getPreparedVariants();
+    applyVariantsToProductPayload(payload, variantsToSave);
     const imageUrls = await uploadProductPhotos();
     payload.imagem_url = imageUrls[0] || null;
     payload.imagens = imageUrls;
 
+    let savedProductId = editingId;
     if (editingId) {
       await saveProductRemote(payload, editingId);
       const idx = allProducts.findIndex(p => p.id === editingId);
       if (idx >= 0) allProducts[idx] = { ...allProducts[idx], ...payload };
-      toast('Produto atualizado!', 'success');
     } else {
       const res = await saveProductRemote(payload);
       const created = Array.isArray(res) ? res[0] : res;
+      savedProductId = created?.id || null;
       allProducts.unshift(created || { ...payload, id: Date.now() });
-      toast('Produto criado!', 'success');
     }
+    if (savedProductId) await saveProductVariants(savedProductId, variantsToSave);
+    toast(editingId ? 'Produto atualizado!' : 'Produto criado!', 'success');
     notifyCatalogChanged();
-  } catch {
+  } catch (err) {
     // fallback local
     if (editingId) {
       const idx = allProducts.findIndex(p => p.id === editingId);
