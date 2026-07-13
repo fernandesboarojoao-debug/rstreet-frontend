@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /carrinho.html
+Disallow: /checkout.html
+Disallow: /confirmacao.html
+
+Sitemap: https://www.rstreet.com.br/sitemap.xml
