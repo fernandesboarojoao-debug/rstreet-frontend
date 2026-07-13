@@ -419,6 +419,8 @@
 // URL DO BACKEND — troque pelo seu Render.com
 // ═══════════════════════════════════════════
 const BACKEND_URL = 'https://rstreet-backend.onrender.com';
+const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4dHRxdm1ycGZ3eHNncnBhbmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NDQ2ODMsImV4cCI6MjA5ODEyMDY4M30.rIkhwOxmJSwFADpqHsp_9Y6FWeIixOLMNK0IByYNnng';
 
 // ─── ESTADO ─────────────────────────────────
 let freteVal = 0;
@@ -443,7 +445,72 @@ const FRETE_REGRAS = {
 
 // ─── CART ───────────────────────────────────
 function getCart() { return JSON.parse(localStorage.getItem('rstreet_cart') || '[]'); }
+function saveCart(cart) { localStorage.setItem('rstreet_cart', JSON.stringify(cart)); }
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+
+async function validarCarrinhoAtual() {
+  const cart = getCart();
+  if (!cart.length) return { ok: false, message: 'Carrinho vazio.' };
+
+  const [prodRes, varRes] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    }),
+    fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo`, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    })
+  ]);
+
+  if (!prodRes.ok) return { ok: true };
+  const products = await prodRes.json();
+  const variants = varRes.ok ? await varRes.json() : [];
+  const messages = [];
+  let changed = false;
+
+  const next = cart.map(item => {
+    const product = products.find(p => Number(p.id) === Number(item.id));
+    if (!product || product.ativo === false) {
+      changed = true;
+      messages.push(`${item.nome} nao esta mais disponivel e foi removido do carrinho.`);
+      return null;
+    }
+
+    let estoque = Math.max(0, Number(product.estoque) || 0);
+    if (item.produto_variante_id) {
+      const variant = variants.find(v => Number(v.id) === Number(item.produto_variante_id));
+      if (!variant || variant.ativo === false || Number(variant.estoque) <= 0) {
+        changed = true;
+        messages.push(`${item.nome}${item.cor ? ' - '+item.cor : ''}${item.tamanho ? ' / '+item.tamanho : ''} esgotou ou nao esta mais disponivel e foi removido do carrinho.`);
+        return null;
+      }
+      estoque = Math.max(0, Number(variant.estoque) || 0);
+    }
+
+    if (estoque <= 0) {
+      changed = true;
+      messages.push(`${item.nome} esgotou e foi removido do carrinho.`);
+      return null;
+    }
+
+    const qty = Math.min(Number(item.qty) || 1, estoque);
+    if (qty !== item.qty || item.estoque !== estoque) {
+      changed = true;
+      if (qty !== item.qty) messages.push(`A quantidade de ${item.nome} foi ajustada para ${qty}.`);
+    }
+    return { ...item, qty, estoque };
+  }).filter(Boolean);
+
+  if (changed || next.length !== cart.length) {
+    saveCart(next);
+    renderSummary();
+    return {
+      ok: false,
+      message: (messages[0] || 'Seu carrinho foi atualizado conforme o estoque atual.') + ' Revise o carrinho antes de finalizar.'
+    };
+  }
+
+  return { ok: true };
+}
 
 // ─── RENDER SUMMARY ─────────────────────────
 function renderSummary() {
@@ -607,13 +674,25 @@ function validate() {
 // ─── FINALIZAR ──────────────────────────────
 async function finalizarCompra() {
   if (!validate()) return;
-  const cart = getCart();
-  if (!cart.length) return;
 
   const btn = document.getElementById('btnFinalizar');
   btn.classList.add('loading');
   btn.disabled = true;
   clearAlert();
+
+  const validacaoCarrinho = await validarCarrinhoAtual();
+  if (!validacaoCarrinho.ok) {
+    showAlert(validacaoCarrinho.message, 'error');
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    return;
+  }
+
+  const cart = getCart();
+  if (!cart.length) {
+    window.location.href = 'carrinho.html';
+    return;
+  }
 
   const subtotal = cart.reduce((s,i) => s + i.preco * i.qty, 0);
   const total = subtotal + freteVal;

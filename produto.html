@@ -646,12 +646,23 @@ function syncCartWithStock() {
   let changed = false;
   const next = cart.map(item => {
     const productRow = allProducts.find(p => p.id === item.id) || (product && product.id === item.id ? product : null);
-    if (!productRow) return item;
-    const estoque = Math.max(0, Number(productRow.estoque) || 0);
+    if (!productRow || productRow.ativo === false) {
+      changed = true;
+      return null;
+    }
+    let estoque = Math.max(0, Number(productRow.estoque) || 0);
+    if (item.produto_variante_id && product && Number(item.id) === Number(product.id)) {
+      const variant = productVariants.find(v => Number(v.id) === Number(item.produto_variante_id));
+      estoque = (!variant || variant.ativo === false) ? 0 : Math.max(0, Number(variant.estoque) || 0);
+    }
+    if (estoque <= 0) {
+      changed = true;
+      return null;
+    }
     const qty = Math.min(item.qty, estoque);
     if (qty !== item.qty || item.estoque !== estoque) changed = true;
     return { ...item, qty, estoque };
-  }).filter(item => item.qty > 0);
+  }).filter(item => item && item.qty > 0);
   if (changed || next.length !== cart.length) {
     localStorage.setItem('rstreet_cart', JSON.stringify(next));
   }
