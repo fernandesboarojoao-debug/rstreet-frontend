@@ -323,7 +323,24 @@ function finish() {
   renderProduct();
   renderRelated();
   document.title = product.nome + ' | R Street';
+  updateProductSeo(product);
   document.getElementById('breadcrumbName').textContent = product.nome;
+}
+
+function updateProductSeo(p) {
+  const url = `https://www.rstreet.com.br/produto.html?id=${encodeURIComponent(p.id)}`;
+  const description = `${p.nome} na R Street. Consulte cores, tamanhos disponiveis e estoque atualizado.`;
+  document.title = `${p.nome} | R Street`;
+  const metaDescription = document.querySelector('meta[name="description"]');
+  const canonical = document.querySelector('link[rel="canonical"]');
+  const ogTitle = document.querySelector('meta[property="og:title"]');
+  const ogDescription = document.querySelector('meta[property="og:description"]');
+  const ogUrl = document.querySelector('meta[property="og:url"]');
+  if (metaDescription) metaDescription.setAttribute('content', description);
+  if (canonical) canonical.setAttribute('href', url);
+  if (ogTitle) ogTitle.setAttribute('content', p.nome);
+  if (ogDescription) ogDescription.setAttribute('content', description);
+  if (ogUrl) ogUrl.setAttribute('content', url);
 }
 
 function renderProduct() {
@@ -409,6 +426,9 @@ function renderProduct() {
 
         ${colors ? `<div class="section-label">Cor</div><div class="colors-grid">${colors}</div>` : ''}
         ${sizes ? `<div class="section-label">Tamanho</div><div class="sizes-grid">${sizes}</div>` : ''}
+        <div style="font-size:12px;color:var(--gray-400);line-height:1.7;margin:10px 0 18px">
+          Guia rapido: P veste 36/38, M veste 40, G veste 42/44 e GG veste 46/48. Para medidas exatas, chame no WhatsApp.
+        </div>
 
         <div class="product-actions">
           <button class="btn-wpp" onclick="adicionarCarrinho()" id="btnCarrinho"
