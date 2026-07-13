@@ -309,7 +309,7 @@ function init() {
         </div>
         <div class="order-item-info">
           <div class="order-item-name">${item.nome}</div>
-          <div class="order-item-meta">Qtd: ${item.quantidade}${item.tamanho ? ' · ' + item.tamanho : ''}</div>
+          <div class="order-item-meta">Qtd: ${item.quantidade}${item.cor ? ' · Cor: ' + item.cor : ''}${item.tamanho ? ' · Tam: ' + item.tamanho : ''}</div>
         </div>
         <div class="order-item-price">${fmt(item.preco_unitario * item.quantidade)}</div>
       </div>

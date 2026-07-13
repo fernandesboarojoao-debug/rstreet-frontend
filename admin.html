@@ -1776,7 +1776,7 @@ async function verPedido(id) {
       <tbody>
         ${itens.length ? itens.map(i => `
           <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:10px 0">${i.nome_produto}${i.tamanho ? ' · '+i.tamanho : ''}</td>
+            <td style="padding:10px 0">${i.nome_produto}${i.cor ? ' · Cor: '+i.cor : ''}${i.tamanho ? ' · Tam: '+i.tamanho : ''}</td>
             <td style="text-align:center;padding:10px 0">${i.quantidade}</td>
             <td style="text-align:right;padding:10px 0">R$ ${Number(i.preco_unitario).toFixed(2).replace('.',',')}</td>
             <td style="text-align:right;padding:10px 0;font-weight:600;color:var(--gold)">R$ ${Number(i.total).toFixed(2).replace('.',',')}</td>
@@ -1827,7 +1827,7 @@ function imprimirPedido(p, itens) {
     <div class="bloco"><h2>Endereço</h2>${p.endereco_rua}, ${p.endereco_numero}${p.endereco_complemento?', '+p.endereco_complemento:''}<br>${p.endereco_bairro} — ${p.endereco_cidade}/${p.endereco_estado}<br>CEP: ${p.endereco_cep}<br><strong>Frete:</strong> ${freteTexto}</div>
     <div class="bloco"><h2>Itens</h2>
     <table><thead><tr><th>Produto</th><th>Qtd</th><th>Unit.</th><th>Total</th></tr></thead><tbody>
-    ${(itens||[]).map(i=>`<tr><td>${i.nome_produto}${i.tamanho?' · '+i.tamanho:''}</td><td>${i.quantidade}</td><td>R$ ${Number(i.preco_unitario).toFixed(2).replace('.',',')}</td><td>R$ ${Number(i.total).toFixed(2).replace('.',',')}</td></tr>`).join('')}
+    ${(itens||[]).map(i=>`<tr><td>${i.nome_produto}${i.cor?' · Cor: '+i.cor:''}${i.tamanho?' · Tam: '+i.tamanho:''}</td><td>${i.quantidade}</td><td>R$ ${Number(i.preco_unitario).toFixed(2).replace('.',',')}</td><td>R$ ${Number(i.total).toFixed(2).replace('.',',')}</td></tr>`).join('')}
     <tr class="total-row"><td colspan="3">TOTAL</td><td>R$ ${Number(p.total).toFixed(2).replace('.',',')}</td></tr>
     </tbody></table></div>
     <script>window.print();<\/script></body></html>`);

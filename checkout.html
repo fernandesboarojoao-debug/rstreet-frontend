@@ -457,6 +457,7 @@ function renderSummary() {
       </div>
       <div class="os-item-info">
         <div class="os-item-name">${item.nome}</div>
+        ${item.cor ? `<div class="os-item-meta">Cor: ${item.cor}</div>` : ''}
         <div class="os-item-meta">${item.marca} · Qtd: ${item.qty}${item.tamanho ? ' · ' + item.tamanho : ''}</div>
       </div>
       <div class="os-item-price">${fmt(item.preco * item.qty)}</div>
@@ -635,9 +636,11 @@ async function finalizarCompra() {
     },
     itens: cart.map(i => ({
       id: i.id,
+      produto_variante_id: i.produto_variante_id || null,
       nome: i.nome,
       quantidade: i.qty,
       preco_unitario: i.preco,
+      cor: i.cor || null,
       tamanho: i.tamanho || null,
     })),
     frete: { valor: freteVal, tipo: freteLabel },

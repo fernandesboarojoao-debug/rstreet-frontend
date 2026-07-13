@@ -288,6 +288,7 @@
 const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR4dHRxdm1ycGZ3eHNncnBhbmN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NDQ2ODMsImV4cCI6MjA5ODEyMDY4M30.rIkhwOxmJSwFADpqHsp_9Y6FWeIixOLMNK0IByYNnng';
 let latestProducts = [];
+let latestVariants = [];
 
 // ─── CARRINHO UTILS ─────────────────────────────────
 function getCart() {
@@ -309,11 +310,17 @@ function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
 
 async function loadLatestProducts() {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
-    });
-    if (!res.ok) return;
-    latestProducts = await res.json();
+    const [prodRes, varRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      }),
+      fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      })
+    ]);
+    if (!prodRes.ok) return;
+    latestProducts = await prodRes.json();
+    if (varRes.ok) latestVariants = await varRes.json();
     syncCartWithStock();
   } catch {}
 }
@@ -325,7 +332,11 @@ function syncCartWithStock() {
   const next = cart.map(item => {
     const product = latestProducts.find(p => p.id === item.id);
     if (!product) return item;
-    const estoque = product.ativo === false ? 0 : Math.max(0, Number(product.estoque) || 0);
+    let estoque = product.ativo === false ? 0 : Math.max(0, Number(product.estoque) || 0);
+    if (item.produto_variante_id) {
+      const variant = latestVariants.find(v => Number(v.id) === Number(item.produto_variante_id));
+      estoque = (!variant || variant.ativo === false) ? 0 : Math.max(0, Number(variant.estoque) || 0);
+    }
     const qty = Math.min(item.qty, estoque);
     if (qty !== item.qty || item.estoque !== estoque) changed = true;
     return { ...item, qty, estoque };
@@ -374,6 +385,7 @@ function render() {
         <div class="item-brand">${item.marca}</div>
         <div class="item-name">${item.nome}</div>
         <div class="item-meta">
+          ${item.cor ? `<span>Cor: ${item.cor}</span>` : ''}
           ${item.tamanho ? `<span>Tamanho: ${item.tamanho}</span>` : ''}
           <span>Ref: ${item.referencia || '#'+item.id}</span>
         </div>

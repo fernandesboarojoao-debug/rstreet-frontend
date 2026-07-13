@@ -509,10 +509,7 @@ function selectColor(cor) {
 function selectSize(size, el) {
   if (el?.disabled) return;
   selectedSize = size;
-  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-  const btn = document.getElementById('wppBtn');
-  if (btn) btn.href = buildWppLink();
+  renderProduct();
 }
 
 function escapeHtml(value) {
