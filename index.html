@@ -818,10 +818,10 @@
     grid-template-columns: 1fr 1fr;
     gap: 0;
     padding: 0;
-    min-height: 500px;
+    min-height: 460px;
   }
   .location-info {
-    padding: 80px 60px;
+    padding: 64px 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -830,7 +830,7 @@
     background: var(--gray-800);
     position: relative;
     overflow: hidden;
-    min-height: 400px;
+    min-height: 360px;
   }
   .location-map iframe {
     width: 100%; height: 100%;
@@ -838,7 +838,7 @@
     filter: grayscale(60%) contrast(1.1);
   }
   .location-details {
-    margin-top: 40px;
+    margin-top: 32px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -1153,7 +1153,8 @@
     .experience-item { padding: 20px; }
     .exp-num { font-size: 36px; }
     .reviews-grid { grid-template-columns: 1fr; }
-    .location-section { grid-template-columns: 1fr; }
+    .location-section { grid-template-columns: 1fr; min-height: 0; }
+    .location-map { min-height: 320px; }
     .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
     .cta-banner { padding: 80px 24px; }
     footer { padding: 60px 24px 32px; }
@@ -1556,9 +1557,9 @@
   </div>
   <div class="location-map">
     <iframe
-      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3681.9!2d-46.889!3d-21.594!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjHCsDM1JzM4LjQiUyA0NsKwNTMnMjAuNCJX!5e0!3m2!1spt!2sbr!4v1600000000000!5m2!1spt!2sbr"
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3709.6135200964227!2d-46.89851022493941!3d-21.60100398019538!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94b7cdc042682d25%3A0xe79d9e3a11c211e5!2sR_Street%20Moda%20Masculina!5e0!3m2!1spt-BR!2sbr!4v1784061616899!5m2!1spt-BR!2sbr"
       allowfullscreen="" loading="lazy"
-      referrerpolicy="no-referrer-when-downgrade">
+      referrerpolicy="strict-origin-when-cross-origin">
     </iframe>
   </div>
 </div>
