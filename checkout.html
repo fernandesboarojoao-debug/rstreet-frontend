@@ -476,6 +476,12 @@ async function validarCarrinhoAtual() {
     }
 
     let estoque = Math.max(0, Number(product.estoque) || 0);
+    const productHasVariants = variants.some(v => Number(v.produto_id) === Number(item.id) && v.ativo !== false);
+    if (productHasVariants && !item.produto_variante_id) {
+      changed = true;
+      messages.push(`${item.nome} precisa de cor e tamanho. Escolha novamente no produto.`);
+      return null;
+    }
     if (item.produto_variante_id) {
       const variant = variants.find(v => Number(v.id) === Number(item.produto_variante_id));
       if (!variant || variant.ativo === false || Number(variant.estoque) <= 0) {

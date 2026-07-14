@@ -338,6 +338,12 @@ function syncCartWithStock() {
       return null;
     }
     let estoque = product.ativo === false ? 0 : Math.max(0, Number(product.estoque) || 0);
+    const productHasVariants = latestVariants.some(v => Number(v.produto_id) === Number(item.id) && v.ativo !== false);
+    if (productHasVariants && !item.produto_variante_id) {
+      changed = true;
+      notices.push(`${item.nome} precisa de cor e tamanho. Escolha novamente no produto.`);
+      return null;
+    }
     if (item.produto_variante_id) {
       const variant = latestVariants.find(v => Number(v.id) === Number(item.produto_variante_id));
       if (!variant || variant.ativo === false || Number(variant.estoque) <= 0) {
