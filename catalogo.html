@@ -50,6 +50,8 @@
   .nav-links a.active { color: var(--gold); }
   .nav-back { background: transparent; border: 1px solid rgba(200,169,110,0.4); color: var(--gold); padding: 8px 20px; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; border-radius: 2px; transition: all 0.3s; }
   .nav-back:hover { background: var(--gold); color: var(--black); }
+  .nav-action { color: var(--gold); text-decoration: none; font-size: 12px; border: 1px solid rgba(200,169,110,0.3); padding: 8px 18px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: all 0.3s; white-space: nowrap; }
+  .nav-action:hover { background: var(--gold); color: var(--black); }
 
   /* HEADER BANNER */
   .catalog-header {
@@ -480,6 +482,7 @@
     nav { padding: 16px 20px; }
     nav .nav-links { display: none; }
     nav .nav-back { display: none; }
+    .nav-action { padding: 8px 12px; font-size: 11px; letter-spacing: .6px; }
     .catalog-header { padding: 40px 20px 28px; }
     .catalog-header-title { font-size: 48px; }
     .toolbar {
@@ -508,8 +511,10 @@
   }
 
   @media (max-width: 560px) {
-    nav { padding: 14px 18px; }
+    nav { padding: 14px 18px; gap: 8px; }
     .nav-logo { font-size: 24px; letter-spacing: 4px; }
+    .nav-action { min-height: 40px; padding: 8px 10px; font-size: 0; gap: 0; }
+    .nav-action::after { content: 'Pedido'; font-size: 10px; letter-spacing: .5px; }
     #navCartBtn { min-height: 40px; padding: 8px 14px !important; }
     .catalog-header { padding: 36px 20px 26px; }
     .catalog-header::before { font-size: 120px; right: -60px; letter-spacing: 12px; }
@@ -554,6 +559,7 @@
     <li><a href="catalogo.html" class="active">Catálogo</a></li>
     <li><a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a></li>
   </ul>
+  <a href="acompanhar.html" class="nav-action">Acompanhar Pedido</a>
   <a href="index.html" class="nav-back">← Voltar ao Site</a>
   <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn">🛒 <span id="navCartCount">0</span></a>
 </nav>

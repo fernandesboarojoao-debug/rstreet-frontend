@@ -163,9 +163,26 @@
     .nav-links { display:none; }
     .breadcrumb { padding:14px 20px; }
     .product-page { grid-template-columns:1fr; padding:24px 20px 60px; gap:32px; }
-    .gallery { position:static; }
+    .gallery { position:static; width:min(100%, 430px); margin:0 auto; }
+    .gallery-main { max-height:560px; }
+    .thumb { width:60px; height:76px; }
     .related-section { padding:40px 20px 60px; }
-    .related-grid { grid-template-columns:repeat(2,1fr); }
+    .related-grid {
+      display:flex;
+      gap:12px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      scroll-snap-type:x proximity;
+      scrollbar-width:thin;
+      scrollbar-color:rgba(200,169,110,0.45) transparent;
+      padding-bottom:10px;
+    }
+    .related-card { flex:0 0 170px; scroll-snap-align:start; }
+    .related-img { font-size:30px; }
+    .related-body { padding:10px 12px; }
+    .related-brand { font-size:8px; letter-spacing:2px; }
+    .related-name { font-size:12px; }
+    .related-price { font-size:19px; }
     footer { padding:24px 20px; }
   }
 
@@ -176,7 +193,9 @@
     .breadcrumb { overflow:hidden; white-space:nowrap; }
     .breadcrumb-current { overflow:hidden; text-overflow:ellipsis; }
     .product-page { padding:22px 18px 52px; gap:28px; }
-    .gallery-main { max-height:72vh; }
+    .gallery { width:min(100%, 310px); }
+    .gallery-main { max-height:420px; }
+    .thumb { width:48px; height:62px; }
     .product-name { font-size:40px; overflow-wrap:anywhere; }
     .price-current { font-size:44px; }
     .size-btn, .btn-wpp, .btn-secondary-act { min-height:44px; }
@@ -184,8 +203,12 @@
     .detail-val { text-align:right; overflow-wrap:anywhere; }
     .related-section { padding:36px 18px 52px; }
     .related-header { align-items:flex-start; gap:12px; }
-    .related-title { font-size:30px; }
-    .related-grid { grid-template-columns:1fr; max-width:320px; margin:0 auto; }
+    .related-title { font-size:26px; }
+    .related-card { flex-basis:138px; }
+    .related-body { padding:9px 10px; }
+    .related-brand { font-size:7px; letter-spacing:1.5px; }
+    .related-name { font-size:11px; margin-bottom:4px; }
+    .related-price { font-size:17px; }
     .toast-wrap { left:18px; right:18px; bottom:18px; }
     .toast { width:100%; }
   }
