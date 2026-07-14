@@ -1028,28 +1028,33 @@
     nav {
       top: 0;
       height: 70px;
-      padding: 14px 20px;
-      gap: 14px;
-      align-items: center;
-      overflow: visible;
+      padding: 0 20px;
+      display: block;
+      overflow: hidden;
       transition: background-color 0.25s ease, border-color 0.25s ease;
     }
     nav.scrolled {
       height: 70px;
-      padding: 14px 20px;
+      padding: 0 20px;
     }
     .nav-links { display: none; }
     .nav-logo {
-      flex-shrink: 0;
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
       line-height: 1;
+      height: 28px;
+      display: flex;
+      align-items: center;
     }
     .nav-mobile-catalog {
       display: inline-flex !important;
       align-items: center;
       justify-content: center;
-      position: static;
-      margin-left: auto;
-      flex-shrink: 0;
+      position: absolute;
+      right: 20px;
+      top: 50%;
       width: 94px;
       height: 42px;
       padding: 10px 0;
@@ -1063,7 +1068,7 @@
       text-transform: uppercase;
       white-space: nowrap;
       line-height: 1;
-      transform: none;
+      transform: translateY(-50%);
     }
     section { padding: 80px 24px; }
     .hero-content { padding: 0 24px; }
@@ -1139,6 +1144,8 @@
   @media (max-width: 520px) {
     nav, nav.scrolled { padding-left: 18px; padding-right: 18px; }
     .nav-logo { font-size: 24px; letter-spacing: 4px; }
+    .nav-logo { left: 18px; }
+    .nav-mobile-catalog { right: 18px; }
     .hero { min-height: 100svh; }
     .hero-content { padding: 72px 20px 32px; width: 100%; }
     .hero-eyebrow { gap: 10px; margin-bottom: 18px; }
