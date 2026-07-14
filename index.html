@@ -436,7 +436,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    margin-bottom: 80px;
+    margin-bottom: 48px;
     flex-wrap: wrap;
     gap: 32px;
   }
@@ -1053,8 +1053,28 @@
     .hero-stats { display: none; }
     .hero-title { font-size: 64px; }
     .hero-desc { font-size: 14px; }
-    .brands-grid { grid-template-columns: 1fr 1fr; }
-    .brand-name { font-size: 28px; }
+    .brands-grid {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(200,169,110,0.45) transparent;
+      padding: 4px 2px 12px;
+    }
+    .brand-card {
+      flex: 0 0 220px;
+      justify-content: flex-end;
+      scroll-snap-align: start;
+      border-radius: 3px;
+    }
+    .brand-name { font-size: 26px; letter-spacing: 4px; }
+    .brand-card-content {
+      width: 100%;
+      padding: 40px 16px 14px;
+      background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
+    }
     .highlights-grid { grid-template-columns: 1fr; }
     .about-section { grid-template-columns: 1fr; padding: 80px 24px; gap: 48px; }
     .about-visual { height: 400px; }
@@ -1082,10 +1102,36 @@
     .hero-eyebrow-line { width: 42px; }
     .hero-eyebrow span { font-size: 10px; letter-spacing: 3px; }
     .hero-title { font-size: 58px; letter-spacing: 0; }
-    .brands-grid,
     .about-features,
     .experience-strip,
     .footer-grid { grid-template-columns: 1fr; }
+    .brands-grid { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
+    .brand-card { flex-basis: 200px; }
+    .brand-name { font-size: 22px; letter-spacing: 3px; }
+    .brand-tagline { font-size: 9px; letter-spacing: 2px; }
+    .experience-strip {
+      padding: 18px;
+      gap: 0;
+    }
+    .experience-item {
+      min-height: 58px;
+      padding: 10px 14px;
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 12px;
+      text-align: left;
+    }
+    .experience-item::after {
+      right: auto;
+      left: 14px;
+      top: auto;
+      bottom: 0;
+      width: calc(100% - 28px);
+      height: 1px;
+    }
+    .exp-icon { width: 30px; font-size: 22px; text-align: center; }
+    .exp-num { width: 48px; font-size: 30px; }
+    .exp-label { font-size: 10px; letter-spacing: 1.3px; }
     .about-visual { height: 320px; }
     .section-title { font-size: 46px; }
     .footer-bottom { align-items: flex-start; }
