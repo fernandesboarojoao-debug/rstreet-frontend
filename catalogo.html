@@ -954,7 +954,7 @@ function renderCard(p) {
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-          <button class="btn-cart" onclick="event.stopPropagation(); window.location.href='produto.html?id=${p.id}'" id="cart-btn-${p.id}" ${p.estoque <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${p.estoque <= 0 ? 'Esgotado' : 'Opcoes'}</button>
+          <button class="btn-cart" onclick="event.stopPropagation(); window.location.href='produto.html?id=${p.id}'" id="cart-btn-${p.id}" ${p.estoque <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${p.estoque <= 0 ? 'Esgotado' : 'Escolher'}</button>
           <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
         </div>
       </div>
