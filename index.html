@@ -1024,7 +1024,28 @@
 
   /* ── MOBILE ── */
   @media (max-width: 900px) {
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      overscroll-behavior-x: none;
+    }
+    @supports (overflow: clip) {
+      html, body { overflow-x: clip; }
+    }
     .cursor, .cursor-ring { display: none; }
+    .marquee-wrap,
+    .brands-section,
+    .highlights-section,
+    .reviews-section {
+      max-width: 100%;
+      overflow-x: clip;
+    }
+    .marquee-track,
+    .brands-grid,
+    .highlights-grid {
+      contain: paint;
+    }
     nav {
       top: 0;
       height: 70px;
