@@ -1026,24 +1026,32 @@
   @media (max-width: 900px) {
     .cursor, .cursor-ring { display: none; }
     nav {
-      min-height: 70px;
+      top: 0;
+      height: 70px;
       padding: 14px 20px;
       gap: 14px;
       align-items: center;
+      overflow: visible;
+      transition: background-color 0.25s ease, border-color 0.25s ease;
     }
     nav.scrolled {
-      min-height: 70px;
+      height: 70px;
       padding: 14px 20px;
     }
     .nav-links { display: none; }
+    .nav-logo {
+      flex-shrink: 0;
+      line-height: 1;
+    }
     .nav-mobile-catalog {
       display: inline-flex !important;
       align-items: center;
       justify-content: center;
       position: static;
       margin-left: auto;
+      flex-shrink: 0;
       width: 94px;
-      min-height: 42px;
+      height: 42px;
       padding: 10px 0;
       border-radius: 2px;
       background: var(--gold);
@@ -1054,6 +1062,8 @@
       letter-spacing: 1.5px;
       text-transform: uppercase;
       white-space: nowrap;
+      line-height: 1;
+      transform: none;
     }
     section { padding: 80px 24px; }
     .hero-content { padding: 0 24px; }
