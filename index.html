@@ -1075,10 +1075,37 @@
       padding: 40px 16px 14px;
       background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
     }
-    .highlights-grid { grid-template-columns: 1fr; }
+    .highlights-grid {
+      display: flex;
+      gap: 14px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(200,169,110,0.45) transparent;
+      padding-bottom: 12px;
+    }
+    .highlight-card {
+      flex: 0 0 230px;
+      scroll-snap-align: start;
+    }
+    .highlight-img { height: 170px; }
+    .highlight-body { padding: 14px 16px 16px; }
+    .highlight-brand { font-size: 9px; letter-spacing: 2px; }
+    .highlight-name { font-size: 16px; margin-bottom: 10px; }
+    .highlight-cta { padding: 8px 16px; font-size: 10px; }
+    .highlight-badge { top: 12px; left: 12px; font-size: 9px; padding: 5px 10px; }
     .about-section { grid-template-columns: 1fr; padding: 80px 24px; gap: 48px; }
     .about-visual { height: 400px; }
-    .about-features { grid-template-columns: 1fr 1fr; }
+    .about-features {
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 32px;
+    }
+    .about-feature { padding: 16px; }
+    .about-feature-icon { font-size: 24px; margin-bottom: 8px; }
+    .about-feature-title { font-size: 14px; margin-bottom: 4px; }
+    .about-feature-text { font-size: 12px; line-height: 1.45; }
     .experience-strip { grid-template-columns: 1fr 1fr; padding: 60px 24px; }
     .experience-item { padding: 20px; }
     .exp-num { font-size: 36px; }
@@ -1109,6 +1136,33 @@
     .brand-card { flex-basis: 200px; }
     .brand-name { font-size: 22px; letter-spacing: 3px; }
     .brand-tagline { font-size: 9px; letter-spacing: 2px; }
+    .highlights-header { margin-bottom: 36px; }
+    .highlight-card { flex-basis: 188px; }
+    .highlight-img { height: 132px; }
+    .highlight-body { padding: 12px; }
+    .highlight-brand { font-size: 8px; letter-spacing: 1.8px; margin-bottom: 4px; }
+    .highlight-name { font-size: 14px; margin-bottom: 8px; }
+    .highlight-footer { align-items: flex-start; }
+    .highlight-cta { padding: 7px 12px; font-size: 9px; letter-spacing: 1.4px; }
+    .highlight-badge { top: 10px; left: 10px; font-size: 8px; letter-spacing: 1.5px; padding: 4px 8px; }
+    .about-features {
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .about-feature {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      column-gap: 12px;
+      padding: 14px;
+    }
+    .about-feature-icon {
+      grid-row: span 2;
+      font-size: 22px;
+      margin-bottom: 0;
+      line-height: 1.2;
+    }
+    .about-feature-title { font-size: 13px; }
+    .about-feature-text { font-size: 11px; line-height: 1.35; }
     .experience-strip {
       padding: 18px;
       gap: 0;
