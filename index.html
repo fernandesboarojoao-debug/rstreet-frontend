@@ -1025,17 +1025,23 @@
   /* ── MOBILE ── */
   @media (max-width: 900px) {
     .cursor, .cursor-ring { display: none; }
-    nav { padding: 18px 20px; gap: 14px; }
-    nav.scrolled { padding: 14px 24px; }
+    nav {
+      min-height: 70px;
+      padding: 14px 20px;
+      gap: 14px;
+      align-items: center;
+    }
+    nav.scrolled {
+      min-height: 70px;
+      padding: 14px 20px;
+    }
     .nav-links { display: none; }
     .nav-mobile-catalog {
       display: inline-flex !important;
       align-items: center;
       justify-content: center;
-      position: absolute;
-      left: min(245px, calc(100vw - 112px));
-      right: auto;
-      top: 18px;
+      position: static;
+      margin-left: auto;
       width: 94px;
       min-height: 42px;
       padding: 10px 0;
@@ -1123,7 +1129,6 @@
   @media (max-width: 520px) {
     nav, nav.scrolled { padding-left: 18px; padding-right: 18px; }
     .nav-logo { font-size: 24px; letter-spacing: 4px; }
-    .nav-mobile-catalog { top: 16px; }
     .hero { min-height: 100svh; }
     .hero-content { padding: 72px 20px 32px; width: 100%; }
     .hero-eyebrow { gap: 10px; margin-bottom: 18px; }
