@@ -65,7 +65,7 @@
     overflow:hidden; border:1px solid var(--border); border-radius:4px;
     display:flex; align-items:center; justify-content:center;
   }
-  .gallery-main img { width:100%; height:100%; object-fit:cover; transition:transform 0.4s ease; }
+  .gallery-main img, .gallery-main video { width:100%; height:100%; object-fit:cover; transition:transform 0.4s ease; }
   .gallery-main:hover img { transform:scale(1.04); }
   .gallery-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:var(--gray-400); font-size:72px; }
   .gallery-placeholder span { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--gray-400); font-family:'Inter',sans-serif; }
@@ -78,7 +78,7 @@
   .thumb { width:72px; height:90px; background:var(--gray-800); border:2px solid var(--border); border-radius:3px; overflow:hidden; cursor:pointer; transition:border-color 0.2s; flex-shrink:0; }
   .thumb.active { border-color:var(--gold); }
   .thumb:hover { border-color:rgba(200,169,110,0.5); }
-  .thumb img { width:100%; height:100%; object-fit:cover; }
+  .thumb img, .thumb video { width:100%; height:100%; object-fit:cover; }
 
   .product-info {}
   .product-brand-tag { display:inline-block; font-size:11px; font-weight:700; letter-spacing:3px; color:var(--gold); text-transform:uppercase; border:1px solid rgba(200,169,110,0.3); padding:4px 12px; border-radius:2px; background:var(--gold-bg); margin-bottom:16px; }
@@ -389,17 +389,18 @@ function renderProduct() {
   else if (colorData.preco_antigo) badge = '<div class="gallery-badge badge-sale">Oferta</div>';
   else badge = '<div class="gallery-badge badge-new">Novo</div>';
 
+  const medias = colorData.medias;
   const imgs = colorData.imagens;
 
-  const mainImg = imgs.length
-    ? `<img id="mainImg" src="${imgs[0]}" alt="${p.nome}">`
+  const mainMedia = medias.length
+    ? renderMainMedia(medias[0], p.nome)
     : `<div class="gallery-placeholder">👕<span>${p.marca || 'R Street'}</span></div>`;
 
-  const thumbs = imgs.length > 1 ? `
+  const thumbs = medias.length > 1 ? `
     <div class="gallery-thumbs">
-      ${imgs.map((url, i) => `
-        <div class="thumb ${i===0?'active':''}" onclick="changeImg('${url}', this)">
-          <img src="${url}" alt="foto ${i+1}">
+      ${medias.map((media, i) => `
+        <div class="thumb ${i===0?'active':''}" onclick="changeMedia('${escapeAttr(media.url)}', '${media.type}', this)">
+          ${renderThumbMedia(media, i)}
         </div>`).join('')}
     </div>` : '';
 
@@ -438,7 +439,7 @@ function renderProduct() {
     <div class="product-page">
       <div class="gallery">
         <div class="gallery-main">
-          ${mainImg}
+          ${mainMedia}
           ${badge}
         </div>
         ${thumbs}
@@ -503,10 +504,29 @@ function renderProduct() {
 }
 
 function changeImg(url, el) {
-  const m = document.getElementById('mainImg');
-  if (m) m.src = url;
+  changeMedia(url, 'image', el);
+}
+
+function changeMedia(url, type, el) {
+  const wrap = document.querySelector('.gallery-main');
+  if (wrap) {
+    const badge = wrap.querySelector('.gallery-badge')?.outerHTML || '';
+    wrap.innerHTML = `${renderMainMedia({ url, type }, product?.nome || 'Produto')}${badge}`;
+  }
   document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  el?.classList.add('active');
+}
+
+function renderMainMedia(media, alt) {
+  if (media?.type === 'video') {
+    return `<video id="mainImg" src="${escapeAttr(media.url)}" controls playsinline muted></video>`;
+  }
+  return `<img id="mainImg" src="${escapeAttr(media.url)}" alt="${escapeAttr(alt)}">`;
+}
+
+function renderThumbMedia(media, index) {
+  if (media?.type === 'video') return `<video src="${escapeAttr(media.url)}" muted></video>`;
+  return `<img src="${escapeAttr(media.url)}" alt="foto ${index + 1}">`;
 }
 
 function getActiveVariants() {
@@ -557,17 +577,28 @@ function getVariantImages(variant) {
   return variant.imagem_url ? [variant.imagem_url] : [];
 }
 
+function getVariantVideos(variant) {
+  if (!variant) return [];
+  return Array.isArray(variant.videos) ? variant.videos.filter(Boolean) : [];
+}
+
 function getColorData(cor) {
   const list = getActiveVariants().filter(v => sameText(v.cor, cor));
   const withImages = list.find(v => getVariantImages(v).length) || list[0] || null;
+  const withVideos = list.find(v => getVariantVideos(v).length) || null;
   const withPrice = list.find(v => v.preco !== null && v.preco !== undefined && v.preco !== '') || withImages;
   const imagens = getVariantImages(withImages);
+  const videos = getVariantVideos(withVideos);
   const fallbackImages = getProductImages();
   const preco = Number(withPrice?.preco ?? product?.preco ?? 0);
   const precoAntigoRaw = withPrice?.preco_antigo ?? product?.preco_antigo ?? null;
+  const mediaImages = (imagens.length ? imagens : fallbackImages).map(url => ({ type: 'image', url }));
+  const mediaVideos = videos.map(url => ({ type: 'video', url }));
   return {
     cor,
     imagens: imagens.length ? imagens : fallbackImages,
+    videos,
+    medias: [...mediaImages, ...mediaVideos],
     thumbnail: imagens[0] || fallbackImages[0] || '',
     preco,
     preco_antigo: precoAntigoRaw ? Number(precoAntigoRaw) : null,

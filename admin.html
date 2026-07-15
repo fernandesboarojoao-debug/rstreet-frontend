@@ -249,13 +249,34 @@
 .tag-remove:hover { opacity:1; }
   .tag-input-inner { background:none;border:none;color:var(--white);outline:none;font-size:13px;min-width:60px;font-family:'Inter',sans-serif; }
 
-  .variant-tools { display:grid;grid-template-columns:1fr 90px 70px 90px 1fr 82px auto;gap:8px;align-items:end; }
+  .variant-tools { display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end; }
+  .variant-tools #variantSizeInput,
+  .variant-tools #variantStockInput,
+  .variant-tools #variantPriceInput,
+  .variant-tools #variantImagesInput { display:none; }
   .variant-grid { display:flex;flex-direction:column;gap:8px;margin-top:10px; }
   .variant-row { display:grid;grid-template-columns:1fr 74px 70px 82px minmax(110px,1fr) 36px;gap:8px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:8px; }
   .variant-name { font-size:13px;font-weight:600; }
   .variant-muted { color:var(--gray1);font-size:12px; }
   .variant-empty { color:var(--gray1);font-size:12px;padding:10px 0; }
   .variant-row input { min-height:36px;padding:8px 10px; }
+  .variant-color-tools { display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end; }
+  .variant-color-card { border:1px solid var(--border);background:var(--surface2);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:12px; }
+  .variant-color-head { display:flex;align-items:center;justify-content:space-between;gap:12px; }
+  .variant-color-title { display:flex;align-items:center;gap:10px;min-width:0; }
+  .variant-color-swatch { width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--gray2);flex:0 0 auto; }
+  .variant-color-title strong { font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+  .variant-color-fields { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px; }
+  .variant-color-fields label, .variant-size-add label { display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--gray1);text-transform:uppercase;letter-spacing:.5px; }
+  .variant-media-box { border:1px dashed var(--border);border-radius:4px;padding:10px;display:flex;flex-direction:column;gap:8px; }
+  .variant-media-actions { display:flex;gap:8px;flex-wrap:wrap;align-items:center; }
+  .variant-media-preview { display:flex;gap:8px;flex-wrap:wrap; }
+  .variant-media-thumb { width:58px;height:58px;border-radius:4px;overflow:hidden;background:var(--surface);border:1px solid var(--border);position:relative;display:flex;align-items:center;justify-content:center;color:var(--gray1);font-size:11px; }
+  .variant-media-thumb img, .variant-media-thumb video { width:100%;height:100%;object-fit:cover;display:block; }
+  .variant-media-thumb button { position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(0,0,0,.7);color:var(--white);cursor:pointer; }
+  .variant-size-list { display:flex;flex-direction:column;gap:6px; }
+  .variant-size-row { display:grid;grid-template-columns:1fr 90px auto auto;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px; }
+  .variant-size-add { display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end; }
 
   /* PHOTO UPLOAD */
   .photo-upload-area {
@@ -312,6 +333,8 @@
     .variant-tools{grid-template-columns:1fr 1fr}
     .variant-tools .btn{grid-column:1/-1}
     .variant-row{grid-template-columns:1fr 70px 80px 74px 36px}
+    .variant-color-tools,.variant-color-fields,.variant-size-add{grid-template-columns:1fr}
+    .variant-size-row{grid-template-columns:1fr 80px auto}
     .login-screen{padding:20px}
     .login-box{width:calc(100vw - 32px);max-width:330px;padding:36px 28px}
   }
@@ -331,6 +354,8 @@
     .toast{max-width:none;width:100%}
     .variant-row{grid-template-columns:1fr 64px 72px 36px}
     .variant-row .variant-status{display:none}
+    .variant-color-head{align-items:flex-start;flex-direction:column}
+    .variant-size-row{grid-template-columns:1fr 70px}
     .login-box{width:calc(100vw - 32px);max-width:330px;padding:32px 24px}
   }
 
@@ -1074,6 +1099,7 @@ function normalizeVariant(item) {
     preco_antigo: item.preco_antigo === null || item.preco_antigo === undefined || item.preco_antigo === '' ? null : Number(item.preco_antigo),
     imagem_url: String(item.imagem_url || '').trim() || null,
     imagens: Array.isArray(item.imagens) ? item.imagens.filter(Boolean) : [],
+    videos: Array.isArray(item.videos) ? item.videos.filter(Boolean) : [],
     cor_hex: String(item.cor_hex || '').trim() || null,
     ordem: parseInt(item.ordem, 10) || 0,
     ativo: item.ativo !== false
@@ -1122,53 +1148,284 @@ async function loadProductVariantsIntoModal(productId) {
 function renderVariantGrid() {
   const grid = document.getElementById('variantGrid');
   if (!grid) return;
-  if (!currentVariants.length) {
-    grid.innerHTML = '<div class="variant-empty">Nenhuma combinacao cadastrada.</div>';
+  prepareVariantColorUi();
+  const groups = getVariantColorGroups();
+  if (!groups.length) {
+    grid.innerHTML = '<div class="variant-empty">Nenhuma cor cadastrada. Adicione uma cor para configurar fotos, videos, preco e tamanhos.</div>';
     return;
   }
-  grid.innerHTML = currentVariants.map((variant, index) => `
-    <div class="variant-row">
-      <div>
-        <div class="variant-name">${escapeHtml(variant.cor)}</div>
-        <div class="variant-muted">${escapeHtml(variant.tamanho)}</div>
+  grid.innerHTML = groups.map((group, groupIndex) => `
+    <div class="variant-color-card">
+      <div class="variant-color-head">
+        <div class="variant-color-title">
+          <span class="variant-color-swatch" style="background:${escapeAttr(group.cor_hex || getAdminColorValue(group.cor))}"></span>
+          <div>
+            <strong>${escapeHtml(group.cor)}</strong>
+            <div class="variant-muted">${group.sizes.length || 0} tamanho(s) cadastrado(s)</div>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" type="button" onclick="removeColorGroup(${groupIndex})">Remover cor</button>
       </div>
-      <input type="number" min="0" value="${variant.estoque}" onchange="updateVariantStock(${index}, this.value)" aria-label="Estoque">
-      <input type="number" min="0" step="0.01" value="${variant.preco ?? ''}" onchange="updateVariantField(${index}, 'preco', this.value)" aria-label="Preco">
-      <input type="text" value="${escapeAttr((variant.imagens || []).join(', '))}" onchange="updateVariantImages(${index}, this.value)" aria-label="Fotos da cor">
-      <button class="btn btn-ghost btn-sm variant-status" type="button" onclick="toggleVariantActive(${index})">${variant.ativo !== false ? 'Ativa' : 'Inativa'}</button>
-      <button class="btn btn-danger btn-icon btn-sm" type="button" onclick="removeVariant(${index})" title="Remover">x</button>
+
+      <div class="variant-color-fields">
+        <label>Preco da cor
+          <input type="number" min="0" step="0.01" value="${group.preco ?? ''}" onchange="updateColorGroupField(${groupIndex}, 'preco', this.value)">
+        </label>
+        <label>Preco antigo
+          <input type="number" min="0" step="0.01" value="${group.preco_antigo ?? ''}" onchange="updateColorGroupField(${groupIndex}, 'preco_antigo', this.value)">
+        </label>
+        <label>Codigo da cor
+          <input type="text" value="${escapeAttr(group.cor_hex || '')}" placeholder="#111111" onchange="updateColorGroupField(${groupIndex}, 'cor_hex', this.value)">
+        </label>
+        <label>Ordem
+          <input type="number" min="0" step="1" value="${group.ordem || 0}" onchange="updateColorGroupField(${groupIndex}, 'ordem', this.value)">
+        </label>
+      </div>
+
+      <div class="variant-media-box">
+        <div class="variant-media-actions">
+          <button class="btn btn-outline btn-sm" type="button" onclick="document.getElementById('variantMediaInput-${groupIndex}').click()">Enviar fotos/videos</button>
+          <span class="variant-muted">Imagens ate 5MB, videos ate 30MB.</span>
+          <input type="file" id="variantMediaInput-${groupIndex}" accept="image/*,video/*" multiple style="display:none" onchange="uploadVariantMedia(${groupIndex}, event)">
+        </div>
+        <div class="variant-media-preview">
+          ${renderVariantMediaThumbs(group, groupIndex)}
+        </div>
+      </div>
+
+      <div class="variant-size-list">
+        ${group.sizes.length ? group.sizes.map((variant, sizeIndex) => `
+          <div class="variant-size-row">
+            <input type="text" value="${escapeAttr(variant.tamanho)}" placeholder="Tamanho" onchange="updateSizeVariantField(${groupIndex}, ${sizeIndex}, 'tamanho', this.value)">
+            <input type="number" min="0" value="${variant.estoque}" placeholder="Qtd" onchange="updateSizeVariantField(${groupIndex}, ${sizeIndex}, 'estoque', this.value)">
+            <button class="btn btn-ghost btn-sm" type="button" onclick="toggleSizeVariant(${groupIndex}, ${sizeIndex})">${variant.ativo !== false ? 'Ativo' : 'Inativo'}</button>
+            <button class="btn btn-danger btn-icon btn-sm" type="button" onclick="removeSizeVariant(${groupIndex}, ${sizeIndex})" title="Remover">x</button>
+          </div>
+        `).join('') : '<div class="variant-empty">Nenhum tamanho nessa cor ainda.</div>'}
+      </div>
+
+      <div class="variant-size-add">
+        <label>Novo tamanho
+          <input type="text" id="variantSizeInput-${groupIndex}" placeholder="P, M, G, 38...">
+        </label>
+        <label>Qtd
+          <input type="number" id="variantStockInput-${groupIndex}" min="0" placeholder="0">
+        </label>
+        <button class="btn btn-outline btn-sm" type="button" onclick="addSizeToColor(${groupIndex})">Adicionar tamanho</button>
+      </div>
     </div>
   `).join('');
 }
 
 function addVariantFromForm() {
   const corEl = document.getElementById('variantColorInput');
-  const tamanhoEl = document.getElementById('variantSizeInput');
-  const estoqueEl = document.getElementById('variantStockInput');
-  const precoEl = document.getElementById('variantPriceInput');
-  const imagensEl = document.getElementById('variantImagesInput');
   const hexEl = document.getElementById('variantHexInput');
   const cor = (corEl?.value || '').trim();
-  const tamanho = (tamanhoEl?.value || '').trim();
-  const estoque = Math.max(0, parseInt(estoqueEl?.value, 10) || 0);
-  const preco = precoEl?.value ? Math.max(0, parseFloat(precoEl.value) || 0) : null;
-  const imagens = (imagensEl?.value || '').split(',').map(url => url.trim()).filter(Boolean);
-  const imagem_url = imagens[0] || null;
   const cor_hex = (hexEl?.value || '').trim() || null;
-  if (!cor || !tamanho) return toast('Informe a cor e o tamanho da combinacao.', 'error');
+  if (!cor) return toast('Informe o nome da cor.', 'error');
 
-  const key = `${cor.toLowerCase()}|${tamanho.toUpperCase()}`;
-  if (currentVariants.some(v => `${String(v.cor).toLowerCase()}|${String(v.tamanho).toUpperCase()}` === key)) {
-    return toast('Essa combinacao de cor e tamanho ja existe.', 'error');
+  if (getVariantColorGroups().some(g => sameAdminText(g.cor, cor))) {
+    return toast('Essa cor ja existe nesse produto.', 'error');
   }
 
-  currentVariants.push({ cor, tamanho, estoque, preco, preco_antigo: null, imagem_url, imagens, cor_hex, ordem: currentVariants.length, ativo: true });
+  currentVariants.push({ cor, tamanho: '', estoque: 0, preco: null, preco_antigo: null, imagem_url: null, imagens: [], videos: [], cor_hex, ordem: currentVariants.length, ativo: true });
   if (corEl) corEl.value = '';
-  if (tamanhoEl) tamanhoEl.value = '';
-  if (estoqueEl) estoqueEl.value = '';
-  if (precoEl) precoEl.value = '';
-  if (imagensEl) imagensEl.value = '';
   if (hexEl) hexEl.value = '';
+  renderVariantGrid();
+}
+
+function prepareVariantColorUi() {
+  const addBtn = document.querySelector('.variant-tools button, .variant-color-tools button');
+  if (addBtn) addBtn.textContent = 'Adicionar cor';
+  const grid = document.getElementById('variantGrid');
+  if (grid?.nextElementSibling?.classList?.contains('form-hint')) {
+    grid.nextElementSibling.textContent = 'Cadastre uma cor por bloco. Dentro dela, envie fotos/videos, defina preco e adicione tamanhos com estoque.';
+  }
+  const hiddenIds = ['variantSizeInput', 'variantStockInput', 'variantPriceInput', 'variantImagesInput'];
+  hiddenIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+}
+
+function sameAdminText(a, b) {
+  return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+}
+
+function getVariantColorGroups() {
+  const map = new Map();
+  currentVariants.forEach((variant, index) => {
+    const cor = String(variant.cor || '').trim();
+    if (!cor) return;
+    const key = cor.toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, {
+        cor,
+        cor_hex: variant.cor_hex || '',
+        preco: variant.preco ?? null,
+        preco_antigo: variant.preco_antigo ?? null,
+        imagens: Array.isArray(variant.imagens) ? [...variant.imagens] : [],
+        videos: Array.isArray(variant.videos) ? [...variant.videos] : [],
+        imagem_url: variant.imagem_url || null,
+        ordem: parseInt(variant.ordem, 10) || 0,
+        sizes: []
+      });
+    }
+    const group = map.get(key);
+    if (!group.imagens.length && Array.isArray(variant.imagens) && variant.imagens.length) group.imagens = [...variant.imagens];
+    if (!group.videos.length && Array.isArray(variant.videos) && variant.videos.length) group.videos = [...variant.videos];
+    if (!group.imagem_url && variant.imagem_url) group.imagem_url = variant.imagem_url;
+    if (!group.cor_hex && variant.cor_hex) group.cor_hex = variant.cor_hex;
+    if (group.preco === null && variant.preco !== null && variant.preco !== undefined) group.preco = variant.preco;
+    if (group.preco_antigo === null && variant.preco_antigo !== null && variant.preco_antigo !== undefined) group.preco_antigo = variant.preco_antigo;
+    if (String(variant.tamanho || '').trim()) group.sizes.push({ ...variant, __index: index });
+  });
+  return [...map.values()].sort((a, b) => (a.ordem || 0) - (b.ordem || 0) || a.cor.localeCompare(b.cor));
+}
+
+function getGroupByIndex(groupIndex) {
+  return getVariantColorGroups()[groupIndex] || null;
+}
+
+function updateColorVariants(groupIndex, updater) {
+  const group = getGroupByIndex(groupIndex);
+  if (!group) return;
+  currentVariants.forEach((variant) => {
+    if (sameAdminText(variant.cor, group.cor)) updater(variant, group);
+  });
+}
+
+function updateColorGroupField(groupIndex, field, value) {
+  updateColorVariants(groupIndex, (variant) => {
+    if (field === 'preco' || field === 'preco_antigo') variant[field] = value === '' ? null : Math.max(0, parseFloat(value) || 0);
+    else if (field === 'ordem') variant[field] = parseInt(value, 10) || 0;
+    else variant[field] = String(value || '').trim() || null;
+  });
+  renderVariantGrid();
+}
+
+function renderVariantMediaThumbs(group, groupIndex) {
+  const images = group.imagens || [];
+  const videos = group.videos || [];
+  const imageHtml = images.map((url, i) => `
+    <div class="variant-media-thumb">
+      <img src="${escapeAttr(url)}" alt="foto ${i + 1}">
+      <button type="button" onclick="removeVariantMedia(${groupIndex}, 'imagens', ${i})">x</button>
+    </div>`).join('');
+  const videoHtml = videos.map((url, i) => `
+    <div class="variant-media-thumb">
+      <video src="${escapeAttr(url)}" muted></video>
+      <button type="button" onclick="removeVariantMedia(${groupIndex}, 'videos', ${i})">x</button>
+    </div>`).join('');
+  return imageHtml + videoHtml || '<span class="variant-muted">Nenhuma midia enviada para essa cor.</span>';
+}
+
+function removeVariantMedia(groupIndex, type, mediaIndex) {
+  updateColorVariants(groupIndex, (variant) => {
+    const list = Array.isArray(variant[type]) ? [...variant[type]] : [];
+    list.splice(mediaIndex, 1);
+    variant[type] = list;
+    if (type === 'imagens') variant.imagem_url = list[0] || null;
+  });
+  renderVariantGrid();
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadVariantMedia(groupIndex, event) {
+  const files = Array.from(event.target.files || []);
+  event.target.value = '';
+  if (!files.length) return;
+  try {
+    const uploaded = { imagens: [], videos: [] };
+    for (const file of files) {
+      if (file.type.startsWith('image/') && file.size > 5 * 1024 * 1024) throw new Error(`Imagem "${file.name}" passa de 5MB.`);
+      if (file.type.startsWith('video/') && file.size > 30 * 1024 * 1024) throw new Error(`Video "${file.name}" passa de 30MB.`);
+      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) throw new Error(`Arquivo "${file.name}" nao e foto nem video.`);
+      const dataUrl = await readFileAsDataUrl(file);
+      const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ dataUrl, name: file.name })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (file.type.startsWith('video/')) uploaded.videos.push(data.url);
+      else uploaded.imagens.push(data.url);
+    }
+    updateColorVariants(groupIndex, (variant) => {
+      variant.imagens = [...(variant.imagens || []), ...uploaded.imagens];
+      variant.videos = [...(variant.videos || []), ...uploaded.videos];
+      variant.imagem_url = variant.imagens[0] || null;
+    });
+    renderVariantGrid();
+    toast('Midia enviada para a cor.', 'success');
+  } catch (err) {
+    toast(err.message || 'Erro ao enviar midia da cor.', 'error');
+  }
+}
+
+function addSizeToColor(groupIndex) {
+  const group = getGroupByIndex(groupIndex);
+  if (!group) return;
+  const sizeEl = document.getElementById(`variantSizeInput-${groupIndex}`);
+  const stockEl = document.getElementById(`variantStockInput-${groupIndex}`);
+  const tamanho = String(sizeEl?.value || '').trim();
+  const estoque = Math.max(0, parseInt(stockEl?.value, 10) || 0);
+  if (!tamanho) return toast('Informe o tamanho.', 'error');
+  if (group.sizes.some(v => sameAdminText(v.tamanho, tamanho))) return toast('Esse tamanho ja existe nessa cor.', 'error');
+
+  const placeholderIndex = currentVariants.findIndex(v => sameAdminText(v.cor, group.cor) && !String(v.tamanho || '').trim());
+  const nextVariant = {
+    cor: group.cor,
+    tamanho,
+    estoque,
+    preco: group.preco,
+    preco_antigo: group.preco_antigo,
+    imagem_url: group.imagem_url || group.imagens[0] || null,
+    imagens: [...(group.imagens || [])],
+    videos: [...(group.videos || [])],
+    cor_hex: group.cor_hex || null,
+    ordem: group.ordem || 0,
+    ativo: true
+  };
+  if (placeholderIndex >= 0) currentVariants[placeholderIndex] = nextVariant;
+  else currentVariants.push(nextVariant);
+  renderVariantGrid();
+}
+
+function updateSizeVariantField(groupIndex, sizeIndex, field, value) {
+  const variant = getGroupByIndex(groupIndex)?.sizes[sizeIndex];
+  if (!variant || currentVariants[variant.__index] === undefined) return;
+  if (field === 'estoque') currentVariants[variant.__index].estoque = Math.max(0, parseInt(value, 10) || 0);
+  else currentVariants[variant.__index][field] = String(value || '').trim();
+}
+
+function toggleSizeVariant(groupIndex, sizeIndex) {
+  const variant = getGroupByIndex(groupIndex)?.sizes[sizeIndex];
+  if (!variant || currentVariants[variant.__index] === undefined) return;
+  currentVariants[variant.__index].ativo = currentVariants[variant.__index].ativo === false;
+  renderVariantGrid();
+}
+
+function removeSizeVariant(groupIndex, sizeIndex) {
+  const variant = getGroupByIndex(groupIndex)?.sizes[sizeIndex];
+  if (!variant) return;
+  currentVariants.splice(variant.__index, 1);
+  renderVariantGrid();
+}
+
+function removeColorGroup(groupIndex) {
+  const group = getGroupByIndex(groupIndex);
+  if (!group) return;
+  currentVariants = currentVariants.filter(v => !sameAdminText(v.cor, group.cor));
   renderVariantGrid();
 }
 
@@ -1198,6 +1455,12 @@ function toggleVariantActive(index) {
 function removeVariant(index) {
   currentVariants.splice(index, 1);
   renderVariantGrid();
+}
+
+function getAdminColorValue(cor) {
+  const key = String(cor || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const colors = { preto:'#111111', branco:'#f7f7f7', azul:'#1f5fbf', marrom:'#6b3f26', bege:'#d8c4a0', vermelho:'#c62828', verde:'#2e7d32', cinza:'#777777', grafite:'#333333', caramelo:'#9b5c2e' };
+  return colors[key] || '#777777';
 }
 
 async function saveProductVariants(productId, variants) {
