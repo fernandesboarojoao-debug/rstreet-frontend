@@ -1682,17 +1682,26 @@ RETURNS TRIGGER AS $$
 BEGIN NEW.atualizado_em = NOW(); RETURN NEW; END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_produtos_atualizado ON produtos;
 CREATE TRIGGER trg_produtos_atualizado
   BEFORE UPDATE ON produtos
   FOR EACH ROW EXECUTE FUNCTION update_atualizado_em();
 
--- Política de acesso público (leitura)
+-- Seguranca: leitura publica somente de produtos ativos.
+-- Escrita fica restrita ao backend usando service_role.
 ALTER TABLE produtos ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Leitura pública" ON produtos
-  FOR SELECT USING (ativo = true);
+DROP POLICY IF EXISTS "Leitura publica" ON produtos;
+DROP POLICY IF EXISTS "Admin total" ON produtos;
+DROP POLICY IF EXISTS "Backend total produtos" ON produtos;
+DROP POLICY IF EXISTS "Public read active produtos" ON produtos;
 
-CREATE POLICY "Admin total" ON produtos
+CREATE POLICY "Public read active produtos"
+  ON produtos FOR SELECT TO anon, authenticated
+  USING (ativo = true);
+
+CREATE POLICY "Backend total produtos"
+  ON produtos FOR ALL TO service_role
   USING (true) WITH CHECK (true);`;
 
 function copySQL() {
