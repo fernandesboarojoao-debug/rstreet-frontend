@@ -456,7 +456,7 @@ async function validarCarrinhoAtual() {
     fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo`, {
       headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
     }),
-    fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo`, {
+    fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, {
       headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
     })
   ]);
@@ -490,6 +490,9 @@ async function validarCarrinhoAtual() {
         return null;
       }
       estoque = Math.max(0, Number(variant.estoque) || 0);
+      if (variant.preco !== null && variant.preco !== undefined) item.preco = Number(variant.preco);
+      const variantImages = Array.isArray(variant.imagens) && variant.imagens.length ? variant.imagens : variant.imagem_url ? [variant.imagem_url] : [];
+      if (variantImages[0]) item.imagem = variantImages[0];
     }
 
     if (estoque <= 0) {

@@ -100,11 +100,14 @@
   .stock-text.out { color:var(--red); }
 
   .section-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--gray-400); margin-bottom:12px; }
-  .colors-grid { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px; }
-  .color-btn { width:42px; height:42px; border:2px solid rgba(255,255,255,0.16); background:transparent; border-radius:50%; padding:3px; cursor:pointer; transition:all 0.2s; position:relative; }
+  .colors-grid { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+  .color-btn { width:64px; border:2px solid rgba(255,255,255,0.16); background:var(--gray-800); border-radius:4px; padding:4px; cursor:pointer; transition:all 0.2s; position:relative; color:var(--gray-200); font-family:'Inter',sans-serif; }
   .color-btn:hover { border-color:rgba(200,169,110,0.6); transform:translateY(-1px); }
-  .color-btn.selected { border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-bg); }
-  .color-swatch { display:block; width:100%; height:100%; border-radius:50%; border:1px solid rgba(255,255,255,0.2); }
+  .color-btn.selected { border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-bg); color:var(--gold); }
+  .color-thumb { width:100%; aspect-ratio:1; border-radius:2px; overflow:hidden; border:1px solid rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; background:var(--gray-700); }
+  .color-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .color-swatch { display:block; width:100%; height:100%; }
+  .color-name { display:block; margin-top:5px; font-size:9px; line-height:1.15; text-transform:uppercase; letter-spacing:.6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .sizes-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:32px; }
   .size-btn { border:1.5px solid rgba(255,255,255,0.15); background:transparent; color:var(--gray-200); padding:10px 18px; border-radius:2px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; font-family:'Inter',sans-serif; min-width:52px; text-align:center; }
   .size-btn:hover { border-color:rgba(200,169,110,0.6); color:var(--gold); }
@@ -205,6 +208,7 @@
     .thumb { width:48px; height:62px; }
     .product-name { font-size:40px; overflow-wrap:anywhere; }
     .price-current { font-size:44px; }
+    .color-btn { width:56px; }
     .size-btn, .btn-wpp, .btn-secondary-act { min-height:44px; }
     .detail-item { align-items:flex-start; gap:16px; }
     .detail-val { text-align:right; overflow-wrap:anywhere; }
@@ -297,7 +301,7 @@ async function init() {
       fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&ativo=eq.true&order=criado_em.desc&limit=20`, {
         headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
       }),
-      fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&produto_id=eq.${productId}&ativo=eq.true&order=cor.asc,tamanho.asc`, {
+      fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&produto_id=eq.${productId}&ativo=eq.true&order=ordem.asc,cor.asc,tamanho.asc`, {
         headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
       })
     ]);
@@ -325,7 +329,7 @@ async function refreshProduct() {
       fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&ativo=eq.true&order=criado_em.desc&limit=20`, {
         headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
       }),
-      fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&produto_id=eq.${productId}&ativo=eq.true&order=cor.asc,tamanho.asc`, {
+      fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&produto_id=eq.${productId}&ativo=eq.true&order=ordem.asc,cor.asc,tamanho.asc`, {
         headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
       })
     ]);
@@ -378,14 +382,14 @@ function renderProduct() {
   const variants = getActiveVariants();
   const hasVariants = variants.length > 0;
   if (hasVariants) ensureVariantSelection();
+  const colorData = getSelectedColorData();
   const currentStock = getCurrentStock();
   let badge = '';
   if (currentStock === 0) badge = '<div class="gallery-badge badge-out">Esgotado</div>';
-  else if (p.preco_antigo) badge = '<div class="gallery-badge badge-sale">Oferta</div>';
+  else if (colorData.preco_antigo) badge = '<div class="gallery-badge badge-sale">Oferta</div>';
   else badge = '<div class="gallery-badge badge-new">Novo</div>';
 
-  const imgs = Array.isArray(p.imagens) && p.imagens.length ? p.imagens
-    : p.imagem_url ? [p.imagem_url] : [];
+  const imgs = colorData.imagens;
 
   const mainImg = imgs.length
     ? `<img id="mainImg" src="${imgs[0]}" alt="${p.nome}">`
@@ -399,7 +403,7 @@ function renderProduct() {
         </div>`).join('')}
     </div>` : '';
 
-  const discount = p.preco_antigo ? Math.round((1 - p.preco / p.preco_antigo) * 100) : 0;
+  const discount = colorData.preco_antigo ? Math.round((1 - colorData.preco / colorData.preco_antigo) * 100) : 0;
 
   const stockClass = currentStock === 0 ? 'out' : currentStock <= 5 ? 'low' : 'ok';
   let stockText  = p.estoque === 0 ? 'Esgotado'
@@ -410,10 +414,13 @@ function renderProduct() {
     : currentStock <= 5 ? `Últimas ${currentStock} unidades`
     : `Em estoque (${currentStock} unidades)`;
 
-  const colors = hasVariants ? getVariantColors().map(c =>
-    `<button class="color-btn ${selectedColor === c ? 'selected' : ''}" onclick="selectColor('${escapeAttr(c)}')" title="${escapeAttr(c)}" aria-label="Cor ${escapeAttr(c)}">
-      <span class="color-swatch" style="background:${getColorValue(c)}"></span>
-    </button>`).join('') : '';
+  const colors = hasVariants ? getVariantColors().map(c => {
+    const data = getColorData(c);
+    return `<button class="color-btn ${selectedColor === c ? 'selected' : ''}" onclick="selectColor('${escapeAttr(c)}')" title="${escapeAttr(c)}" aria-label="Cor ${escapeAttr(c)}">
+      <span class="color-thumb">${data.thumbnail ? `<img src="${escapeAttr(data.thumbnail)}" alt="${escapeAttr(c)}">` : `<span class="color-swatch" style="background:${data.cor_hex || getColorValue(c)}"></span>`}</span>
+      <span class="color-name">${escapeHtml(c)}</span>
+    </button>`;
+  }).join('') : '';
 
   const sizes = hasVariants ? getVariantSizes().map(s => {
     const variant = getVariantFor(selectedColor, s);
@@ -442,9 +449,9 @@ function renderProduct() {
         <div class="product-ref">Ref: ${p.referencia || '#'+p.id}${p.categoria ? ' · '+p.categoria : ''}</div>
 
         <div class="price-block">
-          ${p.preco_antigo ? `<div class="price-old">De R$ ${fmt(p.preco_antigo)}</div>` : ''}
+          ${colorData.preco_antigo ? `<div class="price-old">De R$ ${fmt(colorData.preco_antigo)}</div>` : ''}
           <div class="price-current">
-            R$ ${fmt(p.preco)}
+            R$ ${fmt(colorData.preco)}
             ${discount ? `<span class="price-discount">-${discount}%</span>` : ''}
           </div>
         </div>
@@ -507,18 +514,30 @@ function getActiveVariants() {
 }
 
 function getVariantColors() {
-  return [...new Set(getActiveVariants().map(v => String(v.cor || '').trim()).filter(Boolean))];
+  const colors = [...new Set(getActiveVariants().map(v => String(v.cor || '').trim()).filter(Boolean))];
+  return colors.sort((a, b) => {
+    const aOrder = Math.min(...getActiveVariants().filter(v => sameText(v.cor, a)).map(v => Number(v.ordem) || 0));
+    const bOrder = Math.min(...getActiveVariants().filter(v => sameText(v.cor, b)).map(v => Number(v.ordem) || 0));
+    return aOrder - bOrder || a.localeCompare(b);
+  });
 }
 
 function getVariantSizes() {
-  return [...new Set(getActiveVariants().map(v => String(v.tamanho || '').trim()).filter(Boolean))];
+  const list = selectedColor
+    ? getActiveVariants().filter(v => sameText(v.cor, selectedColor))
+    : getActiveVariants();
+  return [...new Set(list.map(v => String(v.tamanho || '').trim()).filter(Boolean))];
 }
 
 function getVariantFor(cor, tamanho) {
   return getActiveVariants().find(v =>
-    String(v.cor || '').trim() === String(cor || '').trim() &&
-    String(v.tamanho || '').trim() === String(tamanho || '').trim()
+    sameText(v.cor, cor) &&
+    sameText(v.tamanho, tamanho)
   ) || null;
+}
+
+function sameText(a, b) {
+  return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 }
 
 function getSelectedVariant() {
@@ -526,11 +545,45 @@ function getSelectedVariant() {
   return variant && Number(variant.estoque) > 0 ? variant : null;
 }
 
+function getProductImages() {
+  return Array.isArray(product?.imagens) && product.imagens.length
+    ? product.imagens
+    : product?.imagem_url ? [product.imagem_url] : [];
+}
+
+function getVariantImages(variant) {
+  if (!variant) return [];
+  if (Array.isArray(variant.imagens) && variant.imagens.length) return variant.imagens.filter(Boolean);
+  return variant.imagem_url ? [variant.imagem_url] : [];
+}
+
+function getColorData(cor) {
+  const list = getActiveVariants().filter(v => sameText(v.cor, cor));
+  const withImages = list.find(v => getVariantImages(v).length) || list[0] || null;
+  const withPrice = list.find(v => v.preco !== null && v.preco !== undefined && v.preco !== '') || withImages;
+  const imagens = getVariantImages(withImages);
+  const fallbackImages = getProductImages();
+  const preco = Number(withPrice?.preco ?? product?.preco ?? 0);
+  const precoAntigoRaw = withPrice?.preco_antigo ?? product?.preco_antigo ?? null;
+  return {
+    cor,
+    imagens: imagens.length ? imagens : fallbackImages,
+    thumbnail: imagens[0] || fallbackImages[0] || '',
+    preco,
+    preco_antigo: precoAntigoRaw ? Number(precoAntigoRaw) : null,
+    cor_hex: withImages?.cor_hex || ''
+  };
+}
+
+function getSelectedColorData() {
+  return getColorData(selectedColor || getVariantColors()[0] || '');
+}
+
 function ensureVariantSelection() {
   const colors = getVariantColors();
   if (!colors.length) return;
   if (!selectedColor || !colors.includes(selectedColor)) {
-    const availableColor = colors.find(c => getActiveVariants().some(v => v.cor === c && Number(v.estoque) > 0));
+    const availableColor = colors.find(c => getActiveVariants().some(v => sameText(v.cor, c) && Number(v.estoque) > 0));
     selectedColor = availableColor || colors[0];
   }
   if (selectedSize) {
@@ -544,7 +597,7 @@ function getCurrentStock() {
   if (!variants.length) return Math.max(0, Number(product?.estoque) || 0);
   const selected = getVariantFor(selectedColor, selectedSize);
   if (selected) return Math.max(0, Number(selected.estoque) || 0);
-  const list = selectedColor ? variants.filter(v => v.cor === selectedColor) : variants;
+  const list = selectedColor ? variants.filter(v => sameText(v.cor, selectedColor)) : variants;
   return list.reduce((sum, v) => sum + Math.max(0, Number(v.estoque) || 0), 0);
 }
 
@@ -610,7 +663,8 @@ function getColorValue(cor) {
 
 function buildWppLink() {
   if (!product) return '#';
-  const msg = `Olá! Tenho interesse no produto:\n*${product.nome}*${selectedColor ? `\nCor: *${selectedColor}*` : ''}${selectedSize ? `\nTamanho: *${selectedSize}*` : ''}\nReferência: ${product.referencia || '#'+product.id}\nValor: R$ ${fmt(product.preco)}\n\nPode me ajudar?`;
+  const price = getSelectedColorData().preco;
+  const msg = `Olá! Tenho interesse no produto:\n*${product.nome}*${selectedColor ? `\nCor: *${selectedColor}*` : ''}${selectedSize ? `\nTamanho: *${selectedSize}*` : ''}\nReferência: ${product.referencia || '#'+product.id}\nValor: R$ ${fmt(price)}\n\nPode me ajudar?`;
   return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -650,7 +704,8 @@ function adicionarCarrinho() {
     return;
   }
   const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
-  const imgs = Array.isArray(product.imagens) && product.imagens.length ? product.imagens : product.imagem_url ? [product.imagem_url] : [];
+  const colorData = getSelectedColorData();
+  const imgs = colorData.imagens;
   const variantId = selectedVariant?.id || null;
   const existing = cart.find(i =>
     i.id === product.id &&
@@ -669,7 +724,7 @@ function adicionarCarrinho() {
       produto_variante_id: variantId,
       nome: product.nome,
       marca: product.marca,
-      preco: product.preco,
+      preco: colorData.preco,
       cor: selectedColor || '',
       tamanho: selectedSize || '',
       referencia: product.referencia || '',
