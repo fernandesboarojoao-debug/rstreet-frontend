@@ -623,7 +623,10 @@
     <div id="tab-pedidos" style="display:none">
       <div class="section-header">
         <div class="section-title">Pedidos</div>
-        <button class="btn btn-outline btn-sm" onclick="loadPedidos()">🔄 Atualizar</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="exportPedidosCSV()">CSV</button>
+          <button class="btn btn-outline btn-sm" onclick="loadPedidos()">🔄 Atualizar</button>
+        </div>
       </div>
       <div class="stats-row" style="margin-bottom:24px">
         <div class="stat-card"><div class="stat-icon">🧾</div><div class="stat-label">Total</div><div class="stat-num" id="ped-total">0</div></div>
@@ -1739,6 +1742,34 @@ async function loadPedidos() {
   }
   updatePedidosStats();
   renderPedidosTable();
+}
+
+function csvCell(value) {
+  const text = String(value ?? '').replace(/\r?\n/g, ' ').trim();
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+async function exportPedidosCSV() {
+  if (!allPedidos.length) await loadPedidos();
+  if (!allPedidos.length) {
+    toast('Nenhum pedido para exportar.', 'info');
+    return;
+  }
+  const cols = [
+    'id','cliente_nome','cliente_email','cliente_telefone','status','envio_status',
+    'codigo_rastreio','rastreio_url','frete_tipo','frete_valor','subtotal','total','criado_em','pago_em'
+  ];
+  const csv = [
+    cols.join(','),
+    ...allPedidos.map(p => cols.map(col => csvCell(p[col])).join(','))
+  ].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `rstreet_pedidos_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('CSV de pedidos exportado.', 'success');
 }
 
 function updatePedidosStats() {
