@@ -282,7 +282,7 @@
   .variant-media-thumb img, .variant-media-thumb video { width:100%;height:100%;object-fit:cover;display:block; }
   .variant-media-thumb button { position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(0,0,0,.7);color:var(--white);cursor:pointer; }
   .variant-size-list { display:flex;flex-direction:column;gap:6px; }
-  .variant-size-row { display:grid;grid-template-columns:1fr 90px auto auto;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px; }
+  .variant-size-row { display:grid;grid-template-columns:1fr 110px auto auto;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px; }
   .variant-size-add { display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end; }
   /* PHOTO UPLOAD */
   .photo-upload-area {
@@ -760,7 +760,7 @@
           <label>Referência</label>
           <input type="text" id="f-ref" placeholder="Ex: ACO-001">
         </div>
-        <div class="form-group full">
+        <div class="form-group full" id="sizesFormGroup">
           <label id="sizesLabel">Tamanhos Disponíveis</label>
           <div class="tag-input-wrap" id="sizesWrap" onclick="document.getElementById('sizeInput').focus()">
             <input type="text" class="tag-input-inner" id="sizeInput" placeholder="Digite e pressione Enter (P, M, G, 38...)" onkeydown="handleSizeInput(event)">
@@ -779,7 +779,7 @@
             <button class="btn btn-outline btn-sm" type="button" onclick="addVariantFromForm()">Adicionar</button>
           </div>
           <div class="variant-grid" id="variantGrid"></div>
-          <div class="form-hint">Use este controle para criar cores e ajustar o estoque por tamanho. Preço, fotos e URL usam os campos da aba de cor selecionada.</div>
+          <div class="form-hint">Use esta área para cadastrar cada tamanho da cor selecionada e a quantidade em estoque de cada tamanho.</div>
         </div>
         <div class="form-group full">
           <label id="imageUrlLabel">URL da Imagem</label>
@@ -1211,8 +1211,8 @@ function renderVariantGrid() {
       <div class="variant-size-list">
         ${group.sizes.length ? group.sizes.map((variant, sizeIndex) => `
           <div class="variant-size-row">
-            <input type="text" value="${escapeAttr(variant.tamanho)}" placeholder="Tamanho" onchange="updateSizeVariantField(${groupIndex}, ${sizeIndex}, 'tamanho', this.value)">
-            <input type="number" min="0" value="${variant.estoque}" placeholder="Qtd" onchange="updateSizeVariantField(${groupIndex}, ${sizeIndex}, 'estoque', this.value)">
+            <input type="text" value="${escapeAttr(variant.tamanho)}" placeholder="Tamanho" aria-label="Tamanho" onchange="updateSizeVariantField(${groupIndex}, ${sizeIndex}, 'tamanho', this.value)">
+            <input type="number" min="0" value="${variant.estoque}" placeholder="Estoque" aria-label="Quantidade em estoque" onchange="updateSizeVariantField(${groupIndex}, ${sizeIndex}, 'estoque', this.value)">
             <button class="btn btn-ghost btn-sm" type="button" onclick="toggleSizeVariant(${groupIndex}, ${sizeIndex})">${variant.ativo !== false ? 'Ativo' : 'Inativo'}</button>
             <button class="btn btn-danger btn-icon btn-sm" type="button" onclick="removeSizeVariant(${groupIndex}, ${sizeIndex})" title="Remover">x</button>
           </div>
@@ -1223,8 +1223,8 @@ function renderVariantGrid() {
         <label>Novo tamanho
           <input type="text" id="variantSizeInput-${groupIndex}" placeholder="P, M, G, 38...">
         </label>
-        <label>Qtd
-          <input type="number" id="variantStockInput-${groupIndex}" min="0" placeholder="0">
+        <label>Estoque
+          <input type="number" id="variantStockInput-${groupIndex}" min="0" placeholder="Qtd">
         </label>
         <button class="btn btn-outline btn-sm" type="button" onclick="addSizeToColor(${groupIndex})">Adicionar tamanho</button>
       </div>
@@ -1258,6 +1258,8 @@ function updateVariantEditorLabels(group) {
   setText('imageUrlLabel', group ? `URL da imagem${color}` : 'URL da Imagem');
   setText('photosLabel', group ? `Fotos/Vídeos${color}` : 'Fotos do Produto');
   setText('sizesHint', group ? 'Os tamanhos desta aba são salvos só para esta cor.' : 'Pressione Enter ou vírgula para adicionar');
+  const sizesGroup = document.getElementById('sizesFormGroup');
+  if (sizesGroup) sizesGroup.style.display = group ? 'none' : '';
   const stockEl = document.getElementById('f-estoque');
   if (stockEl) {
     stockEl.readOnly = !!group;
