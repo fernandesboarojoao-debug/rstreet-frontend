@@ -261,6 +261,11 @@
   .variant-empty { color:var(--gray1);font-size:12px;padding:10px 0; }
   .variant-row input { min-height:36px;padding:8px 10px; }
   .variant-color-tools { display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end; }
+  .variant-tabs-row { display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px; }
+  .variant-tabs { display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;flex:1 1 auto; }
+  .variant-tab { border:1px solid var(--border);background:var(--surface2);color:var(--gray1);border-radius:4px;padding:8px 12px;min-height:40px;display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;white-space:nowrap; }
+  .variant-tab.active { color:var(--gold);border-color:var(--gold);background:var(--gold-bg); }
+  .variant-tab-count { color:var(--gray1);font-weight:600; }
   .variant-color-card { border:1px solid var(--border);background:var(--surface2);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:12px; }
   .variant-color-head { display:flex;align-items:center;justify-content:space-between;gap:12px; }
   .variant-color-title { display:flex;align-items:center;gap:10px;min-width:0; }
@@ -277,7 +282,6 @@
   .variant-size-list { display:flex;flex-direction:column;gap:6px; }
   .variant-size-row { display:grid;grid-template-columns:1fr 90px auto auto;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px; }
   .variant-size-add { display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:end; }
-
   /* PHOTO UPLOAD */
   .photo-upload-area {
     border:2px dashed var(--gray3); border-radius:4px;
@@ -334,6 +338,8 @@
     .variant-tools .btn{grid-column:1/-1}
     .variant-row{grid-template-columns:1fr 70px 80px 74px 36px}
     .variant-color-tools,.variant-color-fields,.variant-size-add{grid-template-columns:1fr}
+    .variant-tabs-row{align-items:stretch;flex-direction:column}
+    .variant-tabs-row .btn{width:100%}
     .variant-size-row{grid-template-columns:1fr 80px auto}
     .login-screen{padding:20px}
     .login-box{width:calc(100vw - 32px);max-width:330px;padding:36px 28px}
@@ -895,6 +901,7 @@ let allVariants = [];
 let editingId = null;
 let currentSizes = [];
 let currentVariants = [];
+let selectedVariantColorKey = null;
 let importRows = [];
 
 // ─────────────────────────────────────────────────────
@@ -1106,10 +1113,15 @@ function normalizeVariant(item) {
   };
 }
 
+function isValidVariantSize(value) {
+  const size = String(value || '').trim();
+  return !!size && size !== '0' && size.toLowerCase() !== 'null' && size.toLowerCase() !== 'undefined';
+}
+
 function getPreparedVariants() {
   const variants = currentVariants
     .map(normalizeVariant)
-    .filter(v => v.cor && v.tamanho);
+    .filter(v => v.cor && isValidVariantSize(v.tamanho));
   const seen = new Set();
   for (const variant of variants) {
     const key = `${variant.cor.toLowerCase()}|${variant.tamanho.toUpperCase()}`;
@@ -1125,7 +1137,7 @@ function applyVariantsToProductPayload(payload, variants) {
   if (!variants.length) return payload;
   const activeVariants = variants.filter(v => v.ativo !== false);
   payload.estoque = activeVariants.reduce((sum, v) => sum + (parseInt(v.estoque, 10) || 0), 0);
-  payload.tamanhos = [...new Set(activeVariants.map(v => v.tamanho).filter(Boolean))];
+  payload.tamanhos = [...new Set(activeVariants.map(v => v.tamanho).filter(isValidVariantSize))];
   const estoqueEl = document.getElementById('f-estoque');
   if (estoqueEl) estoqueEl.value = payload.estoque;
   return payload;
@@ -1151,10 +1163,28 @@ function renderVariantGrid() {
   prepareVariantColorUi();
   const groups = getVariantColorGroups();
   if (!groups.length) {
-    grid.innerHTML = '<div class="variant-empty">Nenhuma cor cadastrada. Adicione uma cor para configurar fotos, videos, preco e tamanhos.</div>';
+    selectedVariantColorKey = null;
+    grid.innerHTML = '<div class="variant-empty">Nenhuma cor cadastrada. Adicione uma cor para configurar fotos, vídeos, preço e tamanhos.</div>';
     return;
   }
-  grid.innerHTML = groups.map((group, groupIndex) => `
+  if (!selectedVariantColorKey || !groups.some(g => getVariantColorKey(g.cor) === selectedVariantColorKey)) {
+    selectedVariantColorKey = getVariantColorKey(groups[0].cor);
+  }
+  const groupIndex = Math.max(0, groups.findIndex(g => getVariantColorKey(g.cor) === selectedVariantColorKey));
+  const group = groups[groupIndex];
+  grid.innerHTML = `
+    <div class="variant-tabs-row">
+      <div class="variant-tabs">
+        ${groups.map((tab, index) => `
+          <button class="variant-tab ${index === groupIndex ? 'active' : ''}" type="button" onclick="selectVariantColorTab(${index})">
+            <span class="variant-color-swatch" style="background:${escapeAttr(tab.cor_hex || getAdminColorValue(tab.cor))}"></span>
+            ${escapeHtml(tab.cor)}
+            <span class="variant-tab-count">${tab.sizes.length || 0}</span>
+          </button>
+        `).join('')}
+      </div>
+      <button class="btn btn-outline btn-sm" type="button" onclick="focusNewColor()">+ Nova cor</button>
+    </div>
     <div class="variant-color-card">
       <div class="variant-color-head">
         <div class="variant-color-title">
@@ -1168,10 +1198,10 @@ function renderVariantGrid() {
       </div>
 
       <div class="variant-color-fields">
-        <label>Preco da cor
+        <label>Preço da cor
           <input type="number" min="0" step="0.01" value="${group.preco ?? ''}" onchange="updateColorGroupField(${groupIndex}, 'preco', this.value)">
         </label>
-        <label>Preco antigo
+        <label>Preço antigo
           <input type="number" min="0" step="0.01" value="${group.preco_antigo ?? ''}" onchange="updateColorGroupField(${groupIndex}, 'preco_antigo', this.value)">
         </label>
         <label>Codigo da cor
@@ -1184,8 +1214,8 @@ function renderVariantGrid() {
 
       <div class="variant-media-box">
         <div class="variant-media-actions">
-          <button class="btn btn-outline btn-sm" type="button" onclick="document.getElementById('variantMediaInput-${groupIndex}').click()">Enviar fotos/videos</button>
-          <span class="variant-muted">Imagens ate 5MB, videos ate 30MB.</span>
+          <button class="btn btn-outline btn-sm" type="button" onclick="document.getElementById('variantMediaInput-${groupIndex}').click()">Enviar fotos/vídeos</button>
+          <span class="variant-muted">Imagens até 5MB, vídeos até 30MB.</span>
           <input type="file" id="variantMediaInput-${groupIndex}" accept="image/*,video/*" multiple style="display:none" onchange="uploadVariantMedia(${groupIndex}, event)">
         </div>
         <div class="variant-media-preview">
@@ -1214,7 +1244,7 @@ function renderVariantGrid() {
         <button class="btn btn-outline btn-sm" type="button" onclick="addSizeToColor(${groupIndex})">Adicionar tamanho</button>
       </div>
     </div>
-  `).join('');
+  `;
 }
 
 function addVariantFromForm() {
@@ -1229,9 +1259,27 @@ function addVariantFromForm() {
   }
 
   currentVariants.push({ cor, tamanho: '', estoque: 0, preco: null, preco_antigo: null, imagem_url: null, imagens: [], videos: [], cor_hex, ordem: currentVariants.length, ativo: true });
+  selectedVariantColorKey = getVariantColorKey(cor);
   if (corEl) corEl.value = '';
   if (hexEl) hexEl.value = '';
   renderVariantGrid();
+}
+
+function getVariantColorKey(cor) {
+  return String(cor || '').trim().toLowerCase();
+}
+
+function selectVariantColorTab(groupIndex) {
+  const group = getGroupByIndex(groupIndex);
+  if (!group) return;
+  selectedVariantColorKey = getVariantColorKey(group.cor);
+  renderVariantGrid();
+}
+
+function focusNewColor() {
+  const input = document.getElementById('variantColorInput');
+  input?.focus();
+  input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function prepareVariantColorUi() {
@@ -1239,7 +1287,7 @@ function prepareVariantColorUi() {
   if (addBtn) addBtn.textContent = 'Adicionar cor';
   const grid = document.getElementById('variantGrid');
   if (grid?.nextElementSibling?.classList?.contains('form-hint')) {
-    grid.nextElementSibling.textContent = 'Cadastre uma cor por bloco. Dentro dela, envie fotos/videos, defina preco e adicione tamanhos com estoque.';
+    grid.nextElementSibling.textContent = 'Cadastre uma cor por aba. Dentro dela, envie fotos/vídeos, defina preço e adicione tamanhos com estoque.';
   }
   const hiddenIds = ['variantSizeInput', 'variantStockInput', 'variantPriceInput', 'variantImagesInput'];
   hiddenIds.forEach(id => {
@@ -1278,7 +1326,7 @@ function getVariantColorGroups() {
     if (!group.cor_hex && variant.cor_hex) group.cor_hex = variant.cor_hex;
     if (group.preco === null && variant.preco !== null && variant.preco !== undefined) group.preco = variant.preco;
     if (group.preco_antigo === null && variant.preco_antigo !== null && variant.preco_antigo !== undefined) group.preco_antigo = variant.preco_antigo;
-    if (String(variant.tamanho || '').trim()) group.sizes.push({ ...variant, __index: index });
+    if (isValidVariantSize(variant.tamanho)) group.sizes.push({ ...variant, __index: index });
   });
   return [...map.values()].sort((a, b) => (a.ordem || 0) - (b.ordem || 0) || a.cor.localeCompare(b.cor));
 }
@@ -1379,10 +1427,10 @@ function addSizeToColor(groupIndex) {
   const stockEl = document.getElementById(`variantStockInput-${groupIndex}`);
   const tamanho = String(sizeEl?.value || '').trim();
   const estoque = Math.max(0, parseInt(stockEl?.value, 10) || 0);
-  if (!tamanho) return toast('Informe o tamanho.', 'error');
+  if (!isValidVariantSize(tamanho)) return toast('Informe um tamanho válido.', 'error');
   if (group.sizes.some(v => sameAdminText(v.tamanho, tamanho))) return toast('Esse tamanho ja existe nessa cor.', 'error');
 
-  const placeholderIndex = currentVariants.findIndex(v => sameAdminText(v.cor, group.cor) && !String(v.tamanho || '').trim());
+  const placeholderIndex = currentVariants.findIndex(v => sameAdminText(v.cor, group.cor) && !isValidVariantSize(v.tamanho));
   const nextVariant = {
     cor: group.cor,
     tamanho,
@@ -1405,7 +1453,15 @@ function updateSizeVariantField(groupIndex, sizeIndex, field, value) {
   const variant = getGroupByIndex(groupIndex)?.sizes[sizeIndex];
   if (!variant || currentVariants[variant.__index] === undefined) return;
   if (field === 'estoque') currentVariants[variant.__index].estoque = Math.max(0, parseInt(value, 10) || 0);
-  else currentVariants[variant.__index][field] = String(value || '').trim();
+  else {
+    const clean = String(value || '').trim();
+    if (!isValidVariantSize(clean)) {
+      toast('Informe um tamanho válido.', 'error');
+      renderVariantGrid();
+      return;
+    }
+    currentVariants[variant.__index][field] = clean;
+  }
 }
 
 function toggleSizeVariant(groupIndex, sizeIndex) {
@@ -1426,6 +1482,7 @@ function removeColorGroup(groupIndex) {
   const group = getGroupByIndex(groupIndex);
   if (!group) return;
   currentVariants = currentVariants.filter(v => !sameAdminText(v.cor, group.cor));
+  selectedVariantColorKey = null;
   renderVariantGrid();
 }
 
@@ -1621,6 +1678,7 @@ function openProductModal(id = null) {
   editingId = id;
   currentSizes = [];
   currentVariants = [];
+  selectedVariantColorKey = null;
   document.getElementById('productModal').classList.add('open');
   document.getElementById('sizesWrap').innerHTML = '<input type="text" class="tag-input-inner" id="sizeInput" placeholder="P, M, G, 38..." onkeydown="handleSizeInput(event)">';
   ['variantColorInput','variantSizeInput','variantStockInput'].forEach(id => {
@@ -1677,9 +1735,11 @@ function handleSizeInput(e) {
   if (e.key === 'Enter' || e.key === ',') {
     e.preventDefault();
     const val = e.target.value.trim().replace(',','');
-    if (val && !currentSizes.includes(val)) {
+    if (isValidVariantSize(val) && !currentSizes.includes(val)) {
       currentSizes.push(val);
       renderSizeTags();
+    } else if (!isValidVariantSize(val)) {
+      toast('Informe um tamanho válido.', 'error');
     }
     e.target.value = '';
   }
@@ -1687,6 +1747,7 @@ function handleSizeInput(e) {
 
 function renderSizeTags() {
   const wrap = document.getElementById('sizesWrap');
+  currentSizes = [...new Set(currentSizes.filter(isValidVariantSize))];
   wrap.innerHTML = currentSizes.map(s =>
     `<span class="tag">${s} <span class="tag-remove" onclick="removeSize('${s}')">✕</span></span>`
   ).join('') + '<input type="text" class="tag-input-inner" id="sizeInput" placeholder="P, M, G, 38..." onkeydown="handleSizeInput(event)">';
