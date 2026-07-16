@@ -575,13 +575,20 @@ function getProductImages() {
 
 function getVariantImages(variant) {
   if (!variant) return [];
-  if (Array.isArray(variant.imagens) && variant.imagens.length) return variant.imagens.filter(Boolean);
-  return variant.imagem_url ? [variant.imagem_url] : [];
+  const imagens = Array.isArray(variant.imagens) ? variant.imagens.map(getStoredMediaUrl).filter(Boolean) : [];
+  if (imagens.length) return imagens;
+  const single = getStoredMediaUrl(variant.imagem_url);
+  return single ? [single] : [];
 }
 
 function getVariantVideos(variant) {
   if (!variant) return [];
   return Array.isArray(variant.videos) ? variant.videos.filter(Boolean) : [];
+}
+
+function getStoredMediaUrl(url) {
+  const clean = String(url || '').trim();
+  return clean && !clean.toLowerCase().startsWith('data:') ? clean : '';
 }
 
 function getColorData(cor) {

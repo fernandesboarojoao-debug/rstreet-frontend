@@ -1055,8 +1055,9 @@ function getCatalogColorGroups(productId) {
     if (group.preco === null && v.preco !== null && v.preco !== undefined && v.preco !== '') group.preco = Number(v.preco);
     if (group.preco_antigo === null && v.preco_antigo !== null && v.preco_antigo !== undefined && v.preco_antigo !== '') group.preco_antigo = Number(v.preco_antigo);
     const images = [];
-    if (v.imagem_url) images.push(v.imagem_url);
-    if (Array.isArray(v.imagens)) images.push(...v.imagens.filter(Boolean));
+    if (Array.isArray(v.imagens)) images.push(...v.imagens.map(getCatalogStoredMediaUrl).filter(Boolean));
+    const singleImage = getCatalogStoredMediaUrl(v.imagem_url);
+    if (singleImage) images.push(singleImage);
     group.imagens.push(...images);
   });
   return [...groups.values()]
@@ -1068,6 +1069,11 @@ function getCatalogGroupImage(group, product) {
   if (group?.imagens?.length) return group.imagens[0];
   if (Array.isArray(product?.imagens) && product.imagens.length) return product.imagens[0];
   return product?.imagem_url || '';
+}
+
+function getCatalogStoredMediaUrl(url) {
+  const clean = String(url || '').trim();
+  return clean && !clean.toLowerCase().startsWith('data:') ? clean : '';
 }
 
 function getCatalogGroupPrice(group, product) {

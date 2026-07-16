@@ -939,6 +939,15 @@ function validateMediaFile(file) {
   return kind;
 }
 
+function getStoredMediaUrl(url) {
+  const clean = String(url || '').trim();
+  return clean && !clean.toLowerCase().startsWith('data:') ? clean : '';
+}
+
+function cleanStoredMediaList(list) {
+  return (Array.isArray(list) ? list : []).map(getStoredMediaUrl).filter(Boolean);
+}
+
 function handlePhotoSelect(e) {
   const files = Array.from(e.target.files);
   const remaining = 5 - uploadedPhotos.length;
@@ -1288,6 +1297,8 @@ function updateVariantEditorLabels(group) {
 function updateVariantEditorFromSelected(group) {
   if (!group) return;
   updateVariantEditorLabels(group);
+  const storedImages = cleanStoredMediaList(group.imagens);
+  const storedImageUrl = getStoredMediaUrl(group.imagem_url);
   const priceEl = document.getElementById('f-preco');
   const oldPriceEl = document.getElementById('f-preco-antigo');
   const stockEl = document.getElementById('f-estoque');
@@ -1295,10 +1306,10 @@ function updateVariantEditorFromSelected(group) {
   if (priceEl) priceEl.value = group.preco ?? '';
   if (oldPriceEl) oldPriceEl.value = group.preco_antigo ?? '';
   if (stockEl) stockEl.value = group.sizes.reduce((sum, v) => sum + (parseInt(v.estoque, 10) || 0), 0);
-  if (imageEl) imageEl.value = group.imagem_url || group.imagens?.[0] || '';
+  if (imageEl) imageEl.value = storedImages[0] || storedImageUrl || '';
   currentSizes = group.sizes.map(v => v.tamanho).filter(isValidVariantSize);
   renderSizeTags();
-  loadPhotosIntoPreview([...(group.imagens || (group.imagem_url ? [group.imagem_url] : [])), ...(group.videos || [])]);
+  loadPhotosIntoPreview([...storedImages, ...(group.videos || [])]);
 }
 
 function syncActiveVariantEditorToState(imageUrls = null) {
@@ -1308,13 +1319,13 @@ function syncActiveVariantEditorToState(imageUrls = null) {
   const sizes = [...new Set(currentSizes.filter(isValidVariantSize))];
   const precoValue = document.getElementById('f-preco')?.value ?? '';
   const precoAntigoValue = document.getElementById('f-preco-antigo')?.value ?? '';
-  const imagemUrl = document.getElementById('f-imagem')?.value.trim() || null;
+  const imagemUrl = getStoredMediaUrl(document.getElementById('f-imagem')?.value) || null;
   const mediaUrls = imageUrls || uploadedPhotos.map(ph => ph.dataUrl || ph.url).filter(Boolean);
   const isVideoMedia = (url, index) => {
     const original = uploadedPhotos[index];
     return String(original?.type || '').startsWith('video/') || /\.(mp4|webm|mov)(\?|$)/i.test(String(url || ''));
   };
-  const imagens = mediaUrls.filter((url, index) => !isVideoMedia(url, index));
+  const imagens = cleanStoredMediaList(mediaUrls.filter((url, index) => !isVideoMedia(url, index)));
   const videos = mediaUrls.filter((url, index) => isVideoMedia(url, index));
   const preco = precoValue === '' ? null : Math.max(0, parseFloat(precoValue) || 0);
   const preco_antigo = precoAntigoValue === '' ? null : Math.max(0, parseFloat(precoAntigoValue) || 0);
@@ -1413,17 +1424,17 @@ function getVariantColorGroups() {
         cor_hex: variant.cor_hex || '',
         preco: variant.preco ?? null,
         preco_antigo: variant.preco_antigo ?? null,
-        imagens: Array.isArray(variant.imagens) ? [...variant.imagens] : [],
+        imagens: cleanStoredMediaList(variant.imagens),
         videos: Array.isArray(variant.videos) ? [...variant.videos] : [],
-        imagem_url: variant.imagem_url || null,
+        imagem_url: getStoredMediaUrl(variant.imagem_url) || null,
         ordem: parseInt(variant.ordem, 10) || 0,
         sizes: []
       });
     }
     const group = map.get(key);
-    if (!group.imagens.length && Array.isArray(variant.imagens) && variant.imagens.length) group.imagens = [...variant.imagens];
+    if (!group.imagens.length && Array.isArray(variant.imagens) && variant.imagens.length) group.imagens = cleanStoredMediaList(variant.imagens);
     if (!group.videos.length && Array.isArray(variant.videos) && variant.videos.length) group.videos = [...variant.videos];
-    if (!group.imagem_url && variant.imagem_url) group.imagem_url = variant.imagem_url;
+    if (!group.imagem_url && getStoredMediaUrl(variant.imagem_url)) group.imagem_url = getStoredMediaUrl(variant.imagem_url);
     if (!group.cor_hex && variant.cor_hex) group.cor_hex = variant.cor_hex;
     if (group.preco === null && variant.preco !== null && variant.preco !== undefined) group.preco = variant.preco;
     if (group.preco_antigo === null && variant.preco_antigo !== null && variant.preco_antigo !== undefined) group.preco_antigo = variant.preco_antigo;
@@ -1539,7 +1550,7 @@ function addSizeToColor(groupIndex) {
     estoque,
     preco: group.preco,
     preco_antigo: group.preco_antigo,
-    imagem_url: group.imagem_url || group.imagens[0] || null,
+    imagem_url: getStoredMediaUrl(group.imagem_url) || cleanStoredMediaList(group.imagens)[0] || null,
     imagens: [...(group.imagens || [])],
     videos: [...(group.videos || [])],
     cor_hex: group.cor_hex || null,
