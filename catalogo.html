@@ -976,18 +976,15 @@ function renderCard(p) {
   const colorGroups = getCatalogColorGroups(p.id);
   const initialColor = colorGroups[0]?.cor || '';
   const initialImage = getCatalogGroupImage(colorGroups[0], p);
+  const initialPrice = getCatalogGroupPrice(colorGroups[0], p);
   const initialUrl = buildProductUrl(p.id, initialColor);
-  const badges = [];
-  if (p.estoque === 0) badges.push('<div class="product-badge badge-out">Esgotado</div>');
-  else if (p.preco_antigo) badges.push('<div class="product-badge badge-sale">Oferta</div>');
-  else if (p.id > allProducts.length - 4) badges.push('<div class="product-badge badge-new">Novo</div>');
+  const badges = renderCatalogBadges(p, initialPrice);
 
   const sizes = (p.tamanhos || []).map(s =>
     `<span class="size-tag available">${s}</span>`
   ).join('');
 
-  const oldPrice = p.preco_antigo
-    ? `<div class="product-price-old">R$ ${p.preco_antigo.toFixed(2).replace('.',',')}</div>` : '';
+  const oldPrice = renderCatalogOldPrice(initialPrice.preco_antigo);
 
   const stockInfo = p.estoque === 0
     ? `<span class="product-stock low">Esgotado</span>`
@@ -1006,7 +1003,7 @@ function renderCard(p) {
     <div class="product-img-wrap">
       ${imgContent}
       ${renderCatalogColorSwatches(p, colorGroups)}
-      ${badges.join('')}
+      <div id="catalog-badges-${p.id}">${badges}</div>
       <div class="product-actions">
         <a class="action-btn" href="${initialUrl}" data-product-link title="Ver detalhes" onclick="event.stopPropagation()">🔍</a>
         <a class="action-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp">💬</a>
@@ -1019,8 +1016,8 @@ function renderCard(p) {
       <div class="product-sizes">${sizes}</div>
       <div class="product-footer">
         <div>
-          ${oldPrice}
-          <div class="product-price">R$ ${p.preco.toFixed(2).replace('.',',')}</div>
+          <div id="catalog-old-price-${p.id}">${oldPrice}</div>
+          <div class="product-price" id="catalog-price-${p.id}">R$ ${formatCatalogPrice(initialPrice.preco)}</div>
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
@@ -1047,14 +1044,20 @@ function getCatalogColorGroups(productId) {
         cor_hex: v.cor_hex || '',
         ordem: Number(v.ordem) || 0,
         imagens: [],
+        preco: null,
+        preco_antigo: null,
         estoque: 0
       });
     }
     const group = groups.get(color);
     group.estoque += Math.max(0, Number(v.estoque) || 0);
     if (!group.cor_hex && v.cor_hex) group.cor_hex = v.cor_hex;
-    if (Array.isArray(v.imagens)) group.imagens.push(...v.imagens.filter(Boolean));
-    else if (v.imagem_url) group.imagens.push(v.imagem_url);
+    if (group.preco === null && v.preco !== null && v.preco !== undefined && v.preco !== '') group.preco = Number(v.preco);
+    if (group.preco_antigo === null && v.preco_antigo !== null && v.preco_antigo !== undefined && v.preco_antigo !== '') group.preco_antigo = Number(v.preco_antigo);
+    const images = [];
+    if (v.imagem_url) images.push(v.imagem_url);
+    if (Array.isArray(v.imagens)) images.push(...v.imagens.filter(Boolean));
+    group.imagens.push(...images);
   });
   return [...groups.values()]
     .map(group => ({ ...group, imagens: [...new Set(group.imagens)] }))
@@ -1065,6 +1068,30 @@ function getCatalogGroupImage(group, product) {
   if (group?.imagens?.length) return group.imagens[0];
   if (Array.isArray(product?.imagens) && product.imagens.length) return product.imagens[0];
   return product?.imagem_url || '';
+}
+
+function getCatalogGroupPrice(group, product) {
+  const hasColorGroup = !!group;
+  return {
+    preco: Number(group?.preco ?? product?.preco ?? 0),
+    preco_antigo: hasColorGroup ? (group.preco_antigo ?? null) : (product?.preco_antigo ?? null)
+  };
+}
+
+function renderCatalogBadges(product, price) {
+  if (product?.estoque === 0) return '<div class="product-badge badge-out">Esgotado</div>';
+  if (price?.preco_antigo) return '<div class="product-badge badge-sale">Oferta</div>';
+  if (product?.id > allProducts.length - 4) return '<div class="product-badge badge-new">Novo</div>';
+  return '';
+}
+
+function renderCatalogOldPrice(value) {
+  const price = Number(value || 0);
+  return price > 0 ? `<div class="product-price-old">R$ ${formatCatalogPrice(price)}</div>` : '';
+}
+
+function formatCatalogPrice(value) {
+  return Number(value || 0).toFixed(2).replace('.', ',');
 }
 
 function renderCatalogColorSwatches(product, groups) {
@@ -1089,14 +1116,27 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   event.stopPropagation();
   const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
   if (!card) return;
+  const product = allProducts.find(p => Number(p.id) === Number(productId));
+  const group = getCatalogColorGroups(productId).find(g => sameCatalogText(g.cor, color));
+  const price = getCatalogGroupPrice(group, product);
   card.dataset.selectedColor = color || '';
   const img = card.querySelector(`#catalog-img-${productId}`);
   if (img && imageUrl) img.src = imageUrl;
+  const priceEl = card.querySelector(`#catalog-price-${productId}`);
+  if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
+  const oldPriceEl = card.querySelector(`#catalog-old-price-${productId}`);
+  if (oldPriceEl) oldPriceEl.innerHTML = renderCatalogOldPrice(price.preco_antigo);
+  const badgeEl = card.querySelector(`#catalog-badges-${productId}`);
+  if (badgeEl) badgeEl.innerHTML = renderCatalogBadges(product, price);
   card.querySelectorAll('.catalog-color-swatch').forEach(btn => btn.classList.remove('is-active'));
   event.currentTarget?.classList.add('is-active');
   card.querySelectorAll('[data-product-link]').forEach(link => {
     link.href = buildProductUrl(productId, color);
   });
+}
+
+function sameCatalogText(a, b) {
+  return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 }
 
 function openCatalogProduct(productId) {

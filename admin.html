@@ -798,7 +798,7 @@
           <div class="form-hint">As fotos ficam salvas em base64 no banco de dados. Para URLs externas, use o campo acima.</div>
         </div>
         <div class="form-group full">
-          <label>Descrição</label>
+          <label id="descLabel">Descrição</label>
           <textarea id="f-desc" placeholder="Descreva o produto..."></textarea>
         </div>
         <div class="form-group full">
@@ -1889,13 +1889,14 @@ async function saveProduct() {
     syncActiveVariantEditorToState(imageUrls);
     const variantsToSave = getPreparedVariants();
     applyVariantsToProductPayload(payload, variantsToSave);
-    const firstVariantWithImage = variantsToSave.find(v => (v.imagens || []).length || v.imagem_url);
+    const hasVariants = variantsToSave.length > 0;
+    const existingProduct = allProducts.find(p => Number(p.id) === Number(editingId)) || {};
     const firstVariantWithPrice = variantsToSave.find(v => v.preco !== null && v.preco !== undefined);
-    payload.imagem_url = firstVariantWithImage?.imagem_url || firstVariantWithImage?.imagens?.[0] || imageUrls[0] || null;
-    payload.imagens = firstVariantWithImage?.imagens?.length ? firstVariantWithImage.imagens : imageUrls;
+    payload.imagem_url = hasVariants ? (imageUrls[0] || existingProduct.imagem_url || null) : (imageUrls[0] || null);
+    payload.imagens = hasVariants ? (imageUrls.length ? imageUrls : (Array.isArray(existingProduct.imagens) ? existingProduct.imagens : [])) : imageUrls;
     if (firstVariantWithPrice) {
       payload.preco = firstVariantWithPrice.preco;
-      payload.preco_antigo = firstVariantWithPrice.preco_antigo;
+      payload.preco_antigo = null;
     }
 
     let savedProductId = editingId;

@@ -593,7 +593,8 @@ function getColorData(cor) {
   const videos = getVariantVideos(withVideos);
   const fallbackImages = getProductImages();
   const preco = Number(withPrice?.preco ?? product?.preco ?? 0);
-  const precoAntigoRaw = withPrice?.preco_antigo ?? product?.preco_antigo ?? null;
+  const hasColorVariants = list.length > 0;
+  const precoAntigoRaw = hasColorVariants ? (withPrice?.preco_antigo ?? null) : (product?.preco_antigo ?? null);
   const mediaImages = (imagens.length ? imagens : fallbackImages).map(url => ({ type: 'image', url }));
   const mediaVideos = videos.map(url => ({ type: 'video', url }));
   return {
