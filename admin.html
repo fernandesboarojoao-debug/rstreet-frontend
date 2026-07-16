@@ -948,6 +948,47 @@ function validateMediaFile(file) {
   return kind;
 }
 
+function isAvifFile(file) {
+  const type = String(file?.type || '').toLowerCase();
+  const ext = String(file?.name || '').split('.').pop()?.toLowerCase();
+  return type === 'image/avif' || ext === 'avif';
+}
+
+function replaceFileExtension(name, ext) {
+  const cleanName = String(name || 'produto').replace(/\.[^.]+$/, '');
+  return `${cleanName}.${ext}`;
+}
+
+function convertAvifToJpegDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(objectUrl);
+        resolve({
+          dataUrl: canvas.toDataURL('image/jpeg', 0.9),
+          name: replaceFileExtension(file.name, 'jpg'),
+          type: 'image/jpeg'
+        });
+      } catch (err) {
+        URL.revokeObjectURL(objectUrl);
+        reject(err);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error(`Nao foi possivel converter "${file.name}". Tente salvar essa imagem como JPG ou PNG.`));
+    };
+    img.src = objectUrl;
+  });
+}
+
 function getStoredMediaUrl(url) {
   const clean = String(url || '').trim();
   return clean && !clean.toLowerCase().startsWith('data:') ? clean : '';
@@ -957,28 +998,34 @@ function cleanStoredMediaList(list) {
   return (Array.isArray(list) ? list : []).map(getStoredMediaUrl).filter(Boolean);
 }
 
-function handlePhotoSelect(e) {
+async function prepareMediaForUpload(file, kind) {
+  if (kind === 'image' && isAvifFile(file)) return convertAvifToJpegDataUrl(file);
+  const dataUrl = await readFileAsDataUrl(file);
+  return {
+    dataUrl,
+    name: file.name,
+    type: file.type || (kind === 'video' ? 'video/mp4' : 'image/jpeg')
+  };
+}
+
+async function handlePhotoSelect(e) {
   const files = Array.from(e.target.files);
   const remaining = 5 - uploadedPhotos.length;
   if (remaining <= 0) return toast('Limite de 5 fotos atingido.', 'error');
 
   const toProcess = files.slice(0, remaining);
-  toProcess.forEach(file => {
+  for (const file of toProcess) {
     let kind = '';
     try {
       kind = validateMediaFile(file);
+      const media = await prepareMediaForUpload(file, kind);
+      uploadedPhotos.push(media);
+      renderPhotoPreview();
+      if (isAvifFile(file)) toast(`"${file.name}" convertido para JPG.`, 'info');
     } catch (err) {
       toast(err.message, 'error');
-      return;
     }
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const fallbackType = kind === 'video' ? 'video/mp4' : 'image/jpeg';
-      uploadedPhotos.push({ dataUrl: ev.target.result, name: file.name, type: file.type || fallbackType });
-      renderPhotoPreview();
-    };
-    reader.readAsDataURL(file);
-  });
+  }
   e.target.value = '';
 }
 
@@ -1514,11 +1561,11 @@ async function uploadVariantMedia(groupIndex, event) {
       const kind = validateMediaFile(file);
       if (file.type.startsWith('image/') && file.size > 5 * 1024 * 1024) throw new Error(`Imagem "${file.name}" passa de 5MB.`);
       if (file.type.startsWith('video/') && file.size > 30 * 1024 * 1024) throw new Error(`Video "${file.name}" passa de 30MB.`);
-      const dataUrl = await readFileAsDataUrl(file);
+      const media = await prepareMediaForUpload(file, kind);
       const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
         method: 'POST',
         headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ dataUrl, name: file.name })
+        body: JSON.stringify({ dataUrl: media.dataUrl, name: media.name })
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
