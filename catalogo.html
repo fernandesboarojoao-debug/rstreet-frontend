@@ -977,20 +977,16 @@ function renderCard(p) {
   const initialColor = colorGroups[0]?.cor || '';
   const initialImage = getCatalogGroupImage(colorGroups[0], p);
   const initialPrice = getCatalogGroupPrice(colorGroups[0], p);
+  const initialStock = getCatalogGroupStock(colorGroups[0], p);
   const initialUrl = buildProductUrl(p.id, initialColor);
-  const badges = renderCatalogBadges(p, initialPrice);
+  const badges = renderCatalogBadges(p, initialPrice, initialStock);
 
   const sizes = (p.tamanhos || []).map(s =>
     `<span class="size-tag available">${s}</span>`
   ).join('');
 
   const oldPrice = renderCatalogOldPrice(initialPrice.preco_antigo);
-
-  const stockInfo = p.estoque === 0
-    ? `<span class="product-stock low">Esgotado</span>`
-    : p.estoque <= 5
-    ? `<span class="product-stock low">Últimas ${p.estoque} unid.</span>`
-    : `<span class="product-stock ok">Em estoque</span>`;
+  const stockInfo = renderCatalogStockInfo(initialStock, p.id);
 
   const imgContent = initialImage
     ? `<img class="product-img" id="catalog-img-${p.id}" src="${escapeAttr(initialImage)}" alt="${escapeAttr(p.nome)}" loading="lazy">`
@@ -1021,7 +1017,7 @@ function renderCard(p) {
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-          <button class="btn-cart" onclick="event.stopPropagation(); openCatalogProduct(${p.id})" id="cart-btn-${p.id}" ${p.estoque <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${p.estoque <= 0 ? 'Esgotado' : 'Escolher'}</button>
+          <button class="btn-cart" onclick="event.stopPropagation(); openCatalogProduct(${p.id})" id="cart-btn-${p.id}" ${initialStock <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${initialStock <= 0 ? 'Esgotado' : 'Escolher'}</button>
           <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
         </div>
       </div>
@@ -1084,8 +1080,18 @@ function getCatalogGroupPrice(group, product) {
   };
 }
 
-function renderCatalogBadges(product, price) {
-  if (product?.estoque === 0) return '<div class="product-badge badge-out">Esgotado</div>';
+function getCatalogGroupStock(group, product) {
+  return Math.max(0, Number(group ? group.estoque : product?.estoque) || 0);
+}
+
+function renderCatalogStockInfo(stock, productId) {
+  const text = stock === 0 ? 'Esgotado' : stock <= 5 ? `Últimas ${stock} unid.` : 'Em estoque';
+  const cls = stock <= 5 ? 'low' : 'ok';
+  return `<span class="product-stock ${cls}" id="catalog-stock-${productId}">${text}</span>`;
+}
+
+function renderCatalogBadges(product, price, stock = product?.estoque) {
+  if (Number(stock || 0) <= 0) return '<div class="product-badge badge-out">Esgotado</div>';
   if (price?.preco_antigo) return '<div class="product-badge badge-sale">Oferta</div>';
   if (product?.id > allProducts.length - 4) return '<div class="product-badge badge-new">Novo</div>';
   return '';
@@ -1125,6 +1131,7 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   const product = allProducts.find(p => Number(p.id) === Number(productId));
   const group = getCatalogColorGroups(productId).find(g => sameCatalogText(g.cor, color));
   const price = getCatalogGroupPrice(group, product);
+  const stock = getCatalogGroupStock(group, product);
   card.dataset.selectedColor = color || '';
   const img = card.querySelector(`#catalog-img-${productId}`);
   if (img && imageUrl) img.src = imageUrl;
@@ -1132,8 +1139,17 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
   const oldPriceEl = card.querySelector(`#catalog-old-price-${productId}`);
   if (oldPriceEl) oldPriceEl.innerHTML = renderCatalogOldPrice(price.preco_antigo);
+  const stockEl = card.querySelector(`#catalog-stock-${productId}`);
+  if (stockEl) stockEl.outerHTML = renderCatalogStockInfo(stock, productId);
   const badgeEl = card.querySelector(`#catalog-badges-${productId}`);
-  if (badgeEl) badgeEl.innerHTML = renderCatalogBadges(product, price);
+  if (badgeEl) badgeEl.innerHTML = renderCatalogBadges(product, price, stock);
+  const cartBtn = card.querySelector(`#cart-btn-${productId}`);
+  if (cartBtn) {
+    cartBtn.disabled = stock <= 0;
+    cartBtn.textContent = stock <= 0 ? 'Esgotado' : 'Escolher';
+    cartBtn.style.opacity = stock <= 0 ? '0.45' : '';
+    cartBtn.style.cursor = stock <= 0 ? 'not-allowed' : '';
+  }
   card.querySelectorAll('.catalog-color-swatch').forEach(btn => btn.classList.remove('is-active'));
   event.currentTarget?.classList.add('is-active');
   card.querySelectorAll('[data-product-link]').forEach(link => {

@@ -955,21 +955,17 @@ function handlePhotoSelect(e) {
 
   const toProcess = files.slice(0, remaining);
   toProcess.forEach(file => {
+    let kind = '';
     try {
-      validateMediaFile(file);
+      kind = validateMediaFile(file);
     } catch (err) {
       toast(err.message, 'error');
       return;
     }
-    const isVideo = file.type.startsWith('video/');
-    const maxSize = isVideo ? 30 * 1024 * 1024 : 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast(`"${file.name}" é muito grande (máx ${isVideo ? '30MB' : '5MB'}).`, 'error');
-      return;
-    }
     const reader = new FileReader();
     reader.onload = ev => {
-      uploadedPhotos.push({ dataUrl: ev.target.result, name: file.name, type: file.type });
+      const fallbackType = kind === 'video' ? 'video/mp4' : 'image/jpeg';
+      uploadedPhotos.push({ dataUrl: ev.target.result, name: file.name, type: file.type || fallbackType });
       renderPhotoPreview();
     };
     reader.readAsDataURL(file);
