@@ -380,11 +380,18 @@ function updateProductSeo(p) {
   const ogTitle = document.querySelector('meta[property="og:title"]');
   const ogDescription = document.querySelector('meta[property="og:description"]');
   const ogUrl = document.querySelector('meta[property="og:url"]');
+  const ogImage = document.querySelector('meta[property="og:image"]');
+  const ogImageSecure = document.querySelector('meta[property="og:image:secure_url"]');
+  const twitterImage = document.querySelector('meta[name="twitter:image"]');
+  const image = getSelectedColorData().thumbnail || getProductImages()[0] || 'https://www.rstreet.com.br/rstreet-social-image.jpg';
   if (metaDescription) metaDescription.setAttribute('content', description);
   if (canonical) canonical.setAttribute('href', url);
   if (ogTitle) ogTitle.setAttribute('content', p.nome);
   if (ogDescription) ogDescription.setAttribute('content', description);
   if (ogUrl) ogUrl.setAttribute('content', url);
+  if (ogImage) ogImage.setAttribute('content', image);
+  if (ogImageSecure) ogImageSecure.setAttribute('content', image);
+  if (twitterImage) twitterImage.setAttribute('content', image);
 }
 
 function renderProduct() {
@@ -417,11 +424,7 @@ function renderProduct() {
   const discount = colorData.preco_antigo ? Math.round((1 - colorData.preco / colorData.preco_antigo) * 100) : 0;
 
   const stockClass = currentStock === 0 ? 'out' : currentStock <= 5 ? 'low' : 'ok';
-  let stockText  = p.estoque === 0 ? 'Esgotado'
-    : p.estoque <= 5 ? `Últimas ${p.estoque} unidades`
-    : `Em estoque (${p.estoque} unidades)`;
-
-  stockText = currentStock === 0 ? 'Esgotado'
+  const stockText = currentStock === 0 ? 'Esgotado'
     : currentStock <= 5 ? `Últimas ${currentStock} unidades`
     : `Em estoque (${currentStock} unidades)`;
 
@@ -438,7 +441,7 @@ function renderProduct() {
     const disabled = !variant || variant.estoque <= 0;
     return `<button class="size-btn ${selectedSize === s ? 'selected' : ''}" onclick="selectSize('${escapeAttr(s)}', this)" ${disabled ? 'disabled' : ''}>${escapeHtml(s)}</button>`;
   }).join('') : (p.tamanhos || []).map(s =>
-    `<button class="size-btn" onclick="selectSize('${s}', this)">${s}</button>`).join('');
+    `<button class="size-btn" onclick="selectSize('${escapeAttr(s)}', this)">${escapeHtml(s)}</button>`).join('');
 
   const addDisabled = hasVariants ? !getSelectedVariant() : currentStock <= 0;
   const addText = addDisabled
@@ -482,7 +485,7 @@ function renderProduct() {
           <button class="btn-wpp" onclick="adicionarCarrinho()" id="btnCarrinho"
             ${addDisabled ? 'disabled' : ''}
             style="background:var(--gold);color:var(--black);border:none;font-size:15px;font-weight:700;letter-spacing:1px;padding:16px 28px;border-radius:3px;cursor:${addDisabled ? 'not-allowed' : 'pointer'};transition:all 0.25s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;${addDisabled ? 'opacity:0.45;' : ''}">
-            <span style="font-size:20px">🛒</span> ${p.estoque <= 0 ? 'Produto esgotado' : 'Adicionar ao Carrinho'}
+            <span style="font-size:20px">🛒</span> ${addText}
           </button>
           <a id="wppBtn" href="${buildWppLink()}" target="_blank" class="btn-wpp">
             <span style="font-size:20px">💬</span> Pedir pelo WhatsApp
