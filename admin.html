@@ -793,7 +793,7 @@
             <div class="photo-upload-title">Clique ou arraste fotos aqui</div>
             <div class="photo-upload-sub">JPG, PNG, WEBP ou vídeo · Máx. 5MB por foto e 30MB por vídeo</div>
           </div>
-          <input type="file" id="photoFileInput" accept="image/*,video/*" multiple style="display:none" onchange="handlePhotoSelect(event)">
+          <input type="file" id="photoFileInput" accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,.mov,image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" multiple style="display:none" onchange="handlePhotoSelect(event)">
           <div class="photo-preview-grid" id="photoPreviewGrid"></div>
           <div class="form-hint">As fotos ficam salvas em base64 no banco de dados. Para URLs externas, use o campo acima.</div>
         </div>
@@ -917,6 +917,28 @@ let importRows = [];
 // ─────────────────────────────────────────────────────
 let uploadedPhotos = []; // array de { dataUrl, name }
 
+function getAllowedMediaType(file) {
+  const type = String(file?.type || '').toLowerCase();
+  const ext = String(file?.name || '').split('.').pop()?.toLowerCase();
+  const imageExts = ['jpg', 'jpeg', 'png', 'webp'];
+  const videoExts = ['mp4', 'webm', 'mov'];
+  if (['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp'].includes(type)) return 'image';
+  if (['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'].includes(type)) return 'video';
+  if (imageExts.includes(ext)) return 'image';
+  if (videoExts.includes(ext)) return 'video';
+  return '';
+}
+
+function validateMediaFile(file) {
+  const kind = getAllowedMediaType(file);
+  if (!kind) throw new Error(`Arquivo "${file.name}" invalido. Use JPG, PNG, WEBP, MP4, WEBM ou MOV.`);
+  const maxSize = kind === 'video' ? 30 * 1024 * 1024 : 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    throw new Error(`"${file.name}" e muito grande (max ${kind === 'video' ? '30MB' : '5MB'}).`);
+  }
+  return kind;
+}
+
 function handlePhotoSelect(e) {
   const files = Array.from(e.target.files);
   const remaining = 5 - uploadedPhotos.length;
@@ -924,6 +946,12 @@ function handlePhotoSelect(e) {
 
   const toProcess = files.slice(0, remaining);
   toProcess.forEach(file => {
+    try {
+      validateMediaFile(file);
+    } catch (err) {
+      toast(err.message, 'error');
+      return;
+    }
     const isVideo = file.type.startsWith('video/');
     const maxSize = isVideo ? 30 * 1024 * 1024 : 5 * 1024 * 1024;
     if (file.size > maxSize) {
@@ -1467,9 +1495,9 @@ async function uploadVariantMedia(groupIndex, event) {
   try {
     const uploaded = { imagens: [], videos: [] };
     for (const file of files) {
+      const kind = validateMediaFile(file);
       if (file.type.startsWith('image/') && file.size > 5 * 1024 * 1024) throw new Error(`Imagem "${file.name}" passa de 5MB.`);
       if (file.type.startsWith('video/') && file.size > 30 * 1024 * 1024) throw new Error(`Video "${file.name}" passa de 30MB.`);
-      if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) throw new Error(`Arquivo "${file.name}" nao e foto nem video.`);
       const dataUrl = await readFileAsDataUrl(file);
       const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
         method: 'POST',
@@ -1478,7 +1506,7 @@ async function uploadVariantMedia(groupIndex, event) {
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      if (file.type.startsWith('video/')) uploaded.videos.push(data.url);
+      if (kind === 'video') uploaded.videos.push(data.url);
       else uploaded.imagens.push(data.url);
     }
     updateColorVariants(groupIndex, (variant) => {
