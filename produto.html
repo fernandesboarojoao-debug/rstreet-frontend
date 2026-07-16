@@ -281,7 +281,9 @@ let productVariants = [];
 let selectedColor = null;
 let selectedSize = null;
 
-const productId = parseInt(new URLSearchParams(window.location.search).get('id'));
+const productParams = new URLSearchParams(window.location.search);
+const productId = parseInt(productParams.get('id'));
+const requestedColor = productParams.get('cor') || productParams.get('color') || '';
 
 async function init() {
   // Sem credenciais configuradas → usa dados de exemplo
@@ -614,7 +616,12 @@ function ensureVariantSelection() {
   const colors = getVariantColors();
   if (!colors.length) return;
   if (!selectedColor || !colors.includes(selectedColor)) {
+    const requested = colors.find(c => sameText(c, requestedColor));
     const availableColor = colors.find(c => getActiveVariants().some(v => sameText(v.cor, c) && Number(v.estoque) > 0));
+    if (requested) {
+      selectedColor = requested;
+      return;
+    }
     selectedColor = availableColor || colors[0];
   }
   if (selectedSize) {

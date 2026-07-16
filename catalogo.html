@@ -254,6 +254,38 @@
   }
   .product-card:hover .product-img { transform: scale(1.06); filter: brightness(1); }
 
+  .catalog-color-swatches {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 3;
+  }
+  .catalog-color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.75);
+    background: var(--gray-700);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+    cursor: pointer;
+    padding: 0;
+    overflow: hidden;
+    transition: transform 0.18s ease, border-color 0.18s ease;
+  }
+  .catalog-color-swatch img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .catalog-color-swatch.is-active {
+    border-color: var(--gold);
+    transform: scale(1.08);
+  }
+
   .product-img-placeholder {
     width: 100%; height: 100%;
     display: flex;
@@ -534,6 +566,8 @@
     .product-card { min-width:0; width:100%; }
     .product-card:hover { transform:none; }
     .product-img-wrap { aspect-ratio:3/4; }
+    .catalog-color-swatches { left:5px; bottom:5px; gap:4px; }
+    .catalog-color-swatch { width:17px; height:17px; }
     .product-img-placeholder { font-size:26px; gap:6px; }
     .product-img-placeholder span { font-size:8px; letter-spacing:1px; }
     .product-badge { top:6px; left:6px; font-size:7px; letter-spacing:1px; padding:3px 5px; }
@@ -752,6 +786,7 @@ const WHATSAPP_NUMBER   = '5519993111599';
 // ESTADO GLOBAL
 // ─────────────────────────────────────────────
 let allProducts = [];
+let allProductVariants = [];
 let filtered = [];
 let currentBrand = 'todos';
 let currentCategory = 'todos';
@@ -785,10 +820,12 @@ async function loadProducts(silent = false) {
     });
     if (!res.ok) throw new Error('Erro ' + res.status);
     allProducts = await res.json();
+    await loadProductVariants();
     syncCartWithStock();
   } catch (err) {
     console.warn('Falha ao buscar do Supabase, usando dados de exemplo:', err.message);
     allProducts = getDemoProducts();
+    allProductVariants = [];
   }
 
   updateMaxPrice();
@@ -799,6 +836,22 @@ async function loadProducts(silent = false) {
 
 async function refreshProducts() {
   await loadProducts(true);
+}
+
+async function loadProductVariants() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&ativo=eq.true&order=ordem.asc,cor.asc,tamanho.asc`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    allProductVariants = res.ok ? await res.json() : [];
+  } catch (err) {
+    console.warn('Falha ao buscar variacoes do catalogo:', err.message);
+    allProductVariants = [];
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -920,6 +973,10 @@ function renderPage() {
 }
 
 function renderCard(p) {
+  const colorGroups = getCatalogColorGroups(p.id);
+  const initialColor = colorGroups[0]?.cor || '';
+  const initialImage = getCatalogGroupImage(colorGroups[0], p);
+  const initialUrl = buildProductUrl(p.id, initialColor);
   const badges = [];
   if (p.estoque === 0) badges.push('<div class="product-badge badge-out">Esgotado</div>');
   else if (p.preco_antigo) badges.push('<div class="product-badge badge-sale">Oferta</div>');
@@ -938,19 +995,20 @@ function renderCard(p) {
     ? `<span class="product-stock low">Últimas ${p.estoque} unid.</span>`
     : `<span class="product-stock ok">Em estoque</span>`;
 
-  const imgContent = p.imagem_url
-    ? `<img class="product-img" src="${p.imagem_url}" alt="${p.nome}" loading="lazy">`
+  const imgContent = initialImage
+    ? `<img class="product-img" id="catalog-img-${p.id}" src="${escapeAttr(initialImage)}" alt="${escapeAttr(p.nome)}" loading="lazy">`
     : `<div class="product-img-placeholder">👕<span>${p.marca}</span></div>`;
 
   const wppMsg = encodeURIComponent(`Olá! Tenho interesse no produto: *${p.nome}* (Ref: ${p.referencia || p.id}) - Valor: R$ ${p.preco.toFixed(2).replace('.',',')}`);
 
   return `
-  <div class="product-card" onclick="window.location.href='produto.html?id=${p.id}'" style="cursor:pointer">
+  <div class="product-card" data-product-id="${p.id}" data-selected-color="${escapeAttr(initialColor)}" onclick="openCatalogProduct(${p.id})" style="cursor:pointer">
     <div class="product-img-wrap">
       ${imgContent}
+      ${renderCatalogColorSwatches(p, colorGroups)}
       ${badges.join('')}
       <div class="product-actions">
-        <a class="action-btn" href="produto.html?id=${p.id}" title="Ver detalhes" onclick="event.stopPropagation()">🔍</a>
+        <a class="action-btn" href="${initialUrl}" data-product-link title="Ver detalhes" onclick="event.stopPropagation()">🔍</a>
         <a class="action-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp">💬</a>
       </div>
     </div>
@@ -966,7 +1024,7 @@ function renderCard(p) {
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-          <button class="btn-cart" onclick="event.stopPropagation(); window.location.href='produto.html?id=${p.id}'" id="cart-btn-${p.id}" ${p.estoque <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${p.estoque <= 0 ? 'Esgotado' : 'Escolher'}</button>
+          <button class="btn-cart" onclick="event.stopPropagation(); openCatalogProduct(${p.id})" id="cart-btn-${p.id}" ${p.estoque <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${p.estoque <= 0 ? 'Esgotado' : 'Escolher'}</button>
           <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
         </div>
       </div>
@@ -977,6 +1035,114 @@ function renderCard(p) {
 // ─────────────────────────────────────────────
 // CARRINHO
 // ─────────────────────────────────────────────
+function getCatalogColorGroups(productId) {
+  const rows = allProductVariants.filter(v => Number(v.produto_id) === Number(productId) && v.ativo !== false);
+  const groups = new Map();
+  rows.forEach(v => {
+    const color = String(v.cor || '').trim();
+    if (!color) return;
+    if (!groups.has(color)) {
+      groups.set(color, {
+        cor: color,
+        cor_hex: v.cor_hex || '',
+        ordem: Number(v.ordem) || 0,
+        imagens: [],
+        estoque: 0
+      });
+    }
+    const group = groups.get(color);
+    group.estoque += Math.max(0, Number(v.estoque) || 0);
+    if (!group.cor_hex && v.cor_hex) group.cor_hex = v.cor_hex;
+    if (Array.isArray(v.imagens)) group.imagens.push(...v.imagens.filter(Boolean));
+    else if (v.imagem_url) group.imagens.push(v.imagem_url);
+  });
+  return [...groups.values()]
+    .map(group => ({ ...group, imagens: [...new Set(group.imagens)] }))
+    .sort((a, b) => a.ordem - b.ordem || a.cor.localeCompare(b.cor));
+}
+
+function getCatalogGroupImage(group, product) {
+  if (group?.imagens?.length) return group.imagens[0];
+  if (Array.isArray(product?.imagens) && product.imagens.length) return product.imagens[0];
+  return product?.imagem_url || '';
+}
+
+function renderCatalogColorSwatches(product, groups) {
+  if (!groups || groups.length < 2) return '';
+  return `<div class="catalog-color-swatches" aria-label="Cores disponiveis">
+    ${groups.map((group, index) => {
+      const image = getCatalogGroupImage(group, product);
+      const swatchContent = image
+        ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(group.cor)}" loading="lazy">`
+        : '';
+      const fallbackColor = group.cor_hex || getColorValue(group.cor);
+      return `<button type="button" class="catalog-color-swatch ${index === 0 ? 'is-active' : ''}"
+        style="background:${escapeAttr(fallbackColor)}"
+        title="${escapeAttr(group.cor)}"
+        aria-label="Ver cor ${escapeAttr(group.cor)}"
+        onclick="selectCatalogColor(event, ${product.id}, '${escapeAttr(group.cor)}', '${escapeAttr(image)}')">${swatchContent}</button>`;
+    }).join('')}
+  </div>`;
+}
+
+function selectCatalogColor(event, productId, color, imageUrl) {
+  event.stopPropagation();
+  const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+  if (!card) return;
+  card.dataset.selectedColor = color || '';
+  const img = card.querySelector(`#catalog-img-${productId}`);
+  if (img && imageUrl) img.src = imageUrl;
+  card.querySelectorAll('.catalog-color-swatch').forEach(btn => btn.classList.remove('is-active'));
+  event.currentTarget?.classList.add('is-active');
+  card.querySelectorAll('[data-product-link]').forEach(link => {
+    link.href = buildProductUrl(productId, color);
+  });
+}
+
+function openCatalogProduct(productId) {
+  const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+  const color = card?.dataset.selectedColor || '';
+  window.location.href = buildProductUrl(productId, color);
+}
+
+function buildProductUrl(productId, color = '') {
+  const suffix = color ? `&cor=${encodeURIComponent(color)}` : '';
+  return `produto.html?id=${productId}${suffix}`;
+}
+
+function getColorValue(color) {
+  const key = String(color || '').trim().toLowerCase();
+  const map = {
+    preto: '#111111',
+    preta: '#111111',
+    branco: '#f4f1ea',
+    branca: '#f4f1ea',
+    azul: '#24558f',
+    marrom: '#6b4423',
+    vermelho: '#a11f2b',
+    vermelha: '#a11f2b',
+    verde: '#2f6f4e',
+    bege: '#cdbb9c',
+    cinza: '#777777',
+    caramelo: '#b77932'
+  };
+  return map[key] || '#c8a96e';
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[char]);
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/\\/g, '\\\\');
+}
+
 function addToCart(id) {
   const p = allProducts.find(x => x.id === id);
   if (!p) return;
