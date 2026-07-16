@@ -792,9 +792,9 @@
           <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('photoFileInput').click()">
             <div class="photo-upload-icon">📷</div>
             <div class="photo-upload-title">Clique ou arraste fotos aqui</div>
-            <div class="photo-upload-sub">JPG, PNG, WEBP ou vídeo · Máx. 5MB por foto e 30MB por vídeo</div>
+            <div class="photo-upload-sub">JPG, PNG, WEBP, AVIF ou vídeo · Máx. 5MB por foto e 30MB por vídeo</div>
           </div>
-          <input type="file" id="photoFileInput" accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,.mov,image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime" multiple style="display:none" onchange="handlePhotoSelect(event)">
+          <input type="file" id="photoFileInput" accept=".jpg,.jpeg,.png,.webp,.avif,.mp4,.webm,.mov,image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime" multiple style="display:none" onchange="handlePhotoSelect(event)">
           <div class="photo-preview-grid" id="photoPreviewGrid"></div>
           <div class="form-hint">As fotos ficam salvas em base64 no banco de dados. Para URLs externas, use o campo acima.</div>
         </div>
@@ -929,9 +929,9 @@ let uploadedPhotos = []; // array de { dataUrl, name }
 function getAllowedMediaType(file) {
   const type = String(file?.type || '').toLowerCase();
   const ext = String(file?.name || '').split('.').pop()?.toLowerCase();
-  const imageExts = ['jpg', 'jpeg', 'png', 'webp'];
+  const imageExts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
   const videoExts = ['mp4', 'webm', 'mov'];
-  if (['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp'].includes(type)) return 'image';
+  if (['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/avif'].includes(type)) return 'image';
   if (['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'].includes(type)) return 'video';
   if (imageExts.includes(ext)) return 'image';
   if (videoExts.includes(ext)) return 'video';
@@ -940,7 +940,7 @@ function getAllowedMediaType(file) {
 
 function validateMediaFile(file) {
   const kind = getAllowedMediaType(file);
-  if (!kind) throw new Error(`Arquivo "${file.name}" invalido. Use JPG, PNG, WEBP, MP4, WEBM ou MOV.`);
+  if (!kind) throw new Error(`Arquivo "${file.name}" invalido. Use JPG, PNG, WEBP, AVIF, MP4, WEBM ou MOV.`);
   const maxSize = kind === 'video' ? 30 * 1024 * 1024 : 5 * 1024 * 1024;
   if (file.size > maxSize) {
     throw new Error(`"${file.name}" e muito grande (max ${kind === 'video' ? '30MB' : '5MB'}).`);
