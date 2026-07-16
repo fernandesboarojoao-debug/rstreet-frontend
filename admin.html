@@ -802,6 +802,14 @@
           <textarea id="f-desc" placeholder="Descreva o produto..."></textarea>
         </div>
         <div class="form-group full">
+          <label>Especificações técnicas</label>
+          <textarea id="f-specs" placeholder="Material, composição, medidas, acabamento..."></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Dicas de conservação</label>
+          <textarea id="f-care" placeholder="Como lavar, guardar e cuidar do produto..."></textarea>
+        </div>
+        <div class="form-group full">
           <label>Status</label>
           <div class="toggle-wrap">
             <button class="toggle on" id="f-ativo-toggle" onclick="toggleStatus(this)"></button>
@@ -1812,6 +1820,8 @@ function openProductModal(id = null) {
     document.getElementById('f-ref').value = p.referencia || '';
     document.getElementById('f-imagem').value = p.imagem_url || '';
     document.getElementById('f-desc').value = p.descricao || '';
+    document.getElementById('f-specs').value = p.especificacoes_tecnicas || '';
+    document.getElementById('f-care').value = p.dicas_conservacao || '';
     const toggle = document.getElementById('f-ativo-toggle');
     toggle.classList.toggle('on', p.ativo !== false);
     document.getElementById('f-ativo-label').textContent = p.ativo !== false ? 'Ativo (visível no catálogo)' : 'Inativo (oculto)';
@@ -1821,7 +1831,7 @@ function openProductModal(id = null) {
     loadProductVariantsIntoModal(id);
   } else {
     document.getElementById('modalTitle').textContent = 'Novo Produto';
-    ['f-nome','f-marca','f-categoria','f-preco','f-preco-antigo','f-estoque','f-ref','f-imagem','f-desc'].forEach(id => {
+    ['f-nome','f-marca','f-categoria','f-preco','f-preco-antigo','f-estoque','f-ref','f-imagem','f-desc','f-specs','f-care'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
@@ -1905,6 +1915,8 @@ async function saveProduct() {
     imagem_url: null,
     imagens: [],
     descricao: document.getElementById('f-desc').value.trim() || null,
+    especificacoes_tecnicas: document.getElementById('f-specs').value.trim() || null,
+    dicas_conservacao: document.getElementById('f-care').value.trim() || null,
     tamanhos: currentSizes,
     ativo: document.getElementById('f-ativo-toggle').classList.contains('on')
   };
@@ -2153,6 +2165,8 @@ CREATE TABLE IF NOT EXISTS produtos (
   imagem_url  TEXT,
   imagens     TEXT[] DEFAULT '{}',   -- array de URLs ou base64
   descricao   TEXT,
+  especificacoes_tecnicas TEXT,
+  dicas_conservacao TEXT,
   ativo       BOOLEAN NOT NULL DEFAULT TRUE,
   criado_em   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()

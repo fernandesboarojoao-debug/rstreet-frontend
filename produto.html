@@ -123,6 +123,14 @@
 
   .divider { border:none; border-top:1px solid var(--border); margin:28px 0; }
   .product-desc { font-size:15px; color:var(--gray-200); line-height:1.8; font-weight:300; margin-bottom:24px; }
+  .product-accordion { border-top:1px solid var(--border); margin-bottom:24px; }
+  .product-accordion-item { border-bottom:1px solid var(--border); }
+  .product-accordion-btn { width:100%; display:flex; align-items:center; justify-content:space-between; gap:16px; background:transparent; border:0; color:var(--white); padding:16px 0; cursor:pointer; font-family:'Inter',sans-serif; font-size:12px; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; text-align:left; }
+  .product-accordion-btn:hover { color:var(--gold); }
+  .product-accordion-icon { color:var(--gold); transition:transform 0.2s; }
+  .product-accordion-item.open .product-accordion-icon { transform:rotate(180deg); }
+  .product-accordion-content { display:none; color:var(--gray-200); font-size:15px; line-height:1.8; font-weight:300; padding:0 0 18px; white-space:pre-line; }
+  .product-accordion-item.open .product-accordion-content { display:block; }
 
   .details-list { display:flex; flex-direction:column; gap:0; }
   .detail-item { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
@@ -484,7 +492,7 @@ function renderProduct() {
 
         <hr class="divider">
 
-        ${p.descricao ? `<p class="product-desc">${p.descricao}</p>` : ''}
+        ${renderProductAccordions(p)}
 
         <div class="details-list">
           ${p.marca ? `<div class="detail-item"><span class="detail-key">Marca</span><span class="detail-val">${p.marca}</span></div>` : ''}
@@ -507,6 +515,36 @@ function renderProduct() {
 
 function changeImg(url, el) {
   changeMedia(url, 'image', el);
+}
+
+function renderProductAccordions(p) {
+  const sections = [
+    { key: 'descricao', title: 'Descrição', content: p.descricao || '' },
+    { key: 'especificacoes', title: 'Especificações técnicas', content: p.especificacoes_tecnicas || '' },
+    { key: 'conservacao', title: 'Dicas de conservação', content: p.dicas_conservacao || '' }
+  ].filter(section => String(section.content || '').trim());
+
+  if (!sections.length) return '';
+
+  return `<div class="product-accordion">
+    ${sections.map((section, index) => `
+      <div class="product-accordion-item ${index === 0 ? 'open' : ''}" data-product-accordion="${section.key}">
+        <button type="button" class="product-accordion-btn" onclick="toggleProductAccordion('${section.key}')">
+          <span>${section.title}</span>
+          <span class="product-accordion-icon">⌄</span>
+        </button>
+        <div class="product-accordion-content">${escapeHtml(section.content)}</div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function toggleProductAccordion(key) {
+  const item = document.querySelector(`[data-product-accordion="${key}"]`);
+  if (!item) return;
+  const shouldOpen = !item.classList.contains('open');
+  document.querySelectorAll('.product-accordion-item').forEach(el => el.classList.remove('open'));
+  if (shouldOpen) item.classList.add('open');
 }
 
 function changeMedia(url, type, el) {
