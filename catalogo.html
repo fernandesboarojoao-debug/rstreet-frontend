@@ -249,11 +249,12 @@
   }
   .product-img {
     width: 100%; height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.5s ease;
     filter: brightness(0.9);
+    background: var(--gray-700);
   }
-  .product-card:hover .product-img { transform: scale(1.06); filter: brightness(1); }
+  .product-card:hover .product-img { transform: scale(1.03); filter: brightness(1); }
 
   .catalog-color-swatches {
     position: absolute;

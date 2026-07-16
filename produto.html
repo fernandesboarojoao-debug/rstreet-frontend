@@ -66,8 +66,8 @@
     overflow:hidden; border:1px solid var(--border); border-radius:4px;
     display:flex; align-items:center; justify-content:center;
   }
-  .gallery-main img, .gallery-main video { width:100%; height:100%; object-fit:cover; transition:transform 0.4s ease; }
-  .gallery-main:hover img { transform:scale(1.04); }
+  .gallery-main img, .gallery-main video { width:100%; height:100%; object-fit:contain; transition:transform 0.4s ease; background:var(--gray-800); }
+  .gallery-main:hover img { transform:scale(1.02); }
   .gallery-placeholder { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:var(--gray-400); font-size:72px; }
   .gallery-placeholder span { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--gray-400); font-family:'Inter',sans-serif; }
   .gallery-badge { position:absolute; top:16px; left:16px; font-size:10px; font-weight:800; letter-spacing:2px; padding:5px 12px; border-radius:2px; text-transform:uppercase; }
@@ -152,7 +152,7 @@
   .related-card { background:var(--gray-800); border:1px solid var(--border); border-radius:4px; overflow:hidden; cursor:pointer; transition:all 0.3s; text-decoration:none; color:inherit; display:block; }
   .related-card:hover { border-color:rgba(200,169,110,0.3); transform:translateY(-3px); }
   .related-img { aspect-ratio:3/4; background:var(--gray-700); display:flex; align-items:center; justify-content:center; font-size:40px; overflow:hidden; }
-  .related-img img { width:100%; height:100%; object-fit:cover; }
+  .related-img img { width:100%; height:100%; object-fit:contain; background:var(--gray-700); }
   .related-body { padding:12px 14px; }
   .related-brand { font-size:9px; letter-spacing:3px; color:var(--gold); text-transform:uppercase; font-weight:700; margin-bottom:3px; }
   .related-name { font-size:13px; font-weight:600; margin-bottom:6px; line-height:1.3; }
