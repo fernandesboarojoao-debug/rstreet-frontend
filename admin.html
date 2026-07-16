@@ -1062,18 +1062,8 @@ async function supabaseProductRequest(path, opts = {}) {
 }
 
 async function saveProductRemote(payload, id = null) {
-  try {
-    if (id) return await sbFetch(`/produtos?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
-    return await sbFetch('/produtos', { method: 'POST', body: JSON.stringify(payload) });
-  } catch (backendError) {
-    const path = id ? `/produtos?id=eq.${id}` : '/produtos';
-    const method = id ? 'PATCH' : 'POST';
-    try {
-      return await supabaseProductRequest(path, { method, body: JSON.stringify(payload) });
-    } catch (supabaseError) {
-      throw new Error(supabaseError.message || backendError.message || 'Erro ao salvar produto');
-    }
-  }
+  if (id) return await sbFetch(`/produtos?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  return await sbFetch('/produtos', { method: 'POST', body: JSON.stringify(payload) });
 }
 
 // ─────────────────────────────────────────────────────
@@ -1868,6 +1858,7 @@ async function saveProduct() {
 
   const btn = document.getElementById('saveBtn');
   btn.textContent = '⏳ Salvando...'; btn.disabled = true;
+  let savedOk = false;
 
   const payload = {
     nome, marca,
@@ -1913,18 +1904,14 @@ async function saveProduct() {
     if (savedProductId) await saveProductVariants(savedProductId, variantsToSave);
     toast(editingId ? 'Produto atualizado!' : 'Produto criado!', 'success');
     notifyCatalogChanged();
+    savedOk = true;
   } catch (err) {
-    // fallback local
-    if (editingId) {
-      const idx = allProducts.findIndex(p => p.id === editingId);
-      if (idx >= 0) allProducts[idx] = { ...allProducts[idx], ...payload };
-    } else {
-      allProducts.unshift({ ...payload, id: Date.now() });
-    }
-    toast('Salvo localmente (Supabase não configurado).', 'info');
+    console.error('Erro ao salvar produto:', err);
+    toast('Erro ao salvar no Supabase: ' + (err.message || 'tente novamente.'), 'error');
   }
 
   btn.textContent = '💾 Salvar Produto'; btn.disabled = false;
+  if (!savedOk) return;
   closeProductModal();
   updateStats(); renderRecentTable(); renderAdminTable();
 }
