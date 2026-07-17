@@ -685,6 +685,9 @@
         <button class="filter-btn" onclick="setCategoryFilterMobile('Camiseta', this)">Camisetas</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Bermuda', this)">Bermudas</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Tênis', this)">Tênis</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Chinelo', this)">Chinelos</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Moletom', this)">Moletons</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Blusa de Frio', this)">Blusas de frio</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Acessório', this)">Acessórios</button>
       </div>
       <div style="margin-top:12px">
@@ -740,6 +743,18 @@
       <div class="sidebar-option" onclick="setCategoryFilter('Tênis', this)">
         <span class="sidebar-option-label">Tênis</span>
         <span class="sidebar-option-count" id="cat-Tênis">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Chinelo', this)">
+        <span class="sidebar-option-label">Chinelos</span>
+        <span class="sidebar-option-count" id="cat-Chinelo">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Moletom', this)">
+        <span class="sidebar-option-label">Moletons</span>
+        <span class="sidebar-option-count" id="cat-Moletom">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Blusa de Frio', this)">
+        <span class="sidebar-option-label">Blusas de frio</span>
+        <span class="sidebar-option-count" id="cat-Blusa de Frio">0</span>
       </div>
       <div class="sidebar-option" onclick="setCategoryFilter('Acessório', this)">
         <span class="sidebar-option-label">Acessórios</span>
@@ -964,7 +979,7 @@ function updateMaxPrice() {
 function updateCategoryCounts() {
   const active = allProducts.filter(p => p.ativo);
   document.getElementById('cat-todos').textContent = active.length;
-  ['Camisa','Calça','Camiseta','Bermuda','Tênis','Acessório'].forEach(cat => {
+  ['Camisa','Calça','Camiseta','Bermuda','Tênis','Chinelo','Moletom','Blusa de Frio','Acessório'].forEach(cat => {
     const el = document.getElementById('cat-' + cat);
     if (el) el.textContent = active.filter(p => p.categoria?.includes(cat)).length;
   });
