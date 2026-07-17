@@ -254,7 +254,20 @@
     filter: brightness(0.9);
     background: var(--gray-700);
   }
+  .catalog-media-slot { width:100%; height:100%; }
+  .catalog-media-slot video { width:100%; height:100%; object-fit:contain; background:var(--gray-700); display:block; }
   .product-card:hover .product-img { transform: scale(1.03); filter: brightness(1); }
+  .catalog-media-arrow {
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:34px; height:44px; border:1px solid rgba(255,255,255,0.18);
+    background:rgba(10,10,10,0.7); color:var(--white); z-index:4;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:26px; line-height:1; border-radius:2px;
+    transition:all .2s; backdrop-filter:blur(8px);
+  }
+  .catalog-media-arrow:hover { color:var(--gold); border-color:rgba(200,169,110,.55); background:rgba(10,10,10,.88); }
+  .catalog-media-arrow.prev { left:8px; }
+  .catalog-media-arrow.next { right:8px; }
 
   .catalog-color-swatches {
     position: absolute;
@@ -568,6 +581,9 @@
     .product-card { min-width:0; width:100%; }
     .product-card:hover { transform:none; }
     .product-img-wrap { aspect-ratio:1/1; }
+    .catalog-media-arrow { width:28px; height:38px; font-size:22px; }
+    .catalog-media-arrow.prev { left:5px; }
+    .catalog-media-arrow.next { right:5px; }
     .catalog-color-swatches { left:5px; bottom:5px; gap:4px; }
     .catalog-color-swatch { width:20px; height:20px; }
     .product-img-placeholder { font-size:26px; gap:6px; }
@@ -977,7 +993,8 @@ function renderPage() {
 function renderCard(p) {
   const colorGroups = getCatalogColorGroups(p.id);
   const initialColor = colorGroups[0]?.cor || '';
-  const initialImage = getCatalogGroupImage(colorGroups[0], p);
+  const initialMediaList = getCatalogGroupMedia(colorGroups[0], p);
+  const initialMedia = initialMediaList[0] || null;
   const initialPrice = getCatalogGroupPrice(colorGroups[0], p);
   const initialStock = getCatalogGroupStock(colorGroups[0], p);
   const initialUrl = buildProductUrl(p.id, initialColor);
@@ -990,16 +1007,19 @@ function renderCard(p) {
   const oldPrice = renderCatalogOldPrice(initialPrice.preco_antigo);
   const stockInfo = renderCatalogStockInfo(initialStock, p.id);
 
-  const imgContent = initialImage
-    ? `<img class="product-img" id="catalog-img-${p.id}" src="${escapeAttr(initialImage)}" alt="${escapeAttr(p.nome)}" loading="lazy">`
+  const imgContent = initialMedia
+    ? renderCatalogMedia(p, initialMedia)
     : `<div class="product-img-placeholder">👕<span>${p.marca}</span></div>`;
 
   const wppMsg = encodeURIComponent(`Olá! Tenho interesse no produto: *${p.nome}* (Ref: ${p.referencia || p.id}) - Valor: R$ ${p.preco.toFixed(2).replace('.',',')}`);
 
   return `
-  <div class="product-card" data-product-id="${p.id}" data-selected-color="${escapeAttr(initialColor)}" onclick="openCatalogProduct(${p.id})" style="cursor:pointer">
+  <div class="product-card" data-product-id="${p.id}" data-selected-color="${escapeAttr(initialColor)}" data-media-index="0" onclick="openCatalogProduct(${p.id})" style="cursor:pointer">
     <div class="product-img-wrap">
-      ${imgContent}
+      <div class="catalog-media-slot" id="catalog-media-${p.id}">
+        ${imgContent}
+      </div>
+      ${initialMediaList.length > 1 ? renderCatalogMediaArrows(p.id) : ''}
       ${renderCatalogColorSwatches(p, colorGroups)}
       <div id="catalog-badges-${p.id}">${badges}</div>
       <div class="product-actions">
@@ -1042,6 +1062,7 @@ function getCatalogColorGroups(productId) {
         cor_hex: v.cor_hex || '',
         ordem: Number(v.ordem) || 0,
         imagens: [],
+        videos: [],
         preco: null,
         preco_antigo: null,
         estoque: 0
@@ -1057,9 +1078,11 @@ function getCatalogColorGroups(productId) {
     const singleImage = getCatalogStoredMediaUrl(v.imagem_url);
     if (singleImage) images.push(singleImage);
     group.imagens.push(...images);
+    const videos = Array.isArray(v.videos) ? v.videos.map(getCatalogStoredMediaUrl).filter(Boolean) : [];
+    group.videos.push(...videos);
   });
   return [...groups.values()]
-    .map(group => ({ ...group, imagens: [...new Set(group.imagens)] }))
+    .map(group => ({ ...group, imagens: [...new Set(group.imagens)], videos: [...new Set(group.videos)] }))
     .sort((a, b) => a.ordem - b.ordem || a.cor.localeCompare(b.cor));
 }
 
@@ -1067,6 +1090,34 @@ function getCatalogGroupImage(group, product) {
   if (group?.imagens?.length) return group.imagens[0];
   if (Array.isArray(product?.imagens) && product.imagens.length) return product.imagens[0];
   return product?.imagem_url || '';
+}
+
+function getCatalogGroupMedia(group, product) {
+  const productImages = Array.isArray(product?.imagens)
+    ? product.imagens.map(url => String(url || '').trim()).filter(Boolean)
+    : [];
+  const singleProductImage = String(product?.imagem_url || '').trim();
+  const images = group?.imagens?.length
+    ? group.imagens
+    : (productImages.length ? productImages : (singleProductImage ? [singleProductImage] : []));
+  const videos = Array.isArray(group?.videos) ? group.videos : [];
+  return [
+    ...images.map(url => ({ type: 'image', url })),
+    ...videos.map(url => ({ type: 'video', url }))
+  ].filter(media => media.url);
+}
+
+function renderCatalogMedia(product, media) {
+  if (media?.type === 'video') {
+    return `<video class="product-img" src="${escapeAttr(media.url)}" autoplay loop playsinline muted></video>`;
+  }
+  return `<img class="product-img" id="catalog-img-${product.id}" src="${escapeAttr(media.url)}" alt="${escapeAttr(product.nome)}" loading="lazy">`;
+}
+
+function renderCatalogMediaArrows(productId) {
+  return `
+    <button type="button" class="catalog-media-arrow prev" aria-label="Midia anterior" onclick="moveCatalogMedia(event, ${productId}, -1)">&#8249;</button>
+    <button type="button" class="catalog-media-arrow next" aria-label="Proxima midia" onclick="moveCatalogMedia(event, ${productId}, 1)">&#8250;</button>`;
 }
 
 function getCatalogStoredMediaUrl(url) {
@@ -1135,8 +1186,8 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   const price = getCatalogGroupPrice(group, product);
   const stock = getCatalogGroupStock(group, product);
   card.dataset.selectedColor = color || '';
-  const img = card.querySelector(`#catalog-img-${productId}`);
-  if (img && imageUrl) img.src = imageUrl;
+  card.dataset.mediaIndex = '0';
+  updateCatalogMedia(productId);
   const priceEl = card.querySelector(`#catalog-price-${productId}`);
   if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
   const oldPriceEl = card.querySelector(`#catalog-old-price-${productId}`);
@@ -1157,6 +1208,40 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   card.querySelectorAll('[data-product-link]').forEach(link => {
     link.href = buildProductUrl(productId, color);
   });
+}
+
+function moveCatalogMedia(event, productId, delta) {
+  event.stopPropagation();
+  const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+  if (!card) return;
+  const product = allProducts.find(p => Number(p.id) === Number(productId));
+  const group = getCatalogColorGroups(productId).find(g => sameCatalogText(g.cor, card.dataset.selectedColor));
+  const medias = getCatalogGroupMedia(group, product);
+  if (medias.length < 2) return;
+  const current = Number(card.dataset.mediaIndex || 0);
+  card.dataset.mediaIndex = String((current + delta + medias.length) % medias.length);
+  updateCatalogMedia(productId);
+}
+
+function updateCatalogMedia(productId) {
+  const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+  if (!card) return;
+  const product = allProducts.find(p => Number(p.id) === Number(productId));
+  if (!product) return;
+  const group = getCatalogColorGroups(productId).find(g => sameCatalogText(g.cor, card.dataset.selectedColor));
+  const medias = getCatalogGroupMedia(group, product);
+  const slot = card.querySelector(`#catalog-media-${productId}`);
+  if (!slot || !medias.length) return;
+  let index = Number(card.dataset.mediaIndex || 0);
+  if (Number.isNaN(index) || index < 0 || index >= medias.length) index = 0;
+  card.dataset.mediaIndex = String(index);
+  slot.innerHTML = renderCatalogMedia(product, medias[index]);
+  const arrows = card.querySelectorAll('.catalog-media-arrow');
+  if (medias.length > 1 && !arrows.length) {
+    slot.insertAdjacentHTML('afterend', renderCatalogMediaArrows(productId));
+  } else if (medias.length <= 1) {
+    arrows.forEach(btn => btn.remove());
+  }
 }
 
 function sameCatalogText(a, b) {
