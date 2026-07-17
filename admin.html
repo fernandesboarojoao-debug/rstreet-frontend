@@ -793,12 +793,12 @@
           <label id="photosLabel">Fotos do Produto</label>
           <div class="photo-upload-area" id="photoUploadArea" onclick="document.getElementById('photoFileInput').click()">
             <div class="photo-upload-icon">📷</div>
-            <div class="photo-upload-title">Clique ou arraste fotos aqui</div>
+            <div class="photo-upload-title">Clique ou arraste fotos/videos aqui</div>
             <div class="photo-upload-sub">JPG, PNG, WEBP, AVIF ou vídeo · Máx. 5MB por foto e 30MB por vídeo</div>
           </div>
           <input type="file" id="photoFileInput" accept=".jpg,.jpeg,.png,.webp,.avif,.mp4,.webm,.mov,image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime" multiple style="display:none" onchange="handlePhotoSelect(event)">
           <div class="photo-preview-grid" id="photoPreviewGrid"></div>
-          <div class="form-hint">As fotos ficam salvas em base64 no banco de dados. Para URLs externas, use o campo acima.</div>
+          <div class="form-hint">As midias ficam salvas no Supabase Storage. Para URLs externas, use o campo acima.</div>
         </div>
         <div class="form-group full">
           <label id="descLabel">Descrição</label>
@@ -1013,7 +1013,7 @@ async function prepareMediaForUpload(file, kind) {
 async function handlePhotoSelect(e) {
   const files = Array.from(e.target.files);
   const remaining = 5 - uploadedPhotos.length;
-  if (remaining <= 0) return toast('Limite de 5 fotos atingido.', 'error');
+  if (remaining <= 0) return toast('Limite de 5 midias atingido.', 'error');
 
   const toProcess = files.slice(0, remaining);
   for (const file of toProcess) {

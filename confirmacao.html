@@ -267,6 +267,24 @@
 
 <script>
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/`/g, '&#96;');
+}
+function safeImageUrl(value) {
+  const url = String(value || '').trim();
+  if (!url) return '';
+  if (/^(https?:|data:image\/)/i.test(url)) return url;
+  return '';
+}
 
 const PAYMENT_LABELS = {
   credit_card: '💳 Cartão de Crédito',
@@ -296,49 +314,52 @@ function init() {
   document.getElementById('statusTitle').className = `status-title ${s.cls}`;
   document.getElementById('statusTitle').textContent = s.title;
   document.getElementById('statusSub').textContent = s.sub;
-  if (pedidoId) document.getElementById('statusId').innerHTML = `Pedido: <strong>#${pedidoId}</strong>`;
+  if (pedidoId) document.getElementById('statusId').innerHTML = `Pedido: <strong>#${escapeHtml(pedidoId)}</strong>`;
 
   // Carrega dados do pedido do localStorage
   const pedido = JSON.parse(localStorage.getItem('rstreet_pedido') || 'null');
 
   if (pedido) {
     // Itens
-    document.getElementById('orderItems').innerHTML = pedido.itens.map(item => `
+    document.getElementById('orderItems').innerHTML = pedido.itens.map(item => {
+      const img = safeImageUrl(item.imagem);
+      return `
       <div class="order-item">
         <div class="order-item-img">
-          ${item.imagem ? `<img src="${item.imagem}" alt="${item.nome}">` : '👕'}
+          ${img ? `<img src="${escapeAttr(img)}" alt="${escapeAttr(item.nome)}">` : '👕'}
         </div>
         <div class="order-item-info">
-          <div class="order-item-name">${item.nome}</div>
-          <div class="order-item-meta">Qtd: ${item.quantidade}${item.cor ? ' · Cor: ' + item.cor : ''}${item.tamanho ? ' · Tam: ' + item.tamanho : ''}</div>
+          <div class="order-item-name">${escapeHtml(item.nome)}</div>
+          <div class="order-item-meta">Qtd: ${escapeHtml(item.quantidade)}${item.cor ? ' · Cor: ' + escapeHtml(item.cor) : ''}${item.tamanho ? ' · Tam: ' + escapeHtml(item.tamanho) : ''}</div>
         </div>
         <div class="order-item-price">${fmt(item.preco_unitario * item.quantidade)}</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     // Cliente
     const c = pedido.cliente;
     document.getElementById('clienteInfo').innerHTML = `
-      <div class="info-row"><span class="info-key">Nome</span><span class="info-val">${c.nome}</span></div>
-      <div class="info-row"><span class="info-key">E-mail</span><span class="info-val">${c.email}</span></div>
-      <div class="info-row"><span class="info-key">Telefone</span><span class="info-val">${c.telefone}</span></div>
-      ${c.cpf ? `<div class="info-row"><span class="info-key">CPF</span><span class="info-val">${c.cpf}</span></div>` : ''}
+      <div class="info-row"><span class="info-key">Nome</span><span class="info-val">${escapeHtml(c.nome)}</span></div>
+      <div class="info-row"><span class="info-key">E-mail</span><span class="info-val">${escapeHtml(c.email)}</span></div>
+      <div class="info-row"><span class="info-key">Telefone</span><span class="info-val">${escapeHtml(c.telefone)}</span></div>
+      ${c.cpf ? `<div class="info-row"><span class="info-key">CPF</span><span class="info-val">${escapeHtml(c.cpf)}</span></div>` : ''}
     `;
 
     // Endereço
     const e = pedido.endereco;
     document.getElementById('enderecoInfo').innerHTML = `
-      <div class="info-row"><span class="info-key">Endereço</span><span class="info-val">${e.rua}, ${e.numero}${e.complemento ? ', '+e.complemento : ''}</span></div>
-      <div class="info-row"><span class="info-key">Bairro</span><span class="info-val">${e.bairro}</span></div>
-      <div class="info-row"><span class="info-key">Cidade</span><span class="info-val">${e.cidade} - ${e.estado}</span></div>
-      <div class="info-row"><span class="info-key">CEP</span><span class="info-val">${e.cep}</span></div>
+      <div class="info-row"><span class="info-key">Endereço</span><span class="info-val">${escapeHtml(e.rua)}, ${escapeHtml(e.numero)}${e.complemento ? ', '+escapeHtml(e.complemento) : ''}</span></div>
+      <div class="info-row"><span class="info-key">Bairro</span><span class="info-val">${escapeHtml(e.bairro)}</span></div>
+      <div class="info-row"><span class="info-key">Cidade</span><span class="info-val">${escapeHtml(e.cidade)} - ${escapeHtml(e.estado)}</span></div>
+      <div class="info-row"><span class="info-key">CEP</span><span class="info-val">${escapeHtml(e.cep)}</span></div>
     `;
 
     // Totais
     const subtotal = pedido.itens.reduce((s,i) => s + i.preco_unitario * i.quantidade, 0);
     document.getElementById('cfSubtotal').textContent = fmt(subtotal);
     document.getElementById('cfFrete').textContent = pedido.frete.valor > 0 ? fmt(pedido.frete.valor) : 'Grátis';
-    document.getElementById('cfPagamento').textContent = PAYMENT_LABELS[pedido.metodo_pagamento] || pedido.metodo_pagamento;
+    document.getElementById('cfPagamento').textContent = PAYMENT_LABELS[pedido.metodo_pagamento] || String(pedido.metodo_pagamento || '');
     document.getElementById('cfTotal').textContent = fmt(pedido.total);
   }
 
