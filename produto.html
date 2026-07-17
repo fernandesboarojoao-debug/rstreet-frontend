@@ -303,6 +303,8 @@ let allProducts = [];
 let productVariants = [];
 let selectedColor = null;
 let selectedSize = null;
+let selectedMediaUrl = null;
+let selectedMediaType = null;
 
 const productParams = new URLSearchParams(window.location.search);
 const productId = parseInt(productParams.get('id'));
@@ -423,15 +425,17 @@ function renderProduct() {
 
   const medias = colorData.medias;
   const imgs = colorData.imagens;
+  const activeMediaIndex = getActiveMediaIndex(medias);
+  const activeMedia = medias[activeMediaIndex] || medias[0] || null;
 
-  const mainMedia = medias.length
-    ? renderMainMedia(medias[0], p.nome)
+  const mainMedia = activeMedia
+    ? renderMainMedia(activeMedia, p.nome)
     : `<div class="gallery-placeholder">👕<span>${p.marca || 'R Street'}</span></div>`;
 
   const thumbs = medias.length > 1 ? `
     <div class="gallery-thumbs">
       ${medias.map((media, i) => `
-        <div class="thumb ${i===0?'active':''}" onclick="changeMedia('${escapeAttr(media.url)}', '${media.type}', this)">
+        <div class="thumb ${i===activeMediaIndex?'active':''}" onclick="changeMedia('${escapeAttr(media.url)}', '${media.type}', this)">
           ${renderThumbMedia(media, i)}
         </div>`).join('')}
     </div>` : '';
@@ -567,6 +571,8 @@ function toggleProductAccordion(key) {
 }
 
 function changeMedia(url, type, el) {
+  selectedMediaUrl = url;
+  selectedMediaType = type;
   const wrap = document.querySelector('.gallery-main');
   if (wrap) {
     const badge = wrap.querySelector('.gallery-badge')?.outerHTML || '';
@@ -575,6 +581,18 @@ function changeMedia(url, type, el) {
   }
   document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
   el?.classList.add('active');
+}
+
+function getActiveMediaIndex(medias) {
+  if (!Array.isArray(medias) || !medias.length) return 0;
+  const index = medias.findIndex(media =>
+    media.url === selectedMediaUrl &&
+    (!selectedMediaType || media.type === selectedMediaType)
+  );
+  if (index >= 0) return index;
+  selectedMediaUrl = medias[0].url;
+  selectedMediaType = medias[0].type;
+  return 0;
 }
 
 function renderProductMediaArrows() {
@@ -723,6 +741,8 @@ function getCurrentStock() {
 function selectColor(cor) {
   selectedColor = cor;
   selectedSize = null;
+  selectedMediaUrl = null;
+  selectedMediaType = null;
   renderProduct();
   const btn = document.getElementById('wppBtn');
   if (btn) btn.href = buildWppLink();

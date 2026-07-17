@@ -806,6 +806,7 @@ const WHATSAPP_NUMBER   = '5519993111599';
 let allProducts = [];
 let allProductVariants = [];
 let filtered = [];
+let catalogMediaState = {};
 let currentBrand = 'todos';
 let currentCategory = 'todos';
 let currentStock = 'todos';
@@ -992,11 +993,14 @@ function renderPage() {
 
 function renderCard(p) {
   const colorGroups = getCatalogColorGroups(p.id);
-  const initialColor = colorGroups[0]?.cor || '';
-  const initialMediaList = getCatalogGroupMedia(colorGroups[0], p);
-  const initialMedia = initialMediaList[0] || null;
-  const initialPrice = getCatalogGroupPrice(colorGroups[0], p);
-  const initialStock = getCatalogGroupStock(colorGroups[0], p);
+  const state = catalogMediaState[p.id] || {};
+  const initialGroup = colorGroups.find(group => sameCatalogText(group.cor, state.color)) || colorGroups[0] || null;
+  const initialColor = initialGroup?.cor || '';
+  const initialMediaList = getCatalogGroupMedia(initialGroup, p);
+  const initialIndex = clampCatalogMediaIndex(state.mediaIndex, initialMediaList);
+  const initialMedia = initialMediaList[initialIndex] || null;
+  const initialPrice = getCatalogGroupPrice(initialGroup, p);
+  const initialStock = getCatalogGroupStock(initialGroup, p);
   const initialUrl = buildProductUrl(p.id, initialColor);
   const badges = renderCatalogBadges(p, initialPrice, initialStock);
 
@@ -1014,7 +1018,7 @@ function renderCard(p) {
   const wppMsg = encodeURIComponent(`Olá! Tenho interesse no produto: *${p.nome}* (Ref: ${p.referencia || p.id}) - Valor: R$ ${p.preco.toFixed(2).replace('.',',')}`);
 
   return `
-  <div class="product-card" data-product-id="${p.id}" data-selected-color="${escapeAttr(initialColor)}" data-media-index="0" onclick="openCatalogProduct(${p.id})" style="cursor:pointer">
+  <div class="product-card" data-product-id="${p.id}" data-selected-color="${escapeAttr(initialColor)}" data-media-index="${initialIndex}" onclick="openCatalogProduct(${p.id})" style="cursor:pointer">
     <div class="product-img-wrap">
       <div class="catalog-media-slot" id="catalog-media-${p.id}">
         ${imgContent}
@@ -1120,6 +1124,13 @@ function renderCatalogMediaArrows(productId) {
     <button type="button" class="catalog-media-arrow next" aria-label="Proxima midia" onclick="moveCatalogMedia(event, ${productId}, 1)">&#8250;</button>`;
 }
 
+function clampCatalogMediaIndex(index, medias) {
+  const total = Array.isArray(medias) ? medias.length : 0;
+  if (!total) return 0;
+  const value = Number(index || 0);
+  return Number.isNaN(value) || value < 0 || value >= total ? 0 : value;
+}
+
 function getCatalogStoredMediaUrl(url) {
   const clean = String(url || '').trim();
   return clean && !clean.toLowerCase().startsWith('data:') ? clean : '';
@@ -1161,6 +1172,7 @@ function formatCatalogPrice(value) {
 
 function renderCatalogColorSwatches(product, groups) {
   if (!groups || groups.length < 2) return '';
+  const selectedColor = catalogMediaState[product.id]?.color || groups[0]?.cor || '';
   return `<div class="catalog-color-swatches" aria-label="Cores disponiveis">
     ${groups.map((group, index) => {
       const image = getCatalogGroupImage(group, product);
@@ -1168,7 +1180,7 @@ function renderCatalogColorSwatches(product, groups) {
         ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(group.cor)}" loading="lazy">`
         : '';
       const fallbackColor = group.cor_hex || getColorValue(group.cor);
-      return `<button type="button" class="catalog-color-swatch ${index === 0 ? 'is-active' : ''}"
+      return `<button type="button" class="catalog-color-swatch ${sameCatalogText(group.cor, selectedColor) ? 'is-active' : ''}"
         style="background:${escapeAttr(fallbackColor)}"
         title="${escapeAttr(group.cor)}"
         aria-label="Ver cor ${escapeAttr(group.cor)}"
@@ -1187,6 +1199,7 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   const stock = getCatalogGroupStock(group, product);
   card.dataset.selectedColor = color || '';
   card.dataset.mediaIndex = '0';
+  catalogMediaState[productId] = { color: color || '', mediaIndex: 0 };
   updateCatalogMedia(productId);
   const priceEl = card.querySelector(`#catalog-price-${productId}`);
   if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
@@ -1219,7 +1232,12 @@ function moveCatalogMedia(event, productId, delta) {
   const medias = getCatalogGroupMedia(group, product);
   if (medias.length < 2) return;
   const current = Number(card.dataset.mediaIndex || 0);
-  card.dataset.mediaIndex = String((current + delta + medias.length) % medias.length);
+  const nextIndex = (current + delta + medias.length) % medias.length;
+  card.dataset.mediaIndex = String(nextIndex);
+  catalogMediaState[productId] = {
+    color: card.dataset.selectedColor || '',
+    mediaIndex: nextIndex
+  };
   updateCatalogMedia(productId);
 }
 
@@ -1232,9 +1250,12 @@ function updateCatalogMedia(productId) {
   const medias = getCatalogGroupMedia(group, product);
   const slot = card.querySelector(`#catalog-media-${productId}`);
   if (!slot || !medias.length) return;
-  let index = Number(card.dataset.mediaIndex || 0);
-  if (Number.isNaN(index) || index < 0 || index >= medias.length) index = 0;
+  let index = clampCatalogMediaIndex(card.dataset.mediaIndex, medias);
   card.dataset.mediaIndex = String(index);
+  catalogMediaState[productId] = {
+    color: card.dataset.selectedColor || '',
+    mediaIndex: index
+  };
   slot.innerHTML = renderCatalogMedia(product, medias[index]);
   const arrows = card.querySelectorAll('.catalog-media-arrow');
   if (medias.length > 1 && !arrows.length) {
