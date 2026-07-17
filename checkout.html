@@ -186,12 +186,18 @@
   .footer-copy { font-size:12px; color:var(--gray-400); }
 
   @media(max-width:900px){
+    html, body { width:100%; max-width:100%; overflow-x:hidden; }
+    nav, .steps-bar, .checkout-layout, footer { width:100%; max-width:100vw; }
     nav { padding:14px 20px; }
-    .steps-bar { padding:14px 20px; gap:4px; }
+    .steps-bar { padding:14px 20px; gap:4px; overflow:hidden; }
     .step-item span:not(.step-num) { display:none; }
-    .checkout-layout { grid-template-columns:1fr; padding:24px 20px 60px; }
+    .checkout-layout { grid-template-columns:minmax(0,1fr); padding:24px 16px 60px; margin:0; overflow:hidden; }
+    .checkout-layout > div, .form-card, .order-summary, .form-grid, .form-group, .os-items { width:100%; max-width:100%; min-width:0; }
+    .form-card, .order-summary { max-width:calc(100vw - 32px); }
+    .form-card, .order-summary { overflow:hidden; }
     .order-summary { position:static; }
-    .form-grid { grid-template-columns:1fr; }
+    .form-grid { grid-template-columns:minmax(0,1fr); }
+    input, select, button, .btn-calcular, .btn-finalizar { max-width:100%; }
     .payment-methods { grid-template-columns:1fr 1fr 1fr; }
     footer { padding:24px 20px; }
   }
@@ -203,8 +209,9 @@
     .steps-bar { padding:12px 18px; }
     .step-item { padding:0 8px; }
     .step-sep { width:28px; }
-    .checkout-layout { padding:22px 18px 52px; gap:24px; }
+    .checkout-layout { padding:22px 14px 52px; gap:24px; }
     .checkout-layout, .form-card, .order-summary, .form-grid, .os-items { width:100%; max-width:100%; min-width:0; }
+    .form-card, .order-summary { max-width:calc(100vw - 28px); }
     .form-card, .order-summary { padding:22px; overflow:hidden; }
     .form-card-title { font-size:24px; line-height:1.1; align-items:flex-start; }
     input, select, .btn-calcular { min-height:44px; font-size:15px; }
