@@ -305,6 +305,7 @@ let selectedColor = null;
 let selectedSize = null;
 let selectedMediaUrl = null;
 let selectedMediaType = null;
+let openProductAccordionKey = null;
 
 const productParams = new URLSearchParams(window.location.search);
 const productId = parseInt(productParams.get('id'));
@@ -550,8 +551,8 @@ function renderProductAccordions(p) {
   if (!sections.length) return '';
 
   return `<div class="product-accordion">
-    ${sections.map((section, index) => `
-      <div class="product-accordion-item ${index === 0 ? 'open' : ''}" data-product-accordion="${section.key}">
+    ${sections.map(section => `
+      <div class="product-accordion-item ${openProductAccordionKey === section.key ? 'open' : ''}" data-product-accordion="${section.key}">
         <button type="button" class="product-accordion-btn" onclick="toggleProductAccordion('${section.key}')">
           <span>${section.title}</span>
           <span class="product-accordion-icon">⌄</span>
@@ -567,6 +568,7 @@ function toggleProductAccordion(key) {
   if (!item) return;
   const shouldOpen = !item.classList.contains('open');
   document.querySelectorAll('.product-accordion-item').forEach(el => el.classList.remove('open'));
+  openProductAccordionKey = shouldOpen ? key : null;
   if (shouldOpen) item.classList.add('open');
 }
 
