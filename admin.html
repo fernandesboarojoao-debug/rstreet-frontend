@@ -1155,6 +1155,18 @@ async function saveProductRemote(payload, id = null) {
   return await sbFetch('/produtos', { method: 'POST', body: JSON.stringify(payload) });
 }
 
+function getFriendlySaveError(err) {
+  const raw = String(err?.message || err || '').trim();
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed?.erro) return String(parsed.erro);
+  } catch {}
+  if (raw.includes('produtos_referencia_key') || raw.includes('duplicate key') || raw.includes('23505')) {
+    return 'Essa referência já está cadastrada em outro produto. Use uma referência diferente ou edite o produto existente.';
+  }
+  return raw || 'Tente novamente.';
+}
+
 // ─────────────────────────────────────────────────────
 // CARREGAR PRODUTOS
 // ─────────────────────────────────────────────────────
@@ -1968,6 +1980,15 @@ async function saveProduct() {
     tamanhos: currentSizes,
     ativo: document.getElementById('f-ativo-toggle').classList.contains('on')
   };
+  const duplicatedReference = payload.referencia && allProducts.find(p =>
+    String(p.referencia || '').trim().toLowerCase() === String(payload.referencia).trim().toLowerCase() &&
+    Number(p.id) !== Number(editingId)
+  );
+  if (duplicatedReference) {
+    toast(`A referência ${payload.referencia} já está cadastrada em "${duplicatedReference.nome}". Use outra referência ou edite esse produto.`, 'error');
+    btn.textContent = 'ðŸ’¾ Salvar Produto'; btn.disabled = false;
+    return;
+  }
 
   try {
     syncActiveVariantEditorToState();
@@ -2002,7 +2023,7 @@ async function saveProduct() {
     savedOk = true;
   } catch (err) {
     console.error('Erro ao salvar produto:', err);
-    toast('Erro ao salvar no Supabase: ' + (err.message || 'tente novamente.'), 'error');
+    toast(getFriendlySaveError(err), 'error');
   }
 
   btn.textContent = '💾 Salvar Produto'; btn.disabled = false;
