@@ -55,12 +55,14 @@
   .checkout-layout {
     max-width:1100px; margin:0 auto; padding:48px 60px 80px;
     display:grid; grid-template-columns:1fr 380px; gap:40px; align-items:start;
+    width:100%; min-width:0;
   }
 
   /* FORM */
   .form-card {
     background:var(--gray-900); border:1px solid var(--border);
     border-radius:4px; padding:32px; margin-bottom:20px;
+    min-width:0; max-width:100%;
   }
   .form-card-title {
     font-family:'Bebas Neue',sans-serif; font-size:28px;
@@ -69,7 +71,7 @@
   }
   .form-card-icon { font-size:22px; }
   .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; min-width:0; }
   .form-group.full { grid-column:1/-1; }
   label { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--gray-400); }
   input, select {
@@ -100,11 +102,12 @@
     display:flex; align-items:center; justify-content:space-between;
     padding:12px 16px; border:1px solid var(--border); border-radius:3px;
     cursor:pointer; transition:all 0.2s; background:var(--gray-800);
+    min-width:0;
   }
   .frete-option:hover, .frete-option.selected { border-color:var(--gold); background:var(--gold-bg); }
   .frete-option input[type=radio] { accent-color:var(--gold); margin-right:10px; }
-  .frete-option-label { font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; }
-  .frete-option-price { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); }
+  .frete-option-label { font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
+  .frete-option-price { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); white-space:nowrap; }
   .frete-option-days { font-size:11px; color:var(--gray-400); }
   .frete-loading { font-size:13px; color:var(--gray-400); padding:12px 0; display:none; }
 
@@ -123,6 +126,7 @@
   .order-summary {
     background:var(--gray-900); border:1px solid var(--border);
     border-radius:4px; padding:28px; position:sticky; top:90px;
+    min-width:0; max-width:100%;
   }
   .os-title {
     font-family:'Bebas Neue',sans-serif; font-size:26px;
@@ -141,9 +145,9 @@
   .os-item-meta { font-size:11px; color:var(--gray-400); }
   .os-item-price { font-family:'Bebas Neue',sans-serif; font-size:18px; color:var(--gold); white-space:nowrap; }
   .os-divider { border:none; border-top:1px solid var(--border); margin:12px 0; }
-  .os-row { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; }
+  .os-row { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; gap:12px; min-width:0; }
   .os-row .label { color:var(--gray-400); }
-  .os-total { display:flex; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px solid rgba(200,169,110,0.3); }
+  .os-total { display:flex; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px solid rgba(200,169,110,0.3); gap:12px; min-width:0; }
   .os-total .label { font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--gold); }
   .os-total .val { font-family:'Bebas Neue',sans-serif; font-size:32px; color:var(--gold); }
 
@@ -200,15 +204,19 @@
     .step-item { padding:0 8px; }
     .step-sep { width:28px; }
     .checkout-layout { padding:22px 18px 52px; gap:24px; }
-    .form-card, .order-summary { padding:22px; }
+    .checkout-layout, .form-card, .order-summary, .form-grid, .os-items { width:100%; max-width:100%; min-width:0; }
+    .form-card, .order-summary { padding:22px; overflow:hidden; }
     .form-card-title { font-size:24px; line-height:1.1; align-items:flex-start; }
     input, select, .btn-calcular { min-height:44px; font-size:15px; }
     .frete-calc { flex-direction:column; align-items:stretch; }
     .payment-methods { grid-template-columns:1fr; }
     .pay-method { min-height:68px; display:flex; align-items:center; justify-content:center; gap:12px; }
     .pay-method-icon { margin-bottom:0; }
-    .frete-option { gap:14px; align-items:flex-start; }
+    .frete-option { gap:14px; align-items:flex-start; flex-wrap:wrap; }
+    .frete-option-label { align-items:flex-start; overflow-wrap:anywhere; }
     .frete-option-price { flex-shrink:0; }
+    .os-row, .os-total { align-items:flex-start; }
+    .os-total .val { font-size:28px; text-align:right; white-space:nowrap; }
     .btn-finalizar { min-height:50px; }
     .footer-copy { line-height:1.6; }
   }
