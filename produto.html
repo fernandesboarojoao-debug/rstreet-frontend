@@ -132,6 +132,17 @@
   .btn-wpp:hover { background:#1db954; transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,211,102,0.3); }
   .btn-secondary-act { display:flex; align-items:center; justify-content:center; gap:8px; background:transparent; color:var(--gray-200); border:1px solid rgba(255,255,255,0.15); padding:14px 28px; border-radius:3px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.25s; font-family:'Inter',sans-serif; }
   .btn-secondary-act:hover { border-color:var(--gold); color:var(--gold); }
+  .size-chart-trigger { display:flex; align-items:center; justify-content:space-between; gap:14px; width:100%; margin:4px 0 24px; padding:13px 16px; border-radius:3px; border:1px solid rgba(200,169,110,0.35); background:var(--gold-bg); color:var(--white); cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; text-align:left; }
+  .size-chart-trigger:hover { border-color:var(--gold); transform:translateY(-1px); }
+  .size-chart-trigger strong { color:var(--gold); font-size:12px; letter-spacing:1.7px; text-transform:uppercase; }
+  .size-chart-trigger span { color:var(--gray-200); font-size:13px; }
+  .size-chart-modal { position:fixed; inset:0; z-index:10000; display:flex; align-items:center; justify-content:center; padding:24px; background:rgba(0,0,0,0.78); backdrop-filter:blur(8px); }
+  .size-chart-box { width:min(920px, 100%); max-height:88vh; overflow:auto; background:var(--gray-900); border:1px solid rgba(200,169,110,0.35); border-radius:6px; box-shadow:0 24px 80px rgba(0,0,0,0.55); }
+  .size-chart-head { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 16px; border-bottom:1px solid var(--border); }
+  .size-chart-head strong { color:var(--gold); font-size:12px; letter-spacing:2px; text-transform:uppercase; }
+  .size-chart-close { width:34px; height:34px; border:1px solid rgba(255,255,255,0.16); background:transparent; color:var(--white); font-size:22px; cursor:pointer; border-radius:3px; line-height:1; }
+  .size-chart-close:hover { color:var(--gold); border-color:var(--gold); }
+  .size-chart-img { display:block; width:100%; height:auto; background:#fff; }
 
   .divider { border:none; border-top:1px solid var(--border); margin:28px 0; }
   .product-desc { font-size:15px; color:var(--gray-200); line-height:1.8; font-weight:300; margin-bottom:24px; }
@@ -232,6 +243,10 @@
     .product-name { font-size:40px; overflow-wrap:anywhere; }
     .price-current { font-size:44px; }
     .color-btn { width:56px; }
+    .size-chart-modal { padding:14px; }
+    .size-chart-head { padding:12px; }
+    .size-chart-trigger { padding:12px 14px; margin-bottom:20px; }
+    .size-chart-trigger span { font-size:12px; }
     .size-btn, .btn-wpp, .btn-secondary-act { min-height:44px; }
     .detail-item { align-items:flex-start; gap:16px; }
     .detail-val { text-align:right; overflow-wrap:anywhere; }
@@ -498,9 +513,6 @@ function renderProduct() {
 
         ${colors ? `<div class="section-label">Cor</div><div class="colors-grid">${colors}</div>` : ''}
         ${sizes ? `<div class="section-label">Tamanho</div><div class="sizes-grid">${sizes}</div>` : ''}
-        <div style="font-size:12px;color:var(--gray-400);line-height:1.7;margin:10px 0 18px">
-          Guia rapido: P veste 36/38, M veste 40, G veste 42/44 e GG veste 46/48. Para medidas exatas, chame no WhatsApp.
-        </div>
 
         <div class="product-actions">
           <button class="btn-wpp" onclick="adicionarCarrinho()" id="btnCarrinho"
@@ -516,6 +528,7 @@ function renderProduct() {
 
         <hr class="divider">
 
+        ${renderSizeChartButton(p)}
         ${renderProductAccordions(p)}
 
         <div class="details-list">
@@ -539,6 +552,52 @@ function renderProduct() {
 
 function changeImg(url, el) {
   changeMedia(url, 'image', el);
+}
+
+function getSizeChart(product) {
+  const text = `${product?.categoria || ''} ${product?.nome || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (text.includes('tenis') || text.includes('chinelo') || text.includes('sandalia') || text.includes('sapato') || text.includes('calcado')) {
+    return { title: 'Tabela de medidas - Calçados', src: 'tabela-medidas-tenis.jpeg' };
+  }
+  if (text.includes('calca') || text.includes('jeans')) {
+    return { title: 'Tabela de medidas - Calça', src: 'tabela-medidas-calca.jpg' };
+  }
+  if (text.includes('camisa') || text.includes('camiseta') || text.includes('polo') || text.includes('moletom') || text.includes('moleton') || text.includes('blusa') || text.includes('frio')) {
+    return { title: 'Tabela de medidas - Parte superior', src: 'tabela-medidas-camisa.jpg' };
+  }
+  return null;
+}
+
+function renderSizeChartButton(product) {
+  const chart = getSizeChart(product);
+  if (!chart) return '';
+  return `<button type="button" class="size-chart-trigger" onclick="openSizeChart('${escapeAttr(chart.title)}', '${escapeAttr(chart.src)}')">
+    <span><strong>Tabela de medidas</strong><br>Confira as medidas antes de escolher o tamanho</span>
+    <span>Ver tabela</span>
+  </button>`;
+}
+
+function openSizeChart(title, src) {
+  closeSizeChart();
+  const modal = document.createElement('div');
+  modal.className = 'size-chart-modal';
+  modal.id = 'sizeChartModal';
+  modal.onclick = event => {
+    if (event.target === modal) closeSizeChart();
+  };
+  modal.innerHTML = `
+    <div class="size-chart-box">
+      <div class="size-chart-head">
+        <strong>${escapeHtml(title)}</strong>
+        <button type="button" class="size-chart-close" onclick="closeSizeChart()" aria-label="Fechar tabela">&times;</button>
+      </div>
+      <img class="size-chart-img" src="${escapeAttr(src)}" alt="${escapeAttr(title)}">
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function closeSizeChart() {
+  document.getElementById('sizeChartModal')?.remove();
 }
 
 function renderProductAccordions(p) {
