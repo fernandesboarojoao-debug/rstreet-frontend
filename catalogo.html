@@ -1113,7 +1113,7 @@ function getCatalogGroupMedia(group, product) {
 
 function renderCatalogMedia(product, media) {
   if (media?.type === 'video') {
-    return `<video class="product-img" src="${escapeAttr(media.url)}" autoplay loop playsinline muted onended="this.currentTime=0;this.play()"></video>`;
+    return `<video class="product-img" src="${escapeAttr(media.url)}" autoplay loop playsinline muted disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
   }
   return `<img class="product-img" id="catalog-img-${product.id}" src="${escapeAttr(media.url)}" alt="${escapeAttr(product.nome)}" loading="lazy">`;
 }

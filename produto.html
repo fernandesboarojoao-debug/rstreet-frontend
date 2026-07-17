@@ -614,13 +614,13 @@ function stepProductMedia(event, delta) {
 
 function renderMainMedia(media, alt) {
   if (media?.type === 'video') {
-    return `<video id="mainImg" src="${escapeAttr(media.url)}" controls autoplay loop playsinline muted onended="this.currentTime=0;this.play()"></video>`;
+    return `<video id="mainImg" src="${escapeAttr(media.url)}" autoplay loop playsinline muted disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
   }
   return `<img id="mainImg" src="${escapeAttr(media.url)}" alt="${escapeAttr(alt)}">`;
 }
 
 function renderThumbMedia(media, index) {
-  if (media?.type === 'video') return `<video src="${escapeAttr(media.url)}" autoplay loop playsinline muted onended="this.currentTime=0;this.play()"></video>`;
+  if (media?.type === 'video') return `<video src="${escapeAttr(media.url)}" autoplay loop playsinline muted disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
   return `<img src="${escapeAttr(media.url)}" alt="foto ${index + 1}">`;
 }
 
