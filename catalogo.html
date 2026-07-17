@@ -1004,6 +1004,7 @@ function renderPage() {
   }
 
   grid.innerHTML = page.map(p => renderCard(p)).join('');
+  prepareCatalogVideos(grid);
 }
 
 function renderCard(p) {
@@ -1128,9 +1129,30 @@ function getCatalogGroupMedia(group, product) {
 
 function renderCatalogMedia(product, media) {
   if (media?.type === 'video') {
-    return `<video class="product-img" src="${escapeAttr(media.url)}" autoplay loop playsinline muted disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
+    return `<video class="product-img" src="${escapeAttr(media.url)}" autoplay loop playsinline webkit-playsinline muted preload="auto" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
   }
   return `<img class="product-img" id="catalog-img-${product.id}" src="${escapeAttr(media.url)}" alt="${escapeAttr(product.nome)}" loading="lazy">`;
+}
+
+function prepareCatalogVideos(root = document) {
+  root.querySelectorAll('video').forEach(video => {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    const play = () => {
+      const promise = video.play?.();
+      if (promise?.catch) promise.catch(() => {});
+    };
+    if (video.readyState >= 2) play();
+    else {
+      video.addEventListener('loadeddata', play, { once: true });
+      video.addEventListener('canplay', play, { once: true });
+    }
+    video.addEventListener('touchstart', play, { passive: true });
+  });
 }
 
 function renderCatalogMediaArrows(productId) {
@@ -1272,6 +1294,7 @@ function updateCatalogMedia(productId) {
     mediaIndex: index
   };
   slot.innerHTML = renderCatalogMedia(product, medias[index]);
+  prepareCatalogVideos(slot);
   const arrows = card.querySelectorAll('.catalog-media-arrow');
   if (medias.length > 1 && !arrows.length) {
     slot.insertAdjacentHTML('afterend', renderCatalogMediaArrows(productId));

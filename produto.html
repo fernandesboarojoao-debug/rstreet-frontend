@@ -548,6 +548,7 @@ function renderProduct() {
 
   const cartBtn = document.getElementById('btnCarrinho');
   if (cartBtn) cartBtn.innerHTML = `<span style="font-size:20px">🛒</span> ${addText}`;
+  prepareProductVideos(document.getElementById('mainContent'));
 }
 
 function changeImg(url, el) {
@@ -639,6 +640,7 @@ function changeMedia(url, type, el) {
     const badge = wrap.querySelector('.gallery-badge')?.outerHTML || '';
     const arrows = document.querySelectorAll('.thumb').length > 1 ? renderProductMediaArrows() : '';
     wrap.innerHTML = `${renderMainMedia({ url, type }, product?.nome || 'Produto')}${arrows}${badge}`;
+    prepareProductVideos(wrap);
   }
   document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
   el?.classList.add('active');
@@ -673,14 +675,35 @@ function stepProductMedia(event, delta) {
 
 function renderMainMedia(media, alt) {
   if (media?.type === 'video') {
-    return `<video id="mainImg" src="${escapeAttr(media.url)}" autoplay loop playsinline muted disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
+    return `<video id="mainImg" src="${escapeAttr(media.url)}" autoplay loop playsinline webkit-playsinline muted preload="auto" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
   }
   return `<img id="mainImg" src="${escapeAttr(media.url)}" alt="${escapeAttr(alt)}">`;
 }
 
 function renderThumbMedia(media, index) {
-  if (media?.type === 'video') return `<video src="${escapeAttr(media.url)}" autoplay loop playsinline muted disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
+  if (media?.type === 'video') return `<video src="${escapeAttr(media.url)}" autoplay loop playsinline webkit-playsinline muted preload="metadata" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
   return `<img src="${escapeAttr(media.url)}" alt="foto ${index + 1}">`;
+}
+
+function prepareProductVideos(root = document) {
+  root.querySelectorAll('video').forEach(video => {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    const play = () => {
+      const promise = video.play?.();
+      if (promise?.catch) promise.catch(() => {});
+    };
+    if (video.readyState >= 2) play();
+    else {
+      video.addEventListener('loadeddata', play, { once: true });
+      video.addEventListener('canplay', play, { once: true });
+    }
+    video.addEventListener('touchstart', play, { passive: true });
+  });
 }
 
 function getActiveVariants() {
