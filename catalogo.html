@@ -268,6 +268,16 @@
   .catalog-media-arrow:hover { color:var(--gold); border-color:rgba(200,169,110,.55); background:rgba(10,10,10,.88); }
   .catalog-media-arrow.prev { left:8px; }
   .catalog-media-arrow.next { right:8px; }
+  .video-play-overlay {
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,255,255,.35);
+    background:rgba(10,10,10,.72); color:var(--white); z-index:5;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; cursor:pointer; backdrop-filter:blur(8px);
+    transition:opacity .2s, transform .2s, color .2s, border-color .2s;
+  }
+  .video-play-overlay:hover { color:var(--gold); border-color:rgba(200,169,110,.65); transform:translate(-50%,-50%) scale(1.04); }
+  .video-play-overlay.is-hidden { opacity:0; pointer-events:none; }
 
   .catalog-color-swatches {
     position: absolute;
@@ -1129,7 +1139,7 @@ function getCatalogGroupMedia(group, product) {
 
 function renderCatalogMedia(product, media) {
   if (media?.type === 'video') {
-    return `<video class="product-img" src="${escapeAttr(media.url)}" autoplay loop playsinline webkit-playsinline muted preload="auto" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
+    return `<video class="product-img" src="${escapeAttr(media.url)}" autoplay loop playsinline webkit-playsinline muted preload="auto" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" onclick="playInlineCatalogVideo(event,this)" onplaying="hideCatalogVideoOverlay(this)" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video><button type="button" class="video-play-overlay" aria-label="Reproduzir video" onclick="playInlineCatalogVideo(event,this.previousElementSibling)">&#9658;</button>`;
   }
   return `<img class="product-img" id="catalog-img-${product.id}" src="${escapeAttr(media.url)}" alt="${escapeAttr(product.nome)}" loading="lazy">`;
 }
@@ -1144,7 +1154,7 @@ function prepareCatalogVideos(root = document) {
     video.setAttribute('webkit-playsinline', '');
     const play = () => {
       const promise = video.play?.();
-      if (promise?.catch) promise.catch(() => {});
+      if (promise?.then) promise.then(() => hideCatalogVideoOverlay(video)).catch(() => showCatalogVideoOverlay(video));
     };
     if (video.readyState >= 2) play();
     else {
@@ -1153,6 +1163,28 @@ function prepareCatalogVideos(root = document) {
     }
     video.addEventListener('touchstart', play, { passive: true });
   });
+}
+
+function playInlineCatalogVideo(event, video) {
+  event?.preventDefault();
+  event?.stopPropagation();
+  if (!video) return;
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.setAttribute('muted', '');
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  const promise = video.play?.();
+  if (promise?.then) promise.then(() => hideCatalogVideoOverlay(video)).catch(() => showCatalogVideoOverlay(video));
+}
+
+function hideCatalogVideoOverlay(video) {
+  video?.parentElement?.querySelector('.video-play-overlay')?.classList.add('is-hidden');
+}
+
+function showCatalogVideoOverlay(video) {
+  video?.parentElement?.querySelector('.video-play-overlay')?.classList.remove('is-hidden');
 }
 
 function renderCatalogMediaArrows(productId) {

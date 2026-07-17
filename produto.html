@@ -81,6 +81,16 @@
   .gallery-media-arrow:hover { color:var(--gold); border-color:rgba(200,169,110,.55); background:rgba(10,10,10,.88); }
   .gallery-media-arrow.prev { left:12px; }
   .gallery-media-arrow.next { right:12px; }
+  .video-play-overlay {
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:54px; height:54px; border-radius:50%; border:1px solid rgba(255,255,255,.35);
+    background:rgba(10,10,10,.72); color:var(--white); z-index:5;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; cursor:pointer; backdrop-filter:blur(8px);
+    transition:opacity .2s, transform .2s, color .2s, border-color .2s;
+  }
+  .video-play-overlay:hover { color:var(--gold); border-color:rgba(200,169,110,.65); transform:translate(-50%,-50%) scale(1.04); }
+  .video-play-overlay.is-hidden { opacity:0; pointer-events:none; }
   .gallery-badge { position:absolute; top:16px; left:16px; font-size:10px; font-weight:800; letter-spacing:2px; padding:5px 12px; border-radius:2px; text-transform:uppercase; }
   .badge-new { background:var(--gold); color:var(--black); }
   .badge-sale { background:var(--red); color:#fff; }
@@ -675,7 +685,7 @@ function stepProductMedia(event, delta) {
 
 function renderMainMedia(media, alt) {
   if (media?.type === 'video') {
-    return `<video id="mainImg" src="${escapeAttr(media.url)}" autoplay loop playsinline webkit-playsinline muted preload="auto" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video>`;
+    return `<video id="mainImg" src="${escapeAttr(media.url)}" autoplay loop playsinline webkit-playsinline muted preload="auto" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" onclick="playInlineProductVideo(event,this)" onplaying="hideProductVideoOverlay(this)" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video><button type="button" class="video-play-overlay" aria-label="Reproduzir video" onclick="playInlineProductVideo(event,this.previousElementSibling)">&#9658;</button>`;
   }
   return `<img id="mainImg" src="${escapeAttr(media.url)}" alt="${escapeAttr(alt)}">`;
 }
@@ -695,7 +705,7 @@ function prepareProductVideos(root = document) {
     video.setAttribute('webkit-playsinline', '');
     const play = () => {
       const promise = video.play?.();
-      if (promise?.catch) promise.catch(() => {});
+      if (promise?.then) promise.then(() => hideProductVideoOverlay(video)).catch(() => showProductVideoOverlay(video));
     };
     if (video.readyState >= 2) play();
     else {
@@ -704,6 +714,28 @@ function prepareProductVideos(root = document) {
     }
     video.addEventListener('touchstart', play, { passive: true });
   });
+}
+
+function playInlineProductVideo(event, video) {
+  event?.preventDefault();
+  event?.stopPropagation();
+  if (!video) return;
+  video.muted = true;
+  video.defaultMuted = true;
+  video.playsInline = true;
+  video.setAttribute('muted', '');
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  const promise = video.play?.();
+  if (promise?.then) promise.then(() => hideProductVideoOverlay(video)).catch(() => showProductVideoOverlay(video));
+}
+
+function hideProductVideoOverlay(video) {
+  video?.parentElement?.querySelector('.video-play-overlay')?.classList.add('is-hidden');
+}
+
+function showProductVideoOverlay(video) {
+  video?.parentElement?.querySelector('.video-play-overlay')?.classList.remove('is-hidden');
 }
 
 function getActiveVariants() {
