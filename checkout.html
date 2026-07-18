@@ -763,6 +763,7 @@ async function finalizarCompra() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao criar pagamento');
     // Salva pedido no localStorage para a página de confirmação
+    localStorage.setItem('rstreet_checkout_cart_backup', JSON.stringify(cart));
     localStorage.setItem('rstreet_pedido', JSON.stringify({ ...pedido, pedido_id: data.pedido_id }));
     // Redireciona para o Mercado Pago
     window.location.href = data.init_point;

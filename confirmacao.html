@@ -299,6 +299,7 @@ const PAYMENT_LABELS = {
 const STATUS_MAP = {
   approved: { icon:'✅', cls:'success', title:'Pedido Confirmado!', sub:'Seu pagamento foi aprovado. Em breve você receberá os detalhes por e-mail.' },
   pending:  { icon:'⏳', cls:'pending', title:'Aguardando Pagamento', sub:'Seu pedido foi criado! Complete o pagamento para confirmarmos.' },
+  cancelled: { icon:'⏳', cls:'pending', title:'Pagamento não Finalizado', sub:'Seu pagamento não foi concluído. Seu carrinho foi mantido para você tentar novamente.' },
   failure:  { icon:'❌', cls:'failed',  title:'Pagamento Recusado', sub:'Houve um problema com seu pagamento. Tente novamente ou use outra forma de pagamento.' },
   in_process: { icon:'⏳', cls:'pending', title:'Pagamento em Análise', sub:'Seu pagamento está sendo analisado. Em breve confirmaremos seu pedido.' },
 };
@@ -307,7 +308,8 @@ function statusFromPedido(pedido, fallback) {
   const status = String(pedido?.status || '').toLowerCase();
   if (status === 'pago' || status === 'approved') return 'approved';
   if (status === 'em_analise' || status === 'in_process') return 'in_process';
-  if (['recusado','cancelado','rejected','cancelled','failure'].includes(status)) return 'failure';
+  if (status === 'cancelado' || status === 'cancelled') return 'cancelled';
+  if (['recusado','rejected','failure'].includes(status)) return 'failure';
   return fallback || 'pending';
 }
 
@@ -351,13 +353,29 @@ async function loadPedidoFromBackend(pedidoId, paymentId) {
   return normalizeBackendPedido(data.pedido, data.itens);
 }
 
+function restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus) {
+  if (finalStatus === 'approved') {
+    localStorage.removeItem('rstreet_cart');
+    localStorage.removeItem('rstreet_checkout_cart_backup');
+    return;
+  }
+
+  const cartAtual = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  const backup = JSON.parse(localStorage.getItem('rstreet_checkout_cart_backup') || '[]');
+  if (!cartAtual.length && backup.length) {
+    localStorage.setItem('rstreet_cart', JSON.stringify(backup));
+  }
+}
+
 async function init() {
   // Pega status do Mercado Pago da URL
   const params = new URLSearchParams(window.location.search);
-  const status = params.get('status') || params.get('collection_status') || 'approved';
+  const statusUrl = params.get('collection_status') || params.get('status') || 'approved';
+  const status = statusUrl === 'failure' ? 'cancelled' : statusUrl;
   const pedidoLocal = JSON.parse(localStorage.getItem('rstreet_pedido') || 'null');
   const pedidoId = params.get('pedido_id') || params.get('external_reference') || pedidoLocal?.pedido_id || '';
   const paymentId = params.get('payment_id') || params.get('collection_id') || params.get('id') || '';
+  let finalStatus = status;
 
   // Atualiza header de status
   const s = STATUS_MAP[status] || STATUS_MAP['approved'];
@@ -373,7 +391,7 @@ async function init() {
   if (!pedido) pedido = pedidoLocal;
 
   if (pedido) {
-    const finalStatus = statusFromPedido(pedido, status);
+    finalStatus = statusFromPedido(pedido, status);
     const final = STATUS_MAP[finalStatus] || STATUS_MAP['approved'];
     document.getElementById('statusIcon').className = `status-icon-wrap ${final.cls}`;
     document.getElementById('statusIcon').innerHTML = `<span class="status-icon">${final.icon}</span>`;
@@ -423,16 +441,10 @@ async function init() {
     document.getElementById('cfFrete').textContent = pedido.frete.valor > 0 ? fmt(pedido.frete.valor) : 'Grátis';
     document.getElementById('cfPagamento').textContent = PAYMENT_LABELS[pedido.metodo_pagamento] || String(pedido.metodo_pagamento || '');
     document.getElementById('cfTotal').textContent = fmt(pedido.total);
-    if (finalStatus === 'approved') {
-      localStorage.removeItem('rstreet_cart');
-      localStorage.setItem('rstreet_pedido', JSON.stringify(pedido));
-    }
   }
 
-  // Limpa carrinho se pagamento aprovado
-  if (status === 'approved') {
-    localStorage.removeItem('rstreet_cart');
-  }
+  restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus);
+  if (finalStatus === 'approved' && pedido) localStorage.setItem('rstreet_pedido', JSON.stringify(pedido));
 }
 
 init();
