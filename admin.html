@@ -1120,7 +1120,11 @@ async function sbFetch(path, opts = {}) {
 }
 
 function notifyCatalogChanged() {
-  localStorage.setItem('rstreet_products_changed', String(Date.now()));
+  const payload = String(Date.now());
+  localStorage.setItem('rstreet_products_changed', payload);
+  try {
+    new BroadcastChannel('rstreet_products').postMessage({ type: 'products_changed', at: payload });
+  } catch {}
 }
 
 const PEDIDOS_VISTOS_KEY = 'rstreet_pedidos_vistos';

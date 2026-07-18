@@ -832,6 +832,9 @@ let allProducts = [];
 let allProductVariants = [];
 let filtered = [];
 let catalogMediaState = {};
+let refreshTimer = null;
+let isRefreshingProducts = false;
+let lastProductsRefreshAt = 0;
 let currentBrand = 'todos';
 let currentCategory = 'todos';
 let currentStock = 'todos';
@@ -843,14 +846,17 @@ const PER_PAGE = 12;
 // CARREGAR DO SUPABASE
 // ─────────────────────────────────────────────
 async function loadProducts(silent = false) {
+  if (isRefreshingProducts) return;
+  isRefreshingProducts = true;
   // Se não tem credenciais salvas, cai nos dados de exemplo
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.info('Supabase não configurado — abrindo admin.html para configurar.');
     allProducts = getDemoProducts();
-    updateMaxPrice();
+    updateMaxPrice(silent);
     updateCategoryCounts();
     applyFilters();
     checkURLParams();
+    isRefreshingProducts = false;
     return;
   }
 
@@ -866,13 +872,16 @@ async function loadProducts(silent = false) {
     allProducts = await res.json();
     await loadProductVariants();
     syncCartWithStock();
+    lastProductsRefreshAt = Date.now();
   } catch (err) {
     console.warn('Falha ao buscar do Supabase, usando dados de exemplo:', err.message);
     allProducts = getDemoProducts();
     allProductVariants = [];
+  } finally {
+    isRefreshingProducts = false;
   }
 
-  updateMaxPrice();
+  updateMaxPrice(silent);
   updateCategoryCounts();
   applyFilters();
   if (!silent) checkURLParams();
@@ -880,6 +889,11 @@ async function loadProducts(silent = false) {
 
 async function refreshProducts() {
   await loadProducts(true);
+}
+
+function scheduleProductsRefresh(delay = 250) {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => refreshProducts(), delay);
 }
 
 async function loadProductVariants() {
@@ -977,13 +991,20 @@ function applyFilters() {
   renderPagination();
 }
 
-function updateMaxPrice() {
+function updateMaxPrice(preserveCurrent = false) {
   if (!allProducts.length) return;
+  const range = document.getElementById('priceRange');
+  const previousMax = Number(range.max || currentMaxPrice || 0);
+  const previousValue = currentMaxPrice;
   const max = Math.ceil(Math.max(...allProducts.map(p => p.preco)) / 50) * 50;
-  document.getElementById('priceRange').max = max;
-  document.getElementById('priceRange').value = max;
-  currentMaxPrice = max;
-  document.getElementById('priceLabel').textContent = 'R$ ' + max;
+  range.max = max;
+  if (preserveCurrent && previousValue < previousMax) {
+    currentMaxPrice = Math.min(previousValue, max);
+  } else {
+    currentMaxPrice = max;
+  }
+  range.value = currentMaxPrice;
+  document.getElementById('priceLabel').textContent = 'R$ ' + currentMaxPrice;
 }
 
 function updateCategoryCounts() {
@@ -1551,9 +1572,22 @@ function updateCartNav() {
 updateCartNav();
 loadProducts();
 window.addEventListener('storage', e => {
-  if (e.key === 'rstreet_products_changed') refreshProducts();
+  if (e.key === 'rstreet_products_changed') scheduleProductsRefresh(100);
 });
-setInterval(refreshProducts, 15000);
+try {
+  const productChannel = new BroadcastChannel('rstreet_products');
+  productChannel.onmessage = event => {
+    if (event.data?.type === 'products_changed') scheduleProductsRefresh(100);
+  };
+} catch {}
+window.addEventListener('focus', () => scheduleProductsRefresh(150));
+window.addEventListener('pageshow', () => scheduleProductsRefresh(150));
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && Date.now() - lastProductsRefreshAt > 1000) scheduleProductsRefresh(150);
+});
+setInterval(() => {
+  if (!document.hidden) refreshProducts();
+}, 5000);
 </script>
 </body>
 </html>
