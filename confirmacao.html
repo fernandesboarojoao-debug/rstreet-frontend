@@ -266,6 +266,8 @@
 </footer>
 
 <script>
+const BACKEND_BASE = 'https://rstreet-backend.onrender.com/api';
+
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -301,11 +303,61 @@ const STATUS_MAP = {
   in_process: { icon:'⏳', cls:'pending', title:'Pagamento em Análise', sub:'Seu pagamento está sendo analisado. Em breve confirmaremos seu pedido.' },
 };
 
-function init() {
+function statusFromPedido(pedido, fallback) {
+  const status = String(pedido?.status || '').toLowerCase();
+  if (status === 'pago' || status === 'approved') return 'approved';
+  if (status === 'em_analise' || status === 'in_process') return 'in_process';
+  if (['recusado','cancelado','rejected','cancelled','failure'].includes(status)) return 'failure';
+  return fallback || 'pending';
+}
+
+function normalizeBackendPedido(pedido, itens) {
+  if (!pedido) return null;
+  return {
+    pedido_id: pedido.id,
+    cliente: { nome: pedido.cliente_nome, email: pedido.cliente_email, telefone: pedido.cliente_telefone, cpf: pedido.cliente_cpf },
+    endereco: {
+      cep: pedido.endereco_cep,
+      rua: pedido.endereco_rua,
+      numero: pedido.endereco_numero,
+      complemento: pedido.endereco_complemento,
+      bairro: pedido.endereco_bairro,
+      cidade: pedido.endereco_cidade,
+      estado: pedido.endereco_estado,
+    },
+    itens: (itens || []).map(item => ({
+      nome: item.nome_produto,
+      quantidade: Number(item.quantidade) || 1,
+      preco_unitario: Number(item.preco_unitario) || 0,
+      cor: item.cor || null,
+      tamanho: item.tamanho || null,
+    })),
+    frete: { valor: Number(pedido.frete_valor) || 0, tipo: pedido.frete_tipo },
+    total: Number(pedido.total) || 0,
+    metodo_pagamento: pedido.metodo_pagamento,
+    status: pedido.status,
+  };
+}
+
+async function loadPedidoFromBackend(pedidoId, paymentId) {
+  if (!pedidoId || !paymentId) return null;
+  const res = await fetch(`${BACKEND_BASE}/pedidos/confirmacao`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pedido_id: pedidoId, payment_id: paymentId }),
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return normalizeBackendPedido(data.pedido, data.itens);
+}
+
+async function init() {
   // Pega status do Mercado Pago da URL
   const params = new URLSearchParams(window.location.search);
   const status = params.get('status') || params.get('collection_status') || 'approved';
-  const pedidoId = params.get('external_reference') || params.get('merchant_order_id') || '';
+  const pedidoLocal = JSON.parse(localStorage.getItem('rstreet_pedido') || 'null');
+  const pedidoId = params.get('pedido_id') || params.get('external_reference') || pedidoLocal?.pedido_id || '';
+  const paymentId = params.get('payment_id') || params.get('collection_id') || params.get('id') || '';
 
   // Atualiza header de status
   const s = STATUS_MAP[status] || STATUS_MAP['approved'];
@@ -316,10 +368,20 @@ function init() {
   document.getElementById('statusSub').textContent = s.sub;
   if (pedidoId) document.getElementById('statusId').innerHTML = `Pedido: <strong>#${escapeHtml(pedidoId)}</strong>`;
 
-  // Carrega dados do pedido do localStorage
-  const pedido = JSON.parse(localStorage.getItem('rstreet_pedido') || 'null');
+  // Carrega dados do backend quando voltar do Mercado Pago; localStorage fica como reserva.
+  let pedido = await loadPedidoFromBackend(pedidoId, paymentId);
+  if (!pedido) pedido = pedidoLocal;
 
   if (pedido) {
+    const finalStatus = statusFromPedido(pedido, status);
+    const final = STATUS_MAP[finalStatus] || STATUS_MAP['approved'];
+    document.getElementById('statusIcon').className = `status-icon-wrap ${final.cls}`;
+    document.getElementById('statusIcon').innerHTML = `<span class="status-icon">${final.icon}</span>`;
+    document.getElementById('statusTitle').className = `status-title ${final.cls}`;
+    document.getElementById('statusTitle').textContent = final.title;
+    document.getElementById('statusSub').textContent = final.sub;
+    document.getElementById('statusId').innerHTML = `Pedido: <strong>#${escapeHtml(pedido.pedido_id || pedidoId)}</strong>`;
+
     // Itens
     document.getElementById('orderItems').innerHTML = pedido.itens.map(item => {
       const img = safeImageUrl(item.imagem);
@@ -361,6 +423,10 @@ function init() {
     document.getElementById('cfFrete').textContent = pedido.frete.valor > 0 ? fmt(pedido.frete.valor) : 'Grátis';
     document.getElementById('cfPagamento').textContent = PAYMENT_LABELS[pedido.metodo_pagamento] || String(pedido.metodo_pagamento || '');
     document.getElementById('cfTotal').textContent = fmt(pedido.total);
+    if (finalStatus === 'approved') {
+      localStorage.removeItem('rstreet_cart');
+      localStorage.setItem('rstreet_pedido', JSON.stringify(pedido));
+    }
   }
 
   // Limpa carrinho se pagamento aprovado
