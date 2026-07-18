@@ -835,6 +835,8 @@ let catalogMediaState = {};
 let refreshTimer = null;
 let isRefreshingProducts = false;
 let lastProductsRefreshAt = 0;
+let catalogDataSignature = '';
+let catalogVideoObserver = null;
 let currentBrand = 'todos';
 let currentCategory = 'todos';
 let currentStock = 'todos';
@@ -845,9 +847,40 @@ const PER_PAGE = 12;
 // ─────────────────────────────────────────────
 // CARREGAR DO SUPABASE
 // ─────────────────────────────────────────────
+function getCatalogDataSignature(products = allProducts, variants = allProductVariants) {
+  return JSON.stringify({
+    products: products.map(p => ({
+      id: p.id,
+      nome: p.nome,
+      preco: p.preco,
+      preco_antigo: p.preco_antigo,
+      estoque: p.estoque,
+      ativo: p.ativo,
+      imagem_url: p.imagem_url,
+      imagens: p.imagens,
+    })),
+    variants: variants.map(v => ({
+      id: v.id,
+      produto_id: v.produto_id,
+      cor: v.cor,
+      tamanho: v.tamanho,
+      estoque: v.estoque,
+      preco: v.preco,
+      preco_antigo: v.preco_antigo,
+      ativo: v.ativo,
+      imagem_url: v.imagem_url,
+      imagens: v.imagens,
+      videos: v.videos,
+      cor_hex: v.cor_hex,
+      ordem: v.ordem,
+    }))
+  });
+}
+
 async function loadProducts(silent = false) {
   if (isRefreshingProducts) return;
   isRefreshingProducts = true;
+  let unchanged = false;
   // Se não tem credenciais salvas, cai nos dados de exemplo
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     console.info('Supabase não configurado — abrindo admin.html para configurar.');
@@ -871,6 +904,9 @@ async function loadProducts(silent = false) {
     if (!res.ok) throw new Error('Erro ' + res.status);
     allProducts = await res.json();
     await loadProductVariants();
+    const nextSignature = getCatalogDataSignature();
+    unchanged = silent && nextSignature === catalogDataSignature;
+    catalogDataSignature = nextSignature;
     syncCartWithStock();
     lastProductsRefreshAt = Date.now();
   } catch (err) {
@@ -881,6 +917,7 @@ async function loadProducts(silent = false) {
     isRefreshingProducts = false;
   }
 
+  if (unchanged) return;
   updateMaxPrice(silent);
   updateCategoryCounts();
   applyFilters();
@@ -1160,12 +1197,25 @@ function getCatalogGroupMedia(group, product) {
 
 function renderCatalogMedia(product, media) {
   if (media?.type === 'video') {
-    return `<video class="product-img" src="${escapeAttr(media.url)}" autoplay loop playsinline webkit-playsinline muted preload="auto" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" onclick="playInlineCatalogVideo(event,this)" onplaying="hideCatalogVideoOverlay(this)" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video><button type="button" class="video-play-overlay" aria-label="Reproduzir video" onclick="playInlineCatalogVideo(event,this.previousElementSibling)">&#9658;</button>`;
+    return `<video class="product-img" src="${escapeAttr(media.url)}" loop playsinline webkit-playsinline muted preload="metadata" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" onclick="playInlineCatalogVideo(event,this)" onplaying="hideCatalogVideoOverlay(this)" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video><button type="button" class="video-play-overlay" aria-label="Reproduzir video" onclick="playInlineCatalogVideo(event,this.previousElementSibling)">&#9658;</button>`;
   }
   return `<img class="product-img" id="catalog-img-${product.id}" src="${escapeAttr(media.url)}" alt="${escapeAttr(product.nome)}" loading="lazy">`;
 }
 
 function prepareCatalogVideos(root = document) {
+  if (!catalogVideoObserver && 'IntersectionObserver' in window) {
+    catalogVideoObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const video = entry.target;
+        if (entry.isIntersecting) {
+          playCatalogVideo(video);
+        } else {
+          video.pause();
+        }
+      });
+    }, { threshold: 0.35 });
+  }
+
   root.querySelectorAll('video').forEach(video => {
     video.muted = true;
     video.defaultMuted = true;
@@ -1173,17 +1223,16 @@ function prepareCatalogVideos(root = document) {
     video.setAttribute('muted', '');
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
-    const play = () => {
-      const promise = video.play?.();
-      if (promise?.then) promise.then(() => hideCatalogVideoOverlay(video)).catch(() => showCatalogVideoOverlay(video));
-    };
-    if (video.readyState >= 2) play();
-    else {
-      video.addEventListener('loadeddata', play, { once: true });
-      video.addEventListener('canplay', play, { once: true });
-    }
-    video.addEventListener('touchstart', play, { passive: true });
+    if (catalogVideoObserver) catalogVideoObserver.observe(video);
+    else playCatalogVideo(video);
+    video.addEventListener('touchstart', () => playCatalogVideo(video), { passive: true });
   });
+}
+
+function playCatalogVideo(video) {
+  if (!video) return;
+  const promise = video.play?.();
+  if (promise?.then) promise.then(() => hideCatalogVideoOverlay(video)).catch(() => showCatalogVideoOverlay(video));
 }
 
 function playInlineCatalogVideo(event, video) {
@@ -1196,8 +1245,7 @@ function playInlineCatalogVideo(event, video) {
   video.setAttribute('muted', '');
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
-  const promise = video.play?.();
-  if (promise?.then) promise.then(() => hideCatalogVideoOverlay(video)).catch(() => showCatalogVideoOverlay(video));
+  playCatalogVideo(video);
 }
 
 function hideCatalogVideoOverlay(video) {
