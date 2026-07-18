@@ -318,6 +318,13 @@
   .home-highlight-preview { height:126px; border:1px solid var(--border); border-radius:4px; overflow:hidden; background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--gray1); font-size:12px; }
   .home-highlight-preview img, .home-highlight-preview video { width:100%; height:100%; object-fit:cover; display:block; }
   .home-highlight-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .home-highlight-media-list { display:flex; gap:8px; flex-wrap:wrap; }
+  .home-highlight-media-thumb { width:58px; height:58px; border:1px solid var(--border); border-radius:4px; overflow:hidden; position:relative; background:var(--surface); }
+  .home-highlight-media-thumb img, .home-highlight-media-thumb video { width:100%; height:100%; object-fit:cover; display:block; }
+  .home-highlight-media-thumb.is-main { border-color:var(--gold); box-shadow:0 0 0 1px rgba(200,169,110,.35); }
+  .home-highlight-media-thumb button { position:absolute; width:18px; height:18px; border:0; border-radius:50%; background:rgba(0,0,0,.72); color:var(--white); cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; }
+  .home-highlight-media-main { left:2px; bottom:2px; }
+  .home-highlight-media-remove { right:2px; top:2px; }
 
   @media(max-width:900px){
     body{display:block}
@@ -946,6 +953,7 @@ let currentSizes = [];
 let currentVariants = [];
 let selectedVariantColorKey = null;
 let importRows = [];
+let homeHighlightsState = [];
 
 // ─────────────────────────────────────────────────────
 // UPLOAD DE FOTOS
@@ -2306,9 +2314,9 @@ function copySQL() {
 
 function defaultHomeHighlights() {
   return [
-    { id:1, marca:'Freeway', titulo:'Tennis FreeWay', midia_url:'destaque-1.png', midia_tipo:'image', link_url:'catalogo.html', ativo:true },
-    { id:2, marca:'Freeway', titulo:'Carteiras Freeway', midia_url:'destaque-2.jpg', midia_tipo:'image', link_url:'catalogo.html', ativo:true },
-    { id:3, marca:'Freeway', titulo:'Cintos Freeway', midia_url:'destaque-3.jpg', midia_tipo:'image', link_url:'catalogo.html', ativo:true },
+    { id:1, marca:'Freeway', titulo:'Tennis FreeWay', midia_url:'destaque-1.png', midia_tipo:'image', midias:[{ url:'destaque-1.png', tipo:'image' }], link_url:'catalogo.html', ativo:true },
+    { id:2, marca:'Freeway', titulo:'Carteiras Freeway', midia_url:'destaque-2.jpg', midia_tipo:'image', midias:[{ url:'destaque-2.jpg', tipo:'image' }], link_url:'catalogo.html', ativo:true },
+    { id:3, marca:'Freeway', titulo:'Cintos Freeway', midia_url:'destaque-3.jpg', midia_tipo:'image', midias:[{ url:'destaque-3.jpg', tipo:'image' }], link_url:'catalogo.html', ativo:true },
   ];
 }
 
@@ -2317,18 +2325,50 @@ function mediaTypeFromUrl(url, fallback = 'image') {
 }
 
 function renderHomeHighlightPreview(item) {
-  const url = escapeAttr(item.midia_url || '');
+  const media = normalizeHomeHighlightMedia(item)[0] || {};
+  const url = escapeAttr(media.url || '');
   if (!url) return '<span>Sem midia</span>';
-  if (item.midia_tipo === 'video') {
+  if (media.tipo === 'video') {
     return `<video src="${url}" muted autoplay loop playsinline controlslist="nodownload noplaybackrate nofullscreen" disablepictureinpicture></video>`;
   }
   return `<img src="${url}" alt="${escapeAttr(item.titulo || 'Destaque')}">`;
+}
+
+function normalizeHomeHighlightMedia(item) {
+  const midias = (Array.isArray(item?.midias) ? item.midias : [])
+    .map(media => ({
+      url: String(media?.url || '').trim(),
+      tipo: media?.tipo === 'video' ? 'video' : mediaTypeFromUrl(media?.url || '', item?.midia_tipo || 'image')
+    }))
+    .filter(media => media.url);
+  if (!midias.length && item?.midia_url) {
+    midias.push({ url: String(item.midia_url).trim(), tipo: item.midia_tipo === 'video' ? 'video' : mediaTypeFromUrl(item.midia_url) });
+  }
+  return midias.slice(0, 8);
+}
+
+function renderHomeHighlightMediaList(i) {
+  const item = homeHighlightsState[i] || {};
+  const midias = normalizeHomeHighlightMedia(item);
+  if (!midias.length) return '<div class="variant-muted">Nenhuma midia adicionada.</div>';
+  return midias.map((media, idx) => {
+    const url = escapeAttr(media.url);
+    const body = media.tipo === 'video'
+      ? `<video src="${url}" muted playsinline></video>`
+      : `<img src="${url}" alt="midia ${idx + 1}">`;
+    return `<div class="home-highlight-media-thumb ${idx === 0 ? 'is-main' : ''}">
+      ${body}
+      ${idx !== 0 ? `<button type="button" class="home-highlight-media-main" onclick="setHomeHighlightPrimary(${i}, ${idx})" title="Usar como capa">★</button>` : ''}
+      <button type="button" class="home-highlight-media-remove" onclick="removeHomeHighlightMedia(${i}, ${idx})" title="Remover">×</button>
+    </div>`;
+  }).join('');
 }
 
 function renderHomeHighlightsAdmin(items = defaultHomeHighlights()) {
   const editor = document.getElementById('homeHighlightsEditor');
   if (!editor) return;
   const normalized = defaultHomeHighlights().map((fallback, i) => ({ ...fallback, ...(items[i] || {}) }));
+  homeHighlightsState = normalized.map(item => ({ ...item, midias: normalizeHomeHighlightMedia(item) }));
   editor.innerHTML = normalized.map((item, i) => `
     <div class="home-highlight-card">
       <div class="home-highlight-head">
@@ -2338,10 +2378,11 @@ function renderHomeHighlightsAdmin(items = defaultHomeHighlights()) {
           <span class="toggle-label">Ativo</span>
         </label>
       </div>
-      <div class="home-highlight-preview" id="home-highlight-preview-${i}">${renderHomeHighlightPreview(item)}</div>
+      <div class="home-highlight-preview" id="home-highlight-preview-${i}">${renderHomeHighlightPreview(homeHighlightsState[i])}</div>
+      <div class="home-highlight-media-list" id="home-highlight-media-list-${i}">${renderHomeHighlightMediaList(i)}</div>
       <input type="hidden" id="home-highlight-id-${i}" value="${item.id || i + 1}">
       <input type="hidden" id="home-highlight-media-type-${i}" value="${escapeAttr(item.midia_tipo || mediaTypeFromUrl(item.midia_url))}">
-      <input type="file" id="home-highlight-file-${i}" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime,.jpg,.jpeg,.png,.webp,.avif,.mp4,.webm,.mov" onchange="handleHomeHighlightFile(${i}, event)">
+      <input type="file" id="home-highlight-file-${i}" multiple accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime,.jpg,.jpeg,.png,.webp,.avif,.mp4,.webm,.mov" onchange="handleHomeHighlightFile(${i}, event)">
       <div class="form-group">
         <label>Marca</label>
         <input type="text" id="home-highlight-brand-${i}" value="${escapeAttr(item.marca || '')}" placeholder="Freeway">
@@ -2351,10 +2392,10 @@ function renderHomeHighlightsAdmin(items = defaultHomeHighlights()) {
         <input type="text" id="home-highlight-title-${i}" value="${escapeAttr(item.titulo || '')}" placeholder="Tenis Freeway">
       </div>
       <div class="form-group">
-        <label>Foto ou video</label>
+        <label>Foto ou video principal</label>
         <input type="url" id="home-highlight-media-${i}" value="${escapeAttr(item.midia_url || '')}" placeholder="URL da imagem ou video" oninput="updateHomeHighlightPreview(${i})">
         <div class="home-highlight-actions">
-          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('home-highlight-file-${i}').click()">Enviar arquivo</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('home-highlight-file-${i}').click()">Enviar arquivos</button>
         </div>
       </div>
       <div class="form-group">
@@ -2367,12 +2408,18 @@ function renderHomeHighlightsAdmin(items = defaultHomeHighlights()) {
 
 function getHomeHighlightFromForm(i) {
   const mediaUrl = document.getElementById(`home-highlight-media-${i}`).value.trim();
+  let midias = normalizeHomeHighlightMedia(homeHighlightsState[i] || {});
+  if (mediaUrl && (!midias.length || midias[0].url !== mediaUrl)) {
+    midias = [{ url: mediaUrl, tipo: mediaTypeFromUrl(mediaUrl, document.getElementById(`home-highlight-media-type-${i}`).value) }, ...midias.filter(m => m.url !== mediaUrl)];
+  }
+  const principal = midias[0] || { url: mediaUrl, tipo: document.getElementById(`home-highlight-media-type-${i}`).value || mediaTypeFromUrl(mediaUrl) };
   return {
     id: Number(document.getElementById(`home-highlight-id-${i}`).value || i + 1),
     marca: document.getElementById(`home-highlight-brand-${i}`).value.trim(),
     titulo: document.getElementById(`home-highlight-title-${i}`).value.trim(),
-    midia_url: mediaUrl,
-    midia_tipo: document.getElementById(`home-highlight-media-type-${i}`).value || mediaTypeFromUrl(mediaUrl),
+    midia_url: principal.url,
+    midia_tipo: principal.tipo,
+    midias,
     link_url: document.getElementById(`home-highlight-link-${i}`).value.trim() || 'catalogo.html',
     ativo: document.getElementById(`home-highlight-active-${i}`).classList.contains('on')
   };
@@ -2381,8 +2428,10 @@ function getHomeHighlightFromForm(i) {
 function updateHomeHighlightPreview(i) {
   const item = getHomeHighlightFromForm(i);
   item.midia_tipo = mediaTypeFromUrl(item.midia_url, item.midia_tipo);
+  homeHighlightsState[i] = { ...(homeHighlightsState[i] || {}), ...item };
   document.getElementById(`home-highlight-media-type-${i}`).value = item.midia_tipo;
   document.getElementById(`home-highlight-preview-${i}`).innerHTML = renderHomeHighlightPreview(item);
+  document.getElementById(`home-highlight-media-list-${i}`).innerHTML = renderHomeHighlightMediaList(i);
 }
 
 function toggleHomeHighlight(i) {
@@ -2404,27 +2453,56 @@ async function loadHomeHighlightsAdmin() {
 }
 
 async function handleHomeHighlightFile(i, event) {
-  const file = event.target.files?.[0];
-  if (!file) return;
+  const files = Array.from(event.target.files || []);
+  if (!files.length) return;
   try {
-    const kind = validateMediaFile(file);
-    const media = await prepareMediaForUpload(file, kind);
-    const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
-      method: 'POST',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ dataUrl: media.dataUrl, name: media.name || file.name })
-    });
-    if (!res.ok) throw new Error(await res.text());
-    const data = await res.json();
-    document.getElementById(`home-highlight-media-${i}`).value = data.url;
-    document.getElementById(`home-highlight-media-type-${i}`).value = kind;
+    const current = normalizeHomeHighlightMedia(homeHighlightsState[i] || {});
+    const available = Math.max(0, 8 - current.length);
+    if (!available) return toast('Limite de 8 midias por destaque.', 'error');
+    const added = [];
+    for (const file of files.slice(0, available)) {
+      const kind = validateMediaFile(file);
+      const media = await prepareMediaForUpload(file, kind);
+      const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ dataUrl: media.dataUrl, name: media.name || file.name })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      added.push({ url: data.url, tipo: kind });
+    }
+    const midias = [...current, ...added].slice(0, 8);
+    homeHighlightsState[i] = { ...(homeHighlightsState[i] || {}), midias, midia_url: midias[0]?.url || '', midia_tipo: midias[0]?.tipo || 'image' };
+    document.getElementById(`home-highlight-media-${i}`).value = midias[0]?.url || '';
+    document.getElementById(`home-highlight-media-type-${i}`).value = midias[0]?.tipo || 'image';
     updateHomeHighlightPreview(i);
-    toast('Midia enviada para o destaque.', 'success');
+    toast(`${added.length} midia(s) enviada(s) para o destaque.`, 'success');
   } catch (err) {
     toast(err.message || 'Erro ao enviar midia.', 'error');
   } finally {
     event.target.value = '';
   }
+}
+
+function setHomeHighlightPrimary(i, mediaIndex) {
+  const midias = normalizeHomeHighlightMedia(homeHighlightsState[i] || {});
+  if (!midias[mediaIndex]) return;
+  const [selected] = midias.splice(mediaIndex, 1);
+  midias.unshift(selected);
+  homeHighlightsState[i] = { ...(homeHighlightsState[i] || {}), midias, midia_url:selected.url, midia_tipo:selected.tipo };
+  document.getElementById(`home-highlight-media-${i}`).value = selected.url;
+  document.getElementById(`home-highlight-media-type-${i}`).value = selected.tipo;
+  updateHomeHighlightPreview(i);
+}
+
+function removeHomeHighlightMedia(i, mediaIndex) {
+  const midias = normalizeHomeHighlightMedia(homeHighlightsState[i] || {});
+  midias.splice(mediaIndex, 1);
+  homeHighlightsState[i] = { ...(homeHighlightsState[i] || {}), midias, midia_url:midias[0]?.url || '', midia_tipo:midias[0]?.tipo || 'image' };
+  document.getElementById(`home-highlight-media-${i}`).value = midias[0]?.url || '';
+  document.getElementById(`home-highlight-media-type-${i}`).value = midias[0]?.tipo || 'image';
+  updateHomeHighlightPreview(i);
 }
 
 async function saveHomeHighlights() {

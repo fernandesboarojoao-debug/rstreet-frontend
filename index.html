@@ -688,6 +688,33 @@
     object-position: center 42%;
     display: block;
   }
+  .highlight-media-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 32px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(10,10,10,0.62);
+    color: var(--white);
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    border-radius: 2px;
+    transition: all 0.2s;
+    backdrop-filter: blur(8px);
+  }
+  .highlight-media-arrow:hover {
+    color: var(--gold);
+    border-color: rgba(200,169,110,0.55);
+    background: rgba(10,10,10,0.85);
+  }
+  .highlight-media-arrow.prev { left: 8px; }
+  .highlight-media-arrow.next { right: 8px; }
   .highlight-card:hover .highlight-img {
     transform: scale(1.06);
     filter: brightness(1);
@@ -1182,6 +1209,9 @@
     .highlight-name { font-size: 16px; margin-bottom: 10px; }
     .highlight-cta { padding: 8px 16px; font-size: 10px; }
     .highlight-badge { top: 12px; left: 12px; font-size: 9px; padding: 5px 10px; }
+    .highlight-media-arrow { width: 22px; height: 28px; font-size: 16px; }
+    .highlight-media-arrow.prev { left: 6px; }
+    .highlight-media-arrow.next { right: 6px; }
     .about-section { grid-template-columns: 1fr; padding: 80px 24px; gap: 48px; }
     .about-visual { height: 400px; }
     .about-features {
@@ -1234,6 +1264,7 @@
     .highlight-footer { align-items: flex-start; }
     .highlight-cta { padding: 7px 12px; font-size: 9px; letter-spacing: 1.4px; }
     .highlight-badge { top: 10px; left: 10px; font-size: 8px; letter-spacing: 1.5px; padding: 4px 8px; }
+    .highlight-media-arrow { width: 20px; height: 26px; font-size: 15px; }
     .about-features {
       gap: 10px;
       margin-top: 28px;
@@ -1693,6 +1724,31 @@
     return tipo === 'video' || String(url || '').match(/\.(mp4|webm|mov)(\?|$)/i);
   }
 
+  function getHighlightMediaList(item) {
+    const medias = (Array.isArray(item?.midias) ? item.midias : [])
+      .map(media => ({
+        url: String(media?.url || '').trim(),
+        tipo: media?.tipo === 'video' ? 'video' : (isVideoMedia(media?.url) ? 'video' : 'image')
+      }))
+      .filter(media => media.url);
+    if (!medias.length && item?.midia_url) {
+      medias.push({
+        url: String(item.midia_url).trim(),
+        tipo: item.midia_tipo === 'video' || isVideoMedia(item.midia_url) ? 'video' : 'image'
+      });
+    }
+    return medias;
+  }
+
+  function renderHighlightMedia(item, media, mediaIndex) {
+    const mediaUrl = escapeAttr(media?.url || '');
+    if (!mediaUrl) return '';
+    if (media?.tipo === 'video') {
+      return `<video src="${mediaUrl}" muted autoplay loop playsinline preload="metadata"></video>`;
+    }
+    return `<img src="${mediaUrl}" alt="${escapeAttr(item.titulo || 'Produto em destaque')} ${mediaIndex + 1}">`;
+  }
+
   function safeHighlightLink(url) {
     const clean = String(url || '').trim();
     if (!clean) return 'catalogo.html';
@@ -1703,17 +1759,20 @@
 
   function renderHighlightCard(item, index) {
     const link = escapeAttr(safeHighlightLink(item.link_url));
-    const media = escapeAttr(item.midia_url || '');
     const title = escapeHtml(item.titulo || '');
     const brand = escapeHtml(item.marca || '');
     const delay = index ? ` style="transition-delay: ${index / 10}s"` : '';
-    const mediaHtml = isVideoMedia(item.midia_url, item.midia_tipo)
-      ? `<video src="${media}" muted autoplay loop playsinline preload="metadata"></video>`
-      : `<img src="${media}" alt="${escapeAttr(item.titulo || 'Produto em destaque')}">`;
+    const medias = getHighlightMediaList(item);
+    const mediaHtml = renderHighlightMedia(item, medias[0], 0);
+    const arrows = medias.length > 1
+      ? `<button type="button" class="highlight-media-arrow prev" aria-label="Midia anterior" onclick="moveHighlightMedia(event, ${index}, -1)">&#8249;</button>
+         <button type="button" class="highlight-media-arrow next" aria-label="Proxima midia" onclick="moveHighlightMedia(event, ${index}, 1)">&#8250;</button>`
+      : '';
 
     return `
-      <div class="highlight-card reveal visible"${delay}>
-        <a class="highlight-img" href="${link}" aria-label="${escapeAttr(item.titulo || 'Ver produto')}">${mediaHtml}</a>
+      <div class="highlight-card reveal visible" data-highlight-index="${index}" data-media-index="0"${delay}>
+        <a class="highlight-img" id="highlight-media-${index}" href="${link}" aria-label="${escapeAttr(item.titulo || 'Ver produto')}">${mediaHtml}</a>
+        ${arrows}
         <div class="highlight-badge">Novo</div>
         <div class="highlight-body">
           <div class="highlight-brand">${brand}</div>
@@ -1723,6 +1782,21 @@
           </div>
         </div>
       </div>`;
+  }
+
+  function moveHighlightMedia(event, highlightIndex, delta) {
+    event.preventDefault();
+    event.stopPropagation();
+    const card = document.querySelector(`.highlight-card[data-highlight-index="${highlightIndex}"]`);
+    const item = window.rstreetHomeHighlights?.[highlightIndex];
+    if (!card || !item) return;
+    const medias = getHighlightMediaList(item);
+    if (medias.length <= 1) return;
+    const current = Number(card.dataset.mediaIndex || 0);
+    const next = (current + delta + medias.length) % medias.length;
+    card.dataset.mediaIndex = String(next);
+    const slot = document.getElementById(`highlight-media-${highlightIndex}`);
+    if (slot) slot.innerHTML = renderHighlightMedia(item, medias[next], next);
   }
 
   async function loadHomeHighlights() {
@@ -1735,6 +1809,7 @@
       if (!res.ok) throw new Error(res.status);
       const data = await res.json();
       if (!Array.isArray(data) || !data.length) return;
+      window.rstreetHomeHighlights = data.slice(0, 3);
       grid.innerHTML = data.slice(0, 3).map(renderHighlightCard).join('');
     } catch {}
   }
