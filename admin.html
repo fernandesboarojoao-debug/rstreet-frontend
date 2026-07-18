@@ -311,6 +311,13 @@
   }
   .photo-thumb-remove:hover { background:var(--red); }
   .photo-thumb-main { position:absolute; bottom:4px; left:4px; background:var(--gold); color:var(--bg); font-size:9px; font-weight:700; padding:2px 5px; border-radius:2px; letter-spacing:1px; }
+  .home-highlights-editor { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:16px; }
+  .home-highlight-card { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:14px; display:flex; flex-direction:column; gap:12px; }
+  .home-highlight-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .home-highlight-title { font-size:12px; color:var(--gold); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
+  .home-highlight-preview { height:126px; border:1px solid var(--border); border-radius:4px; overflow:hidden; background:var(--surface); display:flex; align-items:center; justify-content:center; color:var(--gray1); font-size:12px; }
+  .home-highlight-preview img, .home-highlight-preview video { width:100%; height:100%; object-fit:cover; display:block; }
+  .home-highlight-actions { display:flex; gap:8px; flex-wrap:wrap; }
 
   @media(max-width:900px){
     body{display:block}
@@ -344,6 +351,7 @@
     .variant-tools .btn{grid-column:1/-1}
     .variant-row{grid-template-columns:1fr 70px 80px 74px 36px}
     .variant-color-tools,.variant-color-fields,.variant-size-add{grid-template-columns:1fr}
+    .home-highlights-editor{grid-template-columns:1fr}
     .variant-tabs-row{align-items:stretch;flex-direction:column}
     .variant-tabs-row .btn{width:100%}
     .variant-size-row{grid-template-columns:1fr 80px auto}
@@ -645,6 +653,22 @@
         <div style="margin-top:20px;display:flex;gap:10px">
           <button class="btn btn-gold" onclick="saveConfig()">💾 Salvar Configurações</button>
           <button class="btn btn-outline btn-sm" onclick="testConnection()">🔌 Testar Conexão</button>
+        </div>
+      </div>
+
+      <div class="import-card">
+        <h3>Produtos em destaque da Home</h3>
+        <p>Edite somente os cards da pagina inicial: marca, titulo, foto/video e link de destino.</p>
+        <div class="alert alert-info">
+          <span class="alert-icon">💡</span>
+          <span>O link pode ser um produto especifico, por exemplo <strong>produto.html?id=10</strong>, ou qualquer pagina do site.</span>
+        </div>
+        <div class="home-highlights-editor" id="homeHighlightsEditor">
+          <div class="table-empty">Carregando destaques...</div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="saveHomeHighlights()">Salvar Destaques</button>
+          <button class="btn btn-outline btn-sm" onclick="loadHomeHighlightsAdmin()">Recarregar</button>
         </div>
       </div>
 
@@ -2280,6 +2304,148 @@ function copySQL() {
   navigator.clipboard.writeText(SQL_CODE).then(() => toast('SQL copiado!', 'success'));
 }
 
+function defaultHomeHighlights() {
+  return [
+    { id:1, marca:'Freeway', titulo:'Tennis FreeWay', midia_url:'destaque-1.png', midia_tipo:'image', link_url:'catalogo.html', ativo:true },
+    { id:2, marca:'Freeway', titulo:'Carteiras Freeway', midia_url:'destaque-2.jpg', midia_tipo:'image', link_url:'catalogo.html', ativo:true },
+    { id:3, marca:'Freeway', titulo:'Cintos Freeway', midia_url:'destaque-3.jpg', midia_tipo:'image', link_url:'catalogo.html', ativo:true },
+  ];
+}
+
+function mediaTypeFromUrl(url, fallback = 'image') {
+  return String(url || '').match(/\.(mp4|webm|mov)(\?|$)/i) ? 'video' : fallback;
+}
+
+function renderHomeHighlightPreview(item) {
+  const url = escapeAttr(item.midia_url || '');
+  if (!url) return '<span>Sem midia</span>';
+  if (item.midia_tipo === 'video') {
+    return `<video src="${url}" muted autoplay loop playsinline controlslist="nodownload noplaybackrate nofullscreen" disablepictureinpicture></video>`;
+  }
+  return `<img src="${url}" alt="${escapeAttr(item.titulo || 'Destaque')}">`;
+}
+
+function renderHomeHighlightsAdmin(items = defaultHomeHighlights()) {
+  const editor = document.getElementById('homeHighlightsEditor');
+  if (!editor) return;
+  const normalized = defaultHomeHighlights().map((fallback, i) => ({ ...fallback, ...(items[i] || {}) }));
+  editor.innerHTML = normalized.map((item, i) => `
+    <div class="home-highlight-card">
+      <div class="home-highlight-head">
+        <div class="home-highlight-title">Destaque ${i + 1}</div>
+        <label class="toggle-wrap" style="margin:0">
+          <button type="button" class="toggle ${item.ativo !== false ? 'on' : ''}" onclick="toggleHomeHighlight(${i})" id="home-highlight-active-${i}"></button>
+          <span class="toggle-label">Ativo</span>
+        </label>
+      </div>
+      <div class="home-highlight-preview" id="home-highlight-preview-${i}">${renderHomeHighlightPreview(item)}</div>
+      <input type="hidden" id="home-highlight-id-${i}" value="${item.id || i + 1}">
+      <input type="hidden" id="home-highlight-media-type-${i}" value="${escapeAttr(item.midia_tipo || mediaTypeFromUrl(item.midia_url))}">
+      <input type="file" id="home-highlight-file-${i}" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime,.jpg,.jpeg,.png,.webp,.avif,.mp4,.webm,.mov" onchange="handleHomeHighlightFile(${i}, event)">
+      <div class="form-group">
+        <label>Marca</label>
+        <input type="text" id="home-highlight-brand-${i}" value="${escapeAttr(item.marca || '')}" placeholder="Freeway">
+      </div>
+      <div class="form-group">
+        <label>Titulo</label>
+        <input type="text" id="home-highlight-title-${i}" value="${escapeAttr(item.titulo || '')}" placeholder="Tenis Freeway">
+      </div>
+      <div class="form-group">
+        <label>Foto ou video</label>
+        <input type="url" id="home-highlight-media-${i}" value="${escapeAttr(item.midia_url || '')}" placeholder="URL da imagem ou video" oninput="updateHomeHighlightPreview(${i})">
+        <div class="home-highlight-actions">
+          <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('home-highlight-file-${i}').click()">Enviar arquivo</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Link ao clicar</label>
+        <input type="text" id="home-highlight-link-${i}" value="${escapeAttr(item.link_url || 'catalogo.html')}" placeholder="produto.html?id=10">
+      </div>
+    </div>
+  `).join('');
+}
+
+function getHomeHighlightFromForm(i) {
+  const mediaUrl = document.getElementById(`home-highlight-media-${i}`).value.trim();
+  return {
+    id: Number(document.getElementById(`home-highlight-id-${i}`).value || i + 1),
+    marca: document.getElementById(`home-highlight-brand-${i}`).value.trim(),
+    titulo: document.getElementById(`home-highlight-title-${i}`).value.trim(),
+    midia_url: mediaUrl,
+    midia_tipo: document.getElementById(`home-highlight-media-type-${i}`).value || mediaTypeFromUrl(mediaUrl),
+    link_url: document.getElementById(`home-highlight-link-${i}`).value.trim() || 'catalogo.html',
+    ativo: document.getElementById(`home-highlight-active-${i}`).classList.contains('on')
+  };
+}
+
+function updateHomeHighlightPreview(i) {
+  const item = getHomeHighlightFromForm(i);
+  item.midia_tipo = mediaTypeFromUrl(item.midia_url, item.midia_tipo);
+  document.getElementById(`home-highlight-media-type-${i}`).value = item.midia_tipo;
+  document.getElementById(`home-highlight-preview-${i}`).innerHTML = renderHomeHighlightPreview(item);
+}
+
+function toggleHomeHighlight(i) {
+  document.getElementById(`home-highlight-active-${i}`).classList.toggle('on');
+}
+
+async function loadHomeHighlightsAdmin() {
+  const editor = document.getElementById('homeHighlightsEditor');
+  if (!editor) return;
+  editor.innerHTML = '<div class="table-empty">Carregando destaques...</div>';
+  try {
+    const res = await fetch(`${API}/home-destaques`, { headers: authHeaders({ 'Content-Type': 'application/json' }) });
+    if (!res.ok) throw new Error(await res.text());
+    renderHomeHighlightsAdmin(await res.json());
+  } catch {
+    renderHomeHighlightsAdmin();
+    toast('Nao foi possivel carregar destaques. Mostrando padrao.', 'error');
+  }
+}
+
+async function handleHomeHighlightFile(i, event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    const kind = validateMediaFile(file);
+    const media = await prepareMediaForUpload(file, kind);
+    const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ dataUrl: media.dataUrl, name: media.name || file.name })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    document.getElementById(`home-highlight-media-${i}`).value = data.url;
+    document.getElementById(`home-highlight-media-type-${i}`).value = kind;
+    updateHomeHighlightPreview(i);
+    toast('Midia enviada para o destaque.', 'success');
+  } catch (err) {
+    toast(err.message || 'Erro ao enviar midia.', 'error');
+  } finally {
+    event.target.value = '';
+  }
+}
+
+async function saveHomeHighlights() {
+  const destaques = [0,1,2].map(getHomeHighlightFromForm);
+  if (destaques.some(d => !d.marca || !d.titulo || !d.midia_url)) {
+    return toast('Preencha marca, titulo e foto/video dos 3 destaques.', 'error');
+  }
+  try {
+    const res = await fetch(`${API}/home-destaques`, {
+      method: 'PUT',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ destaques })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    renderHomeHighlightsAdmin(await res.json());
+    toast('Destaques da home salvos!', 'success');
+  } catch (err) {
+    toast('Erro ao salvar destaques: ' + (err.message || 'tente novamente.'), 'error');
+  }
+}
+
 // ─────────────────────────────────────────────────────
 // TABS
 // ─────────────────────────────────────────────────────
@@ -2298,6 +2464,7 @@ function showTab(name) {
     if (!allPedidos.length) loadPedidos();
     else renderPedidosTable();
   }
+  if (name === 'config') loadHomeHighlightsAdmin();
 }
 
 // ─── PEDIDOS ─────────────────────────────────────────

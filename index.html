@@ -677,6 +677,14 @@
     background-position: center;
     transition: transform 0.6s ease;
     filter: brightness(0.85);
+    overflow: hidden;
+    display: block;
+  }
+  .highlight-img img, .highlight-img video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .highlight-card:hover .highlight-img {
     transform: scale(1.06);
@@ -1662,6 +1670,75 @@
 </footer>
 
 <script>
+  const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    })[char]);
+  }
+
+  function escapeAttr(value) {
+    return escapeHtml(value).replace(/`/g, '&#96;');
+  }
+
+  function isVideoMedia(url, tipo = '') {
+    return tipo === 'video' || String(url || '').match(/\.(mp4|webm|mov)(\?|$)/i);
+  }
+
+  function safeHighlightLink(url) {
+    const clean = String(url || '').trim();
+    if (!clean) return 'catalogo.html';
+    if (/^(https?:)?\/\//i.test(clean)) return clean;
+    if (/^[a-z0-9_\-./?=&%#]+$/i.test(clean)) return clean;
+    return 'catalogo.html';
+  }
+
+  function renderHighlightCard(item, index) {
+    const link = escapeAttr(safeHighlightLink(item.link_url));
+    const media = escapeAttr(item.midia_url || '');
+    const title = escapeHtml(item.titulo || '');
+    const brand = escapeHtml(item.marca || '');
+    const delay = index ? ` style="transition-delay: ${index / 10}s"` : '';
+    const mediaHtml = isVideoMedia(item.midia_url, item.midia_tipo)
+      ? `<video src="${media}" muted autoplay loop playsinline preload="metadata"></video>`
+      : `<img src="${media}" alt="${escapeAttr(item.titulo || 'Produto em destaque')}">`;
+
+    return `
+      <div class="highlight-card reveal visible"${delay}>
+        <a class="highlight-img" href="${link}" aria-label="${escapeAttr(item.titulo || 'Ver produto')}">${mediaHtml}</a>
+        <div class="highlight-badge">Novo</div>
+        <div class="highlight-body">
+          <div class="highlight-brand">${brand}</div>
+          <div class="highlight-name">${title}</div>
+          <div class="highlight-footer">
+            <a href="${link}" class="highlight-cta">Ver Mais</a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function loadHomeHighlights() {
+    const grid = document.getElementById('highlightsGrid');
+    if (!grid) return;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/home_destaques?select=*&ativo=eq.true&order=id.asc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      });
+      if (!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) return;
+      grid.innerHTML = data.slice(0, 3).map(renderHighlightCard).join('');
+    } catch {}
+  }
+
+  loadHomeHighlights();
+
   // Cursor
   const cursor = document.getElementById('cursor');
   const cursorRing = document.getElementById('cursorRing');
