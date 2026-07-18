@@ -99,15 +99,17 @@
   .frete-options { margin-top:14px; display:none; flex-direction:column; gap:8px; }
   .frete-options.show { display:flex; }
   .frete-option {
-    display:flex; align-items:center; justify-content:space-between;
+    display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:12px; align-items:center;
     padding:12px 16px; border:1px solid var(--border); border-radius:3px;
     cursor:pointer; transition:all 0.2s; background:var(--gray-800);
     min-width:0;
   }
   .frete-option:hover, .frete-option.selected { border-color:var(--gold); background:var(--gold-bg); }
-  .frete-option input[type=radio] { accent-color:var(--gold); margin-right:10px; }
-  .frete-option-label { font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
-  .frete-option-price { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); white-space:nowrap; }
+  .frete-option input[type=radio] { accent-color:var(--gold); flex-shrink:0; margin:0; }
+  .frete-option-label { font-size:13px; font-weight:600; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:10px; min-width:0; }
+  .frete-option-label > div { min-width:0; }
+  .frete-option-label > div > div:first-child { line-height:1.25; overflow-wrap:anywhere; }
+  .frete-option-price { font-family:'Bebas Neue',sans-serif; font-size:20px; color:var(--gold); white-space:nowrap; justify-self:end; text-align:right; }
   .frete-option-days { font-size:11px; color:var(--gray-400); }
   .frete-loading { font-size:13px; color:var(--gray-400); padding:12px 0; display:none; }
 
@@ -219,9 +221,9 @@
     .payment-methods { grid-template-columns:1fr; }
     .pay-method { min-height:68px; display:flex; align-items:center; justify-content:center; gap:12px; }
     .pay-method-icon { margin-bottom:0; }
-    .frete-option { gap:14px; align-items:flex-start; flex-wrap:wrap; }
+    .frete-option { grid-template-columns:auto minmax(0,1fr); gap:8px 12px; align-items:flex-start; }
     .frete-option-label { align-items:flex-start; overflow-wrap:anywhere; }
-    .frete-option-price { flex-shrink:0; }
+    .frete-option-price { grid-column:2; justify-self:start; flex-shrink:0; }
     .os-row, .os-total { align-items:flex-start; }
     .os-total .val { font-size:28px; text-align:right; white-space:nowrap; }
     .btn-finalizar { min-height:50px; }
