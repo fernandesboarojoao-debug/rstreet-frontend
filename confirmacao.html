@@ -304,6 +304,41 @@ const STATUS_MAP = {
   in_process: { icon:'⏳', cls:'pending', title:'Pagamento em Análise', sub:'Seu pagamento está sendo analisado. Em breve confirmaremos seu pedido.' },
 };
 
+const STORE_HOURS_TEXT = 'segunda a sexta das 9h as 18h, sabado das 9h as 13h. Domingo fechado.';
+
+function getStoreOpenStatus(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  const dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const day = dayMap[values.weekday];
+  const minutes = Number(values.hour) * 60 + Number(values.minute);
+  const ranges = {
+    1: [9 * 60, 18 * 60],
+    2: [9 * 60, 18 * 60],
+    3: [9 * 60, 18 * 60],
+    4: [9 * 60, 18 * 60],
+    5: [9 * 60, 18 * 60],
+    6: [9 * 60, 13 * 60],
+  };
+  const range = ranges[day];
+  return { isOpen: Boolean(range && minutes >= range[0] && minutes < range[1]) };
+}
+
+function updateStoreHoursStep() {
+  const step = document.querySelectorAll('.next-step-text')[1];
+  if (!step) return;
+  const status = getStoreOpenStatus();
+  step.innerHTML = status.isOpen
+    ? `<strong>Separacao</strong><br>Estamos abertos agora. Nossa equipe ira separar e embalar seu pedido durante o horario de atendimento. Atendimento: ${STORE_HOURS_TEXT}`
+    : `<strong>Separacao</strong><br>Estamos fechados agora. Seu pedido foi recebido; vamos separar e embalar no proximo horario de funcionamento. Atendimento: ${STORE_HOURS_TEXT}`;
+}
+
 function statusFromPedido(pedido, fallback) {
   const status = String(pedido?.status || '').toLowerCase();
   if (status === 'pago' || status === 'approved') return 'approved';
@@ -368,6 +403,7 @@ function restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus) {
 }
 
 async function init() {
+  updateStoreHoursStep();
   // Pega status do Mercado Pago da URL
   const params = new URLSearchParams(window.location.search);
   const statusUrl = params.get('collection_status') || params.get('status') || 'approved';

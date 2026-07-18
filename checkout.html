@@ -181,6 +181,8 @@
   .alert { padding:14px 16px; border-radius:3px; font-size:13px; margin-bottom:16px; display:flex; gap:10px; align-items:flex-start; line-height:1.5; }
   .alert-error { background:rgba(230,57,70,0.1); border:1px solid rgba(230,57,70,0.3); color:#ef9a9a; }
   .alert-info { background:var(--gold-bg); border:1px solid rgba(200,169,110,0.2); color:var(--gold); }
+  .store-hours-alert { margin-top:16px; }
+  .store-hours-alert strong { color:var(--white); }
 
   footer { background:var(--gray-900); border-top:1px solid var(--border); padding:32px 60px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
   .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; }
@@ -375,6 +377,10 @@
         <span>🔒</span>
         <span>Você será redirecionado para o ambiente seguro do <strong>Mercado Pago</strong> para finalizar o pagamento.</span>
       </div>
+      <div class="alert alert-info store-hours-alert" id="storeHoursAlert">
+        <span>Horario</span>
+        <span>Horario de atendimento: segunda a sexta das 9h as 18h e sabado das 9h as 13h. Domingo fechado.</span>
+      </div>
       <div class="payment-methods">
         <div class="pay-method selected" onclick="selectPayment(this, 'credit_card')">
           <div class="pay-method-icon">💳</div>
@@ -444,6 +450,41 @@ const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';
 let freteVal = 0;
 let freteLabel = '';
 let paymentMethod = 'credit_card';
+
+const STORE_HOURS_TEXT = 'segunda a sexta das 9h as 18h, sabado das 9h as 13h. Domingo fechado.';
+
+function getStoreOpenStatus(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  const dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const day = dayMap[values.weekday];
+  const minutes = Number(values.hour) * 60 + Number(values.minute);
+  const ranges = {
+    1: [9 * 60, 18 * 60],
+    2: [9 * 60, 18 * 60],
+    3: [9 * 60, 18 * 60],
+    4: [9 * 60, 18 * 60],
+    5: [9 * 60, 18 * 60],
+    6: [9 * 60, 13 * 60],
+  };
+  const range = ranges[day];
+  return { isOpen: Boolean(range && minutes >= range[0] && minutes < range[1]) };
+}
+
+function updateStoreHoursAlert() {
+  const alert = document.getElementById('storeHoursAlert');
+  if (!alert) return;
+  const status = getStoreOpenStatus();
+  alert.innerHTML = status.isOpen
+    ? `<span>Aberto</span><span><strong>Estamos abertos agora.</strong> Pedidos pagos entram na separacao durante o horario de atendimento. Atendimento: ${STORE_HOURS_TEXT}</span>`
+    : `<span>Fechado</span><span><strong>Estamos fechados agora.</strong> A compra pode ser feita normalmente; se o pagamento for aprovado, vamos separar e embalar no proximo horario de funcionamento. Atendimento: ${STORE_HOURS_TEXT}</span>`;
+}
 
 const FRETE_REGRAS = {
   local: [
@@ -783,6 +824,7 @@ function showAlert(msg, type) {
 function clearAlert() { document.getElementById('alertArea').innerHTML = ''; }
 
 // ─── INIT ───────────────────────────────────
+updateStoreHoursAlert();
 renderSummary();
 </script>
 </body>
