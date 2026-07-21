@@ -485,7 +485,7 @@ function renderProduct() {
     const variant = getVariantFor(selectedColor, s);
     const disabled = !variant || variant.estoque <= 0;
     return `<button class="size-btn ${selectedSize === s ? 'selected' : ''}" onclick="selectSize('${escapeAttr(s)}', this)" ${disabled ? 'disabled' : ''}>${escapeHtml(s)}</button>`;
-  }).join('') : (p.tamanhos || []).map(s =>
+  }).join('') : sortSizes(p.tamanhos || []).map(s =>
     `<button class="size-btn" onclick="selectSize('${escapeAttr(s)}', this)">${escapeHtml(s)}</button>`).join('');
 
   const addDisabled = hasVariants ? !getSelectedVariant() : currentStock <= 0;
@@ -762,7 +762,7 @@ function getVariantSizes() {
   const list = selectedColor
     ? getActiveVariants().filter(v => sameText(v.cor, selectedColor))
     : getActiveVariants();
-  return [...new Set(list.map(v => String(v.tamanho || '').trim()).filter(Boolean))];
+  return sortSizes([...new Set(list.map(v => String(v.tamanho || '').trim()).filter(Boolean))]);
 }
 
 function getVariantFor(cor, tamanho) {
@@ -774,6 +774,38 @@ function getVariantFor(cor, tamanho) {
 
 function sameText(a, b) {
   return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+}
+
+function sortSizes(sizes) {
+  const order = {
+    'pp': 10,
+    'p': 20,
+    'm': 30,
+    'medio': 30,
+    'médio': 30,
+    'g': 40,
+    'gg': 50,
+    'xg': 60,
+    'xgg': 70,
+    'exg': 80,
+    'exgg': 90
+  };
+
+  return [...sizes].sort((a, b) => {
+    const aa = String(a || '').trim();
+    const bb = String(b || '').trim();
+    const an = Number(aa.replace(',', '.'));
+    const bn = Number(bb.replace(',', '.'));
+    const aIsNumber = Number.isFinite(an);
+    const bIsNumber = Number.isFinite(bn);
+
+    if (aIsNumber && bIsNumber) return an - bn;
+    if (aIsNumber !== bIsNumber) return aIsNumber ? -1 : 1;
+
+    const ao = order[aa.toLowerCase()] ?? 999;
+    const bo = order[bb.toLowerCase()] ?? 999;
+    return ao - bo || aa.localeCompare(bb, 'pt-BR', { numeric: true, sensitivity: 'base' });
+  });
 }
 
 function getSelectedVariant() {
