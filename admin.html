@@ -1514,6 +1514,33 @@ function sameAdminText(a, b) {
   return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
 }
 
+function getAdminSizeOrder(size) {
+  const clean = String(size || '').trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const named = {
+    'PP': 10,
+    'P': 20,
+    'M': 30,
+    'G': 40,
+    'GG': 50,
+    'XG': 60,
+    'XGG': 70,
+    'XXG': 80,
+    'XXGG': 90,
+    'EXG': 100
+  };
+  if (named[clean] !== undefined) return named[clean];
+  const numeric = parseInt(clean, 10);
+  if (!Number.isNaN(numeric)) return 1000 + numeric;
+  return 2000;
+}
+
+function sortAdminSizeVariants(a, b) {
+  const orderA = getAdminSizeOrder(a.tamanho);
+  const orderB = getAdminSizeOrder(b.tamanho);
+  if (orderA !== orderB) return orderA - orderB;
+  return String(a.tamanho || '').localeCompare(String(b.tamanho || ''), 'pt-BR', { numeric: true });
+}
+
 function getVariantColorGroups() {
   const map = new Map();
   currentVariants.forEach((variant, index) => {
@@ -1542,7 +1569,9 @@ function getVariantColorGroups() {
     if (group.preco_antigo === null && variant.preco_antigo !== null && variant.preco_antigo !== undefined) group.preco_antigo = variant.preco_antigo;
     if (isValidVariantSize(variant.tamanho)) group.sizes.push({ ...variant, __index: index });
   });
-  return [...map.values()].sort((a, b) => (a.ordem || 0) - (b.ordem || 0) || a.cor.localeCompare(b.cor));
+  const groups = [...map.values()].sort((a, b) => (a.ordem || 0) - (b.ordem || 0) || a.cor.localeCompare(b.cor));
+  groups.forEach(group => group.sizes.sort(sortAdminSizeVariants));
+  return groups;
 }
 
 function getGroupByIndex(groupIndex) {
