@@ -447,7 +447,7 @@ function renderProduct() {
   let badge = '';
   if (currentStock === 0) badge = '<div class="gallery-badge badge-out">Esgotado</div>';
   else if (colorData.preco_antigo) badge = '<div class="gallery-badge badge-sale">Oferta</div>';
-  else badge = '<div class="gallery-badge badge-new">Novo</div>';
+  else if (isProductNew(p)) badge = '<div class="gallery-badge badge-new">Novo</div>';
 
   const medias = colorData.medias;
   const imgs = colorData.imagens;
@@ -559,6 +559,13 @@ function renderProduct() {
   const cartBtn = document.getElementById('btnCarrinho');
   if (cartBtn) cartBtn.innerHTML = `<span style="font-size:20px">🛒</span> ${addText}`;
   prepareProductVideos(document.getElementById('mainContent'));
+}
+
+function isProductNew(product, days = 30) {
+  const createdAt = product?.criado_em ? new Date(product.criado_em).getTime() : 0;
+  if (!createdAt || Number.isNaN(createdAt)) return false;
+  const ageMs = Date.now() - createdAt;
+  return ageMs >= 0 && ageMs <= days * 24 * 60 * 60 * 1000;
 }
 
 function changeImg(url, el) {

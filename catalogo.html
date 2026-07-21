@@ -1299,10 +1299,17 @@ function renderCatalogStockInfo(stock, productId) {
   return `<span class="product-stock ${cls}" id="catalog-stock-${productId}">${text}</span>`;
 }
 
+function isCatalogProductNew(product, days = 30) {
+  const createdAt = product?.criado_em ? new Date(product.criado_em).getTime() : 0;
+  if (!createdAt || Number.isNaN(createdAt)) return false;
+  const ageMs = Date.now() - createdAt;
+  return ageMs >= 0 && ageMs <= days * 24 * 60 * 60 * 1000;
+}
+
 function renderCatalogBadges(product, price, stock = product?.estoque) {
   if (Number(stock || 0) <= 0) return '<div class="product-badge badge-out">Esgotado</div>';
   if (price?.preco_antigo) return '<div class="product-badge badge-sale">Oferta</div>';
-  if (product?.id > allProducts.length - 4) return '<div class="product-badge badge-new">Novo</div>';
+  if (isCatalogProductNew(product)) return '<div class="product-badge badge-new">Novo</div>';
   return '';
 }
 
