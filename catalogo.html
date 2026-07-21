@@ -693,14 +693,14 @@
       <div class="mobile-filter-row" id="mobileCatFilters">
         <button class="filter-btn active" onclick="setCategoryFilterMobile('todos', this)">Todos</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Camisa', this)">Camisas</button>
-        <button class="filter-btn" onclick="setCategoryFilterMobile('Calça', this)">Calças</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Camiseta', this)">Camisetas</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Regata', this)">Regatas</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Moletom', this)">Moletons</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Blusa de Frio', this)">Blusas de frio</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Calça', this)">Calças</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Bermuda', this)">Bermudas</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Tênis', this)">Tênis</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Chinelo', this)">Chinelos</button>
-        <button class="filter-btn" onclick="setCategoryFilterMobile('Moletom', this)">Moletons</button>
-        <button class="filter-btn" onclick="setCategoryFilterMobile('Blusa de Frio', this)">Blusas de frio</button>
-        <button class="filter-btn" onclick="setCategoryFilterMobile('Regata', this)">Regatas</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Acessório', this)">Acessórios</button>
       </div>
       <div style="margin-top:12px">
@@ -741,13 +741,25 @@
         <span class="sidebar-option-label">Camisas</span>
         <span class="sidebar-option-count" id="cat-Camisa">0</span>
       </div>
-      <div class="sidebar-option" onclick="setCategoryFilter('Calça', this)">
-        <span class="sidebar-option-label">Calças</span>
-        <span class="sidebar-option-count" id="cat-Calça">0</span>
-      </div>
       <div class="sidebar-option" onclick="setCategoryFilter('Camiseta', this)">
         <span class="sidebar-option-label">Camisetas</span>
         <span class="sidebar-option-count" id="cat-Camiseta">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Regata', this)">
+        <span class="sidebar-option-label">Regatas</span>
+        <span class="sidebar-option-count" id="cat-Regata">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Moletom', this)">
+        <span class="sidebar-option-label">Moletons</span>
+        <span class="sidebar-option-count" id="cat-Moletom">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Blusa de Frio', this)">
+        <span class="sidebar-option-label">Blusas de frio</span>
+        <span class="sidebar-option-count" id="cat-Blusa de Frio">0</span>
+      </div>
+      <div class="sidebar-option" onclick="setCategoryFilter('Calça', this)">
+        <span class="sidebar-option-label">Calças</span>
+        <span class="sidebar-option-count" id="cat-Calça">0</span>
       </div>
       <div class="sidebar-option" onclick="setCategoryFilter('Bermuda', this)">
         <span class="sidebar-option-label">Bermudas</span>
@@ -760,18 +772,6 @@
       <div class="sidebar-option" onclick="setCategoryFilter('Chinelo', this)">
         <span class="sidebar-option-label">Chinelos</span>
         <span class="sidebar-option-count" id="cat-Chinelo">0</span>
-      </div>
-      <div class="sidebar-option" onclick="setCategoryFilter('Moletom', this)">
-        <span class="sidebar-option-label">Moletons</span>
-        <span class="sidebar-option-count" id="cat-Moletom">0</span>
-      </div>
-      <div class="sidebar-option" onclick="setCategoryFilter('Blusa de Frio', this)">
-        <span class="sidebar-option-label">Blusas de frio</span>
-        <span class="sidebar-option-count" id="cat-Blusa de Frio">0</span>
-      </div>
-      <div class="sidebar-option" onclick="setCategoryFilter('Regata', this)">
-        <span class="sidebar-option-label">Regatas</span>
-        <span class="sidebar-option-count" id="cat-Regata">0</span>
       </div>
       <div class="sidebar-option" onclick="setCategoryFilter('Acessório', this)">
         <span class="sidebar-option-label">Acessórios</span>
@@ -1054,7 +1054,7 @@ function updateMaxPrice(preserveCurrent = false) {
 function updateCategoryCounts() {
   const active = allProducts.filter(p => p.ativo);
   document.getElementById('cat-todos').textContent = active.length;
-  ['Camisa','Calça','Camiseta','Bermuda','Tênis','Chinelo','Moletom','Blusa de Frio','Regata','Acessório'].forEach(cat => {
+  ['Camisa','Camiseta','Regata','Moletom','Blusa de Frio','Calça','Bermuda','Tênis','Chinelo','Acessório'].forEach(cat => {
     const el = document.getElementById('cat-' + cat);
     if (el) el.textContent = active.filter(p => p.categoria?.includes(cat)).length;
   });
