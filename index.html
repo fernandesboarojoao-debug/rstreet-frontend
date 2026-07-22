@@ -194,9 +194,13 @@
   }
   .hero-bg {
     position: absolute; inset: 0;
-    background:
+    background-image:
       linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.8) 100%),
-      url('hero-primavera.png') center/cover no-repeat;
+      url('hero-primavera.png');
+    background-position: center, center bottom;
+    background-size: cover, cover;
+    background-repeat: no-repeat, no-repeat;
+    background-color: var(--black);
     transform: scale(1.05);
     transition: transform 8s ease;
     will-change: transform;
@@ -1164,6 +1168,10 @@
     }
     section { padding: 80px 24px; }
     .hero-content { padding: 0 24px; }
+    .hero-bg {
+      background-position: center, center bottom;
+      background-size: cover, contain;
+    }
     .hero-stats { display: none; }
     .hero-title { font-size: 64px; }
     .hero-desc { font-size: 14px; }
