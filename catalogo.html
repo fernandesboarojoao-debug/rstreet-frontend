@@ -1012,7 +1012,7 @@ function updatePrice(val) {
 }
 
 function applyFilters() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
+  const search = normalizeSearchText(document.getElementById('searchInput').value);
   const sort = document.getElementById('sortSelect').value;
 
   filtered = allProducts.filter(p => {
@@ -1021,7 +1021,7 @@ function applyFilters() {
     if (currentCategory !== 'todos' && !p.categoria?.includes(currentCategory)) return false;
     if (currentStock === 'estoque' && getCatalogProductStock(p) <= 0) return false;
     if (p.preco > currentMaxPrice) return false;
-    if (search && !p.nome.toLowerCase().includes(search) && !p.marca.toLowerCase().includes(search) && !p.referencia?.toLowerCase().includes(search)) return false;
+    if (search && !matchesProductSearch(p, search)) return false;
     return true;
   });
 
@@ -1049,6 +1049,30 @@ function updateMaxPrice(preserveCurrent = false) {
   }
   range.value = currentMaxPrice;
   document.getElementById('priceLabel').textContent = 'R$ ' + currentMaxPrice;
+}
+
+function normalizeSearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function matchesSearchText(haystack, search) {
+  const text = normalizeSearchText(haystack);
+  return search.split(/\s+/).filter(Boolean).every(term => text.includes(term));
+}
+
+function matchesProductSearch(product, search) {
+  return matchesSearchText([
+    product?.nome,
+    product?.marca,
+    product?.referencia,
+    product?.categoria,
+    product?.descricao
+  ].filter(Boolean).join(' '), search);
 }
 
 function updateCategoryCounts() {

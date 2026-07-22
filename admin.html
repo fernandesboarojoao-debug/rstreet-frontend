@@ -1861,12 +1861,12 @@ function renderRecentTable() {
 }
 
 function renderAdminTable() {
-  const search = document.getElementById('adminSearch')?.value.toLowerCase() || '';
+  const search = normalizeSearchText(document.getElementById('adminSearch')?.value || '');
   const brand = document.getElementById('adminBrandFilter')?.value || '';
   const status = document.getElementById('adminStatusFilter')?.value || '';
 
   let list = allProducts.filter(p => {
-    if (search && !p.nome.toLowerCase().includes(search) && !p.marca?.toLowerCase().includes(search) && !p.referencia?.toLowerCase().includes(search)) return false;
+    if (search && !matchesSearchText([p.nome, p.marca, p.referencia, p.categoria, p.descricao].filter(Boolean).join(' '), search)) return false;
     if (brand && p.marca !== brand) return false;
     if (status === 'ativo' && !p.ativo) return false;
     if (status === 'inativo' && p.ativo) return false;
@@ -1877,6 +1877,20 @@ function renderAdminTable() {
   document.getElementById('adminTableBody').innerHTML = list.length
     ? list.map(p => buildRow(p)).join('')
     : `<tr><td colspan="7" class="table-empty"><div class="table-empty-icon">📭</div>Nenhum produto encontrado.</td></tr>`;
+}
+
+function normalizeSearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function matchesSearchText(haystack, search) {
+  const text = normalizeSearchText(haystack);
+  return search.split(/\s+/).filter(Boolean).every(term => text.includes(term));
 }
 
 function buildTable(list) {
@@ -2647,10 +2661,10 @@ function updatePedidosStats() {
 }
 
 function renderPedidosTable() {
-  const search = document.getElementById('pedSearch')?.value.toLowerCase() || '';
+  const search = normalizeSearchText(document.getElementById('pedSearch')?.value || '');
   const status = document.getElementById('pedStatusFilter')?.value || '';
   let lista = allPedidos.filter(p => {
-    if (search && !p.cliente_nome?.toLowerCase().includes(search) && !p.cliente_email?.toLowerCase().includes(search)) return false;
+    if (search && !matchesSearchText([p.cliente_nome, p.cliente_email, p.cliente_telefone, p.id].filter(Boolean).join(' '), search)) return false;
     if (status && p.status !== status) return false;
     return true;
   });
