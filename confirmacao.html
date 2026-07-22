@@ -406,7 +406,7 @@ async function init() {
   updateStoreHoursStep();
   // Pega status do Mercado Pago da URL
   const params = new URLSearchParams(window.location.search);
-  const statusUrl = params.get('collection_status') || params.get('status') || 'approved';
+  const statusUrl = params.get('collection_status') || params.get('status') || 'pending';
   const status = statusUrl === 'failure' ? 'cancelled' : statusUrl;
   const pedidoLocal = JSON.parse(localStorage.getItem('rstreet_pedido') || 'null');
   const pedidoId = params.get('pedido_id') || params.get('external_reference') || pedidoLocal?.pedido_id || '';

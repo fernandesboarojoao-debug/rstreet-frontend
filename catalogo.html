@@ -1019,7 +1019,7 @@ function applyFilters() {
     if (!p.ativo) return false;
     if (currentBrand !== 'todos' && p.marca !== currentBrand) return false;
     if (currentCategory !== 'todos' && !p.categoria?.includes(currentCategory)) return false;
-    if (currentStock === 'estoque' && p.estoque <= 0) return false;
+    if (currentStock === 'estoque' && getCatalogProductStock(p) <= 0) return false;
     if (p.preco > currentMaxPrice) return false;
     if (search && !p.nome.toLowerCase().includes(search) && !p.marca.toLowerCase().includes(search) && !p.referencia?.toLowerCase().includes(search)) return false;
     return true;
@@ -1291,6 +1291,14 @@ function getCatalogGroupPrice(group, product) {
 
 function getCatalogGroupStock(group, product) {
   return Math.max(0, Number(group ? group.estoque : product?.estoque) || 0);
+}
+
+function getCatalogProductStock(product) {
+  const groups = getCatalogColorGroups(product?.id);
+  if (groups.length) {
+    return groups.reduce((total, group) => total + Math.max(0, Number(group.estoque) || 0), 0);
+  }
+  return Math.max(0, Number(product?.estoque) || 0);
 }
 
 function renderCatalogStockInfo(stock, productId) {

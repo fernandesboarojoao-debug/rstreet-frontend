@@ -711,6 +711,7 @@
             <option value="pendente">Pendente ⏳</option>
             <option value="em_analise">Em análise 🔍</option>
             <option value="recusado">Recusado ❌</option>
+            <option value="estoque_indisponivel">Problema de estoque</option>
             <option value="cancelado">Cancelado</option>
           </select>
         </div>
@@ -2665,6 +2666,7 @@ function renderPedidosTable() {
     pendente:   '<span class="badge" style="background:rgba(255,152,0,0.15);color:#ff9800;border:1px solid rgba(255,152,0,0.3)">⏳ Pendente</span>',
     em_analise: '<span class="badge" style="background:rgba(74,144,226,0.15);color:#4a90e2;border:1px solid rgba(74,144,226,0.3)">🔍 Em análise</span>',
     recusado:   '<span class="badge" style="background:rgba(230,57,70,0.15);color:var(--red);border:1px solid rgba(230,57,70,0.3)">❌ Recusado</span>',
+    estoque_indisponivel: '<span class="badge" style="background:rgba(230,57,70,0.22);color:#ffb3b8;border:1px solid rgba(230,57,70,0.45)">Estoque indisponivel</span>',
     cancelado:  '<span class="badge badge-inactive">Cancelado</span>',
   };
   if (!lista.length) {
