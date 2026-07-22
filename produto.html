@@ -545,7 +545,7 @@ function renderProduct() {
           ${p.marca ? `<div class="detail-item"><span class="detail-key">Marca</span><span class="detail-val">${p.marca}</span></div>` : ''}
           ${p.categoria ? `<div class="detail-item"><span class="detail-key">Categoria</span><span class="detail-val">${p.categoria}</span></div>` : ''}
           ${p.referencia ? `<div class="detail-item"><span class="detail-key">Referência</span><span class="detail-val">${p.referencia}</span></div>` : ''}
-          ${(p.tamanhos||[]).length ? `<div class="detail-item"><span class="detail-key">Tamanhos</span><span class="detail-val">${p.tamanhos.join(' · ')}</span></div>` : ''}
+          ${(p.tamanhos||[]).length ? `<div class="detail-item"><span class="detail-key">Tamanhos</span><span class="detail-val">${sortSizes(p.tamanhos).join(' · ')}</span></div>` : ''}
         </div>
 
         <div class="share-row">
