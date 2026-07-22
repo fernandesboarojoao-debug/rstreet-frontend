@@ -196,16 +196,13 @@
     position: absolute; inset: 0;
     background-image:
       linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.8) 100%),
-      url('hero-primavera.png');
-    background-position: center, center bottom;
+      url('hero-primavera-desktop.jpg');
+    background-position: center, center;
     background-size: cover, cover;
     background-repeat: no-repeat, no-repeat;
     background-color: var(--black);
-    transform: scale(1.05);
-    transition: transform 8s ease;
-    will-change: transform;
   }
-  .hero-bg.loaded { transform: scale(1); }
+  .hero-bg.loaded { transform: none; }
 
   .hero-overlay {
     position: absolute; inset: 0;
@@ -1169,8 +1166,11 @@
     section { padding: 80px 24px; }
     .hero-content { padding: 0 24px; }
     .hero-bg {
-      background-position: center, center bottom;
-      background-size: cover, contain;
+      background-image:
+        linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.8) 100%),
+        url('hero-primavera-mobile.jpg');
+      background-position: center, center;
+      background-size: cover, cover;
     }
     .hero-stats { display: none; }
     .hero-title { font-size: 64px; }
