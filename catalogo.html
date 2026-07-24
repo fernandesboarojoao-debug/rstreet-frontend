@@ -1962,6 +1962,17 @@ function getCampaignProducts() {
 function updateCatalogShowcases() {
   const wrapper = document.getElementById('catalogShowcase');
   if (!wrapper) return;
+  if (currentCampaignTheme) {
+    wrapper.classList.remove('is-visible');
+    ['campaignProductsSection', 'featuredProductsSection', 'saleProductsSection'].forEach(id => {
+      const section = document.getElementById(id);
+      if (section) {
+        section.classList.remove('is-visible');
+        section.innerHTML = '';
+      }
+    });
+    return;
+  }
   const campaignProducts = getCampaignProducts();
   const activeInStock = allProducts.filter(product => product.ativo !== false && getCatalogProductStock(product) > 0);
   const featuredProducts = activeInStock
