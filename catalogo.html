@@ -60,6 +60,122 @@
   .nav-back:hover { background: var(--gold); color: var(--black); }
   .nav-action { color: var(--gold); text-decoration: none; font-size: 12px; border: 1px solid rgba(200,169,110,0.3); padding: 8px 18px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: all 0.3s; white-space: nowrap; }
   .nav-action:hover { background: var(--gold); color: var(--black); }
+  .mobile-menu-toggle {
+    display:none;
+    width:40px;
+    height:40px;
+    border:1px solid rgba(200,169,110,0.32);
+    background:transparent;
+    color:var(--gold);
+    border-radius:2px;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    line-height:1;
+    cursor:pointer;
+  }
+  .catalog-mobile-menu {
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:180;
+    background:rgba(0,0,0,0.62);
+  }
+  .catalog-mobile-menu.open { display:block; }
+  .catalog-mobile-menu-panel {
+    width:min(86vw,340px);
+    height:100%;
+    background:var(--gray-900);
+    border-right:1px solid rgba(200,169,110,0.22);
+    padding:18px;
+    overflow-y:auto;
+    box-shadow:18px 0 40px rgba(0,0,0,0.38);
+  }
+  .catalog-mobile-menu-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding-bottom:14px;
+    margin-bottom:14px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .catalog-mobile-menu-logo {
+    font-family:'Bebas Neue', sans-serif;
+    font-size:24px;
+    letter-spacing:4px;
+    color:var(--white);
+  }
+  .catalog-mobile-menu-logo span { color:var(--gold); }
+  .catalog-mobile-menu-close {
+    width:36px;
+    height:36px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:var(--gray-800);
+    color:var(--white);
+    border-radius:2px;
+    cursor:pointer;
+    font-size:20px;
+  }
+  .catalog-mobile-menu-title {
+    color:var(--gold);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin:18px 0 9px;
+  }
+  .catalog-mobile-menu-links,
+  .catalog-mobile-menu-grid {
+    display:grid;
+    gap:8px;
+  }
+  .catalog-mobile-menu-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .catalog-mobile-menu-link,
+  .catalog-mobile-menu-chip {
+    min-height:42px;
+    border:1px solid rgba(255,255,255,0.1);
+    background:var(--gray-800);
+    color:var(--gray-200);
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    padding:10px 12px;
+    border-radius:2px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.8px;
+    text-transform:uppercase;
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+    text-align:left;
+  }
+  .catalog-mobile-menu-chip { justify-content:center; }
+  .catalog-mobile-menu-link:active,
+  .catalog-mobile-menu-chip.active {
+    background:var(--gold);
+    border-color:var(--gold);
+    color:var(--black);
+  }
+  .catalog-mobile-price {
+    border:1px solid rgba(255,255,255,0.1);
+    background:var(--gray-800);
+    padding:12px;
+    border-radius:2px;
+  }
+  .catalog-mobile-price-row {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    color:var(--gray-200);
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .catalog-mobile-price-row span { color:var(--gold); }
+  .catalog-mobile-price input { width:100%; accent-color:var(--gold); }
 
   /* HEADER BANNER */
   .catalog-header {
@@ -586,10 +702,31 @@
   .mobile-filter-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
   @media (max-width: 900px) {
-    nav { padding: 16px 20px; }
+    nav {
+      padding: 12px 16px;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:center;
+      width:100vw;
+      max-width:100vw;
+    }
+    .mobile-menu-toggle { display:flex; flex:0 0 auto; position:relative; z-index:2; }
+    .nav-logo { position:absolute; left:50%; transform:translateX(-50%); text-align:center; z-index:1; }
+    #navCartBtn {
+      position:fixed;
+      right:16px;
+      top:12px;
+      margin:0;
+      min-width:40px;
+      justify-content:center;
+      flex:0 0 auto;
+      z-index:2;
+      display:flex !important;
+    }
     nav .nav-links { display: none; }
     nav .nav-back { display: none; }
-    .nav-action { padding: 8px 12px; font-size: 11px; letter-spacing: .6px; }
+    nav .nav-action { display:none; }
     .catalog-header { padding: 40px 20px 28px; }
     .catalog-header-title { font-size: 48px; }
     .catalog-theme-banner { margin:18px 20px 0; min-height:180px; }
@@ -610,7 +747,7 @@
     .toolbar .filter-group { display: none; }
     .toolbar .sort-select { display: none; }
     .toolbar .result-count { margin-left: 0; font-size: 12px; white-space: normal; }
-    .filter-mobile-btn { display: block; }
+    .filter-mobile-btn { display: none !important; }
     .catalog-layout { flex-direction: column; }
     .sidebar { display: none; }
     .catalog-main { padding: 16px; }
@@ -626,10 +763,10 @@
   }
 
   @media (max-width: 560px) {
-    nav { padding: 14px 18px; gap: 8px; }
+    nav { padding: 12px 14px; gap: 6px; }
     .nav-logo { font-size: 24px; letter-spacing: 4px; }
-    .nav-action { min-height: 40px; padding: 8px 8px; font-size: 9px; letter-spacing: .3px; gap: 0; }
-    #navCartBtn { min-height: 40px; padding: 8px 14px !important; }
+    .mobile-menu-toggle { width:38px; height:38px; font-size:21px; }
+    #navCartBtn { right:14px; top:12px; min-height: 38px; padding: 8px 12px !important; }
     .catalog-header { padding: 36px 20px 26px; }
     .catalog-header::before { font-size: 120px; right: -60px; letter-spacing: 12px; }
     .catalog-header-label { letter-spacing: 3px; line-height: 1.6; }
@@ -647,7 +784,7 @@
     .showcase-card-body { padding:9px; }
     .showcase-card-name { font-size:12px; min-height:34px; }
     .toolbar { top: 55px; }
-    .filter-mobile-btn { min-height: 40px; }
+    .filter-mobile-btn { display: none !important; }
     .catalog-main { width:100%; max-width:100%; overflow:hidden; padding-left:12px; padding-right:12px; }
     .products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); width:100%; max-width:none; margin: 0; gap:8px; }
     .product-card { min-width:0; width:100%; }
@@ -677,12 +814,17 @@
     .btn-cart, .btn-whatsapp { min-height:28px; width:100%; text-align:center; padding:6px 4px; font-size:8px; letter-spacing:.4px; line-height:1.1; }
     .footer-links-sm { flex-wrap: wrap; }
   }
+
+  @media (min-width: 901px) {
+    .catalog-mobile-menu { display:none !important; }
+  }
 </style>
 </head>
 <body>
 
 <!-- NAV -->
 <nav>
+  <button type="button" class="mobile-menu-toggle" onclick="toggleCatalogMenu()" aria-label="Abrir menu" aria-expanded="false">☰</button>
   <a href="index.html" class="nav-logo">R<span>.</span>Street</a>
   <ul class="nav-links">
     <li><a href="index.html">Início</a></li>
@@ -693,6 +835,51 @@
   <a href="index.html" class="nav-back">← Voltar ao Site</a>
   <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn">🛒 <span id="navCartCount">0</span></a>
 </nav>
+
+<div class="catalog-mobile-menu" id="catalogMobileMenu" onclick="handleCatalogMenuBackdrop(event)">
+  <div class="catalog-mobile-menu-panel">
+    <div class="catalog-mobile-menu-head">
+      <div class="catalog-mobile-menu-logo">R<span>.</span>Street</div>
+      <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
+    </div>
+
+    <div class="catalog-mobile-menu-title">Atalhos</div>
+    <div class="catalog-mobile-menu-links">
+      <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
+      <a class="catalog-mobile-menu-link" href="catalogo.html">Catálogo completo</a>
+      <a class="catalog-mobile-menu-link" href="#catalogThemeBanner" onclick="closeCatalogMenu()">Campanhas</a>
+      <a class="catalog-mobile-menu-link" href="#featuredProductsSection" onclick="closeCatalogMenu()">Escolhas da R Street</a>
+      <a class="catalog-mobile-menu-link" href="#saleProductsSection" onclick="closeCatalogMenu()">Produtos com desconto</a>
+      <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
+      <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
+      <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+    </div>
+
+    <div class="catalog-mobile-menu-title">Categorias</div>
+    <div class="catalog-mobile-menu-grid" id="catalogMenuCategories">
+      <button class="catalog-mobile-menu-chip active" onclick="setCategoryFromMenu('todos', this)">Todos</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camisa', this)">Camisas</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camiseta', this)">Camisetas</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Regata', this)">Regatas</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Moletom', this)">Moletons</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Blusa de Frio', this)">Blusas</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Calça', this)">Calças</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Bermuda', this)">Bermudas</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Tênis', this)">Tênis</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Chinelo', this)">Chinelos</button>
+      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Acessório', this)">Acessórios</button>
+    </div>
+
+    <div class="catalog-mobile-menu-title">Preço</div>
+    <div class="catalog-mobile-price">
+      <div class="catalog-mobile-price-row">
+        <strong>Preço máximo</strong>
+        <span id="mobileMenuPriceLabel">R$ 1000</span>
+      </div>
+      <input type="range" id="mobileMenuPriceRange" min="0" max="1000" value="1000" step="10" oninput="updatePrice(this.value)">
+    </div>
+  </div>
+</div>
 
 <!-- HEADER -->
 <div class="catalog-header">
@@ -1209,6 +1396,7 @@ function setCategoryFilter(cat, el) {
   document.querySelectorAll('.sidebar-option').forEach(o => o.classList.remove('active'));
   el.classList.add('active');
   currentPage = 1;
+  syncCatalogMenuCategory(cat);
   applyFilters();
 }
 
@@ -1220,8 +1408,69 @@ function setStockFilter(val, el) {
 
 function updatePrice(val) {
   currentMaxPrice = parseInt(val);
-  document.getElementById('priceLabel').textContent = 'R$ ' + val;
+  const priceLabel = document.getElementById('priceLabel');
+  const mobilePriceLabel = document.getElementById('mobileMenuPriceLabel');
+  const priceRange = document.getElementById('priceRange');
+  const mobilePriceRange = document.getElementById('mobileMenuPriceRange');
+  if (priceLabel) priceLabel.textContent = 'R$ ' + val;
+  if (mobilePriceLabel) mobilePriceLabel.textContent = 'R$ ' + val;
+  if (priceRange && priceRange.value !== String(val)) priceRange.value = val;
+  if (mobilePriceRange && mobilePriceRange.value !== String(val)) mobilePriceRange.value = val;
   applyFilters();
+}
+
+function toggleCatalogMenu() {
+  const menu = document.getElementById('catalogMobileMenu');
+  const btn = document.querySelector('.mobile-menu-toggle');
+  if (!menu) return;
+  const open = !menu.classList.contains('open');
+  menu.classList.toggle('open', open);
+  if (btn) {
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.textContent = open ? '×' : '☰';
+  }
+}
+
+function closeCatalogMenu() {
+  const menu = document.getElementById('catalogMobileMenu');
+  const btn = document.querySelector('.mobile-menu-toggle');
+  if (menu) menu.classList.remove('open');
+  if (btn) {
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = '☰';
+  }
+}
+
+function handleCatalogMenuBackdrop(event) {
+  if (event.target?.id === 'catalogMobileMenu') closeCatalogMenu();
+}
+
+function syncCatalogMenuCategory(activeCategory) {
+  document.querySelectorAll('#catalogMenuCategories .catalog-mobile-menu-chip').forEach(btn => {
+    const match = btn.getAttribute('onclick')?.includes(`'${activeCategory}'`);
+    btn.classList.toggle('active', Boolean(match));
+  });
+  document.querySelectorAll('#mobileCatFilters .filter-btn').forEach(btn => {
+    const match = btn.getAttribute('onclick')?.includes(`'${activeCategory}'`);
+    btn.classList.toggle('active', Boolean(match));
+  });
+  document.querySelectorAll('.sidebar-option').forEach(btn => {
+    const call = btn.getAttribute('onclick') || '';
+    if (call.includes('setCategoryFilter')) {
+      btn.classList.toggle('active', call.includes(`'${activeCategory}'`));
+    }
+  });
+}
+
+function setCategoryFromMenu(cat, el) {
+  document.querySelectorAll('#catalogMenuCategories .catalog-mobile-menu-chip').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  currentCategory = cat;
+  currentPage = 1;
+  syncCatalogMenuCategory(cat);
+  applyFilters();
+  closeCatalogMenu();
+  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 function applyFilters() {
@@ -1268,6 +1517,13 @@ function updateMaxPrice(preserveCurrent = false) {
   }
   range.value = currentMaxPrice;
   document.getElementById('priceLabel').textContent = 'R$ ' + currentMaxPrice;
+  const mobileRange = document.getElementById('mobileMenuPriceRange');
+  const mobileLabel = document.getElementById('mobileMenuPriceLabel');
+  if (mobileRange) {
+    mobileRange.max = max;
+    mobileRange.value = currentMaxPrice;
+  }
+  if (mobileLabel) mobileLabel.textContent = 'R$ ' + currentMaxPrice;
 }
 
 function normalizeSearchText(value) {
@@ -2002,6 +2258,7 @@ function setCategoryFilterMobile(cat, el) {
   el.classList.add('active');
   currentCategory = cat;
   currentPage = 1;
+  syncCatalogMenuCategory(cat);
   applyFilters();
 }
 
