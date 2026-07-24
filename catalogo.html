@@ -205,9 +205,12 @@
   .catalog-theme-banner { display:none; margin:24px 60px 0; border:1px solid rgba(200,169,110,.25); background:var(--gray-800); min-height:220px; position:relative; overflow:hidden; border-radius:4px; }
   .catalog-theme-banner.is-visible { display:flex; align-items:flex-end; }
   .catalog-theme-banner.is-linkable { cursor:pointer; }
+  .catalog-theme-banner.is-campaign-page { margin-top:0; border-left:0; border-right:0; border-radius:0; min-height:300px; }
   .catalog-theme-banner img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.72); }
   .catalog-theme-banner::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,10,10,.84), rgba(10,10,10,.28)); }
   .catalog-theme-content { position:relative; z-index:1; padding:28px; max-width:620px; }
+  .catalog-theme-back { display:none; align-items:center; justify-content:center; width:max-content; min-height:36px; padding:0 12px; margin-bottom:16px; color:var(--gold); border:1px solid rgba(200,169,110,.45); text-decoration:none; font-size:11px; font-weight:900; letter-spacing:1.2px; text-transform:uppercase; border-radius:2px; background:rgba(10,10,10,.45); }
+  .catalog-theme-banner.is-campaign-page .catalog-theme-back { display:inline-flex; }
   .catalog-theme-label { color:var(--gold); font-size:11px; letter-spacing:3px; text-transform:uppercase; margin-bottom:8px; font-weight:700; }
   .catalog-theme-title { font-family:'Bebas Neue', sans-serif; font-size:42px; line-height:1; margin-bottom:8px; }
   .catalog-theme-text { color:var(--gray-300); font-size:14px; line-height:1.6; margin-bottom:16px; }
@@ -226,6 +229,7 @@
   .campaign-filter-sub { color:var(--gray-400); font-size:12px; margin-top:3px; }
   .campaign-filter-clear { flex:0 0 auto; color:var(--gold); border:1px solid rgba(200,169,110,.35); background:transparent; text-decoration:none; min-height:36px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; border-radius:2px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
   .mobile-catalog-hub { display:none; }
+  .mobile-catalog-hub.is-hidden { display:none !important; }
   .mobile-hub-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:12px; }
   .mobile-hub-kicker { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:800; margin-bottom:4px; }
   .mobile-hub-title { font-family:'Bebas Neue', sans-serif; font-size:30px; line-height:1; }
@@ -260,6 +264,11 @@
   .mobile-current-collection.is-visible { display:block; }
   .mobile-current-collection strong { display:block; color:var(--white); font-size:13px; margin-bottom:2px; }
   .mobile-current-collection span { color:var(--gray-400); font-size:11px; line-height:1.4; }
+  .campaign-products-heading { display:none; margin:18px 60px 0; padding:18px 0 0; border-top:1px solid rgba(255,255,255,.08); }
+  .campaign-products-heading.is-visible { display:block; }
+  .campaign-products-kicker { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:900; margin-bottom:5px; }
+  .campaign-products-title { font-family:'Bebas Neue', sans-serif; font-size:36px; line-height:1; }
+  .campaign-products-sub { color:var(--gray-400); font-size:13px; margin-top:5px; }
   .catalog-showcase { display:none; margin:18px 60px 0; gap:18px; flex-direction:column; }
   .catalog-showcase.is-visible { display:flex; }
   .catalog-rail-section { display:none; }
@@ -768,10 +777,12 @@
     .catalog-header { padding: 40px 20px 28px; }
     .catalog-header-title { font-size: 48px; }
     .catalog-theme-banner { margin:18px 20px 0; min-height:180px; }
+    .catalog-theme-banner.is-campaign-page { margin:0; min-height:238px; }
     .catalog-theme-content { padding:22px; }
     .catalog-theme-title { font-size:34px; }
     .catalog-theme-controls { right:14px; bottom:14px; }
     .campaign-filter-bar { margin:12px 20px 0; align-items:flex-start; flex-direction:column; }
+    .campaign-products-heading { margin:16px 20px 0; padding-top:14px; }
     .mobile-catalog-hub { display:block; padding:18px 16px 0; background:var(--black); }
     .catalog-showcase { margin:16px 20px 0; gap:16px; }
     .catalog-showcase { display:none !important; }
@@ -813,11 +824,14 @@
     .catalog-header-title { font-size: 46px; }
     .catalog-header-sub { font-size: 14px; line-height: 1.55; width: min(100%, 320px); overflow-wrap: break-word; }
     .catalog-theme-banner { margin:16px 12px 0; min-height:176px; }
+    .catalog-theme-banner.is-campaign-page { margin:0; min-height:232px; }
     .catalog-theme-content { padding:18px; }
     .catalog-theme-title { font-size:30px; }
     .catalog-theme-text { font-size:13px; margin-bottom:12px; }
     .catalog-theme-controls { position:relative; right:auto; bottom:auto; margin:0 18px 14px auto; }
     .campaign-filter-bar { margin:10px 12px 0; }
+    .campaign-products-heading { margin:14px 12px 0; }
+    .campaign-products-title { font-size:30px; }
     .mobile-catalog-hub { padding:16px 12px 0; }
     .catalog-showcase { margin:14px 12px 0; gap:14px; }
     .catalog-rail-title { font-size:28px; }
@@ -933,10 +947,11 @@
 
 <div class="catalog-theme-banner" id="catalogThemeBanner" onclick="openCatalogThemeBanner(event)" onkeydown="handleCatalogThemeBannerKey(event)">
   <div class="catalog-theme-content">
+    <a class="catalog-theme-back" id="catalogThemeBack" href="catalogo.html">← Voltar ao catálogo</a>
     <div class="catalog-theme-label" id="catalogThemeLabel">Campanha</div>
     <div class="catalog-theme-title" id="catalogThemeTitle"></div>
     <div class="catalog-theme-text" id="catalogThemeText"></div>
-    <a class="catalog-theme-btn" id="catalogThemeBtn" href="catalogo.html">Ver campanha</a>
+    <a class="catalog-theme-btn" id="catalogThemeBtn" href="catalogo.html" onclick="handleCatalogThemeButton(event)">Ver campanha</a>
   </div>
   <div class="catalog-theme-controls" id="catalogThemeControls">
     <button type="button" class="catalog-theme-arrow" onclick="moveCatalogTheme(-1)" aria-label="Campanha anterior">&#8249;</button>
@@ -953,6 +968,12 @@
   </div>
   <a href="catalogo.html" class="campaign-filter-clear">Ver todos</a>
 </div>
+
+<section class="campaign-products-heading" id="campaignProductsHeading">
+  <div class="campaign-products-kicker">Produtos selecionados</div>
+  <div class="campaign-products-title" id="campaignProductsTitle">Campanha R Street</div>
+  <div class="campaign-products-sub" id="campaignProductsSub">Escolha uma peça da campanha abaixo.</div>
+</section>
 
 <section class="catalog-showcase" id="catalogShowcase" aria-label="Vitrines do catalogo">
   <div class="catalog-rail-section" id="campaignProductsSection"></div>
@@ -1332,6 +1353,7 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   const themeLink = safeCatalogThemeLink(theme);
   banner.classList.add('is-visible');
   banner.classList.add('is-linkable');
+  banner.classList.toggle('is-campaign-page', Boolean(isCampaignFilter));
   banner.dataset.href = themeLink;
   banner.setAttribute('role', 'link');
   banner.setAttribute('tabindex', '0');
@@ -1350,17 +1372,29 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   document.getElementById('catalogThemeTitle').textContent = theme.titulo || theme.nome || '';
   document.getElementById('catalogThemeText').textContent = theme.texto || '';
   const btn = document.getElementById('catalogThemeBtn');
-  btn.textContent = theme.botao_texto || 'Ver campanha';
+  btn.textContent = isCampaignFilter ? 'Ver produtos abaixo' : (theme.botao_texto || 'Ver campanha');
   btn.href = themeLink;
   btn.style.background = color;
+  const back = document.getElementById('catalogThemeBack');
+  if (back) back.style.borderColor = color;
   renderCatalogThemeControls();
 }
 
 function openCatalogThemeBanner(event) {
   if (event?.target?.closest?.('a, button')) return;
+  if (currentCampaignTheme) {
+    document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
   const banner = document.getElementById('catalogThemeBanner');
   const href = banner?.dataset?.href;
   if (href) window.location.href = href;
+}
+
+function handleCatalogThemeButton(event) {
+  if (!currentCampaignTheme) return;
+  event.preventDefault();
+  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 function handleCatalogThemeBannerKey(event) {
@@ -1424,12 +1458,21 @@ function startCatalogThemeCarousel() {
 
 function updateCampaignFilterBar() {
   const bar = document.getElementById('campaignFilterBar');
+  const heading = document.getElementById('campaignProductsHeading');
+  const catalogHeader = document.querySelector('.catalog-header');
+  const mobileHub = document.querySelector('.mobile-catalog-hub');
   if (!bar) return;
   if (!currentCampaignTheme) {
     bar.classList.remove('is-visible');
+    heading?.classList.remove('is-visible');
+    catalogHeader?.style.removeProperty('display');
+    mobileHub?.classList.remove('is-hidden');
     return;
   }
-  bar.classList.add('is-visible');
+  bar.classList.remove('is-visible');
+  heading?.classList.add('is-visible');
+  if (catalogHeader) catalogHeader.style.display = 'none';
+  mobileHub?.classList.add('is-hidden');
   const title = currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Campanha';
   const titleEl = document.getElementById('campaignFilterTitle');
   const subEl = document.getElementById('campaignFilterSub');
@@ -1439,6 +1482,15 @@ function updateCampaignFilterBar() {
     subEl.textContent = total
       ? `Mostrando somente ${total} produto(s) selecionado(s) para esta campanha.`
       : 'Mostrando somente os produtos selecionados para esta campanha.';
+  }
+  const headingTitle = document.getElementById('campaignProductsTitle');
+  const headingSub = document.getElementById('campaignProductsSub');
+  if (headingTitle) headingTitle.textContent = title;
+  if (headingSub) {
+    const total = Number(currentCampaignTheme.produto_ids?.length || 0);
+    headingSub.textContent = total
+      ? `${total} produto(s) selecionado(s) para esta campanha.`
+      : 'Produtos selecionados para esta campanha.';
   }
 }
 
@@ -1744,11 +1796,16 @@ function renderPage() {
   const page = filtered.slice(start, start + PER_PAGE);
 
   if (page.length === 0) {
+    const emptyTitle = currentCampaignTheme ? 'Nenhum produto nesta campanha' : 'Nenhum produto encontrado';
+    const emptySub = currentCampaignTheme
+      ? 'Essa campanha ainda nao tem produtos disponiveis. Volte ao catalogo completo para ver outras pecas.'
+      : 'Tente ajustar os filtros ou buscar por outro termo.';
     grid.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">🔍</div>
-        <div class="empty-state-title">Nenhum produto encontrado</div>
-        <div class="empty-state-sub">Tente ajustar os filtros ou buscar por outro termo.</div>
+        <div class="empty-state-title">${emptyTitle}</div>
+        <div class="empty-state-sub">${emptySub}</div>
+        ${currentCampaignTheme ? '<a class="campaign-filter-clear" style="margin-top:18px" href="catalogo.html">Voltar ao catalogo</a>' : ''}
       </div>`;
     return;
   }
