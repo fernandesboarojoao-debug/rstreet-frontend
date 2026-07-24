@@ -93,6 +93,13 @@
   .catalog-theme-title { font-family:'Bebas Neue', sans-serif; font-size:42px; line-height:1; margin-bottom:8px; }
   .catalog-theme-text { color:var(--gray-300); font-size:14px; line-height:1.6; margin-bottom:16px; }
   .catalog-theme-btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:0 18px; background:var(--gold); color:var(--black); text-decoration:none; font-weight:800; text-transform:uppercase; letter-spacing:1px; font-size:12px; border-radius:2px; }
+  .campaign-filter-bar { display:none; margin:14px 60px 0; border:1px solid rgba(200,169,110,.28); background:rgba(200,169,110,.08); padding:12px 14px; border-radius:4px; align-items:center; justify-content:space-between; gap:14px; }
+  .campaign-filter-bar.is-visible { display:flex; }
+  .campaign-filter-info { min-width:0; }
+  .campaign-filter-kicker { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:800; margin-bottom:3px; }
+  .campaign-filter-title { color:var(--white); font-size:14px; font-weight:800; line-height:1.35; }
+  .campaign-filter-sub { color:var(--gray-400); font-size:12px; margin-top:3px; }
+  .campaign-filter-clear { flex:0 0 auto; color:var(--gold); border:1px solid rgba(200,169,110,.35); background:transparent; text-decoration:none; min-height:36px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; border-radius:2px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
 
   /* TOOLBAR */
   .toolbar {
@@ -561,6 +568,7 @@
     .catalog-theme-banner { margin:18px 20px 0; min-height:170px; }
     .catalog-theme-content { padding:22px; }
     .catalog-theme-title { font-size:34px; }
+    .campaign-filter-bar { margin:12px 20px 0; align-items:flex-start; flex-direction:column; }
     .toolbar {
       padding: 12px 16px;
       top: 57px;
@@ -599,6 +607,7 @@
     .catalog-theme-banner { margin:16px 12px 0; min-height:160px; }
     .catalog-theme-content { padding:18px; }
     .catalog-theme-title { font-size:30px; }
+    .campaign-filter-bar { margin:10px 12px 0; }
     .toolbar { top: 55px; }
     .filter-mobile-btn { min-height: 40px; }
     .catalog-main { width:100%; max-width:100%; overflow:hidden; padding-left:12px; padding-right:12px; }
@@ -661,6 +670,15 @@
     <div class="catalog-theme-text" id="catalogThemeText"></div>
     <a class="catalog-theme-btn" id="catalogThemeBtn" href="catalogo.html">Ver campanha</a>
   </div>
+</div>
+
+<div class="campaign-filter-bar" id="campaignFilterBar">
+  <div class="campaign-filter-info">
+    <div class="campaign-filter-kicker">Filtro de campanha ativo</div>
+    <div class="campaign-filter-title" id="campaignFilterTitle">Campanha</div>
+    <div class="campaign-filter-sub" id="campaignFilterSub">Mostrando somente os produtos selecionados para esta campanha.</div>
+  </div>
+  <a href="catalogo.html" class="campaign-filter-clear">Ver todos</a>
 </div>
 
 <!-- TOOLBAR -->
@@ -1018,6 +1036,26 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   btn.style.background = color;
 }
 
+function updateCampaignFilterBar() {
+  const bar = document.getElementById('campaignFilterBar');
+  if (!bar) return;
+  if (!currentCampaignTheme) {
+    bar.classList.remove('is-visible');
+    return;
+  }
+  bar.classList.add('is-visible');
+  const title = currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Campanha';
+  const titleEl = document.getElementById('campaignFilterTitle');
+  const subEl = document.getElementById('campaignFilterSub');
+  if (titleEl) titleEl.textContent = `Campanha: ${title}`;
+  if (subEl) {
+    const total = Number(currentCampaignTheme.produto_ids?.length || 0);
+    subEl.textContent = total
+      ? `Mostrando somente ${total} produto(s) selecionado(s) para esta campanha.`
+      : 'Mostrando somente os produtos selecionados para esta campanha.';
+  }
+}
+
 async function loadActiveCatalogTheme() {
   try {
     const params = new URLSearchParams(window.location.search);
@@ -1038,6 +1076,7 @@ async function loadActiveCatalogTheme() {
       : null;
     const themeToShow = currentCampaignTheme || activeCatalogTheme;
     if (themeToShow) applyCatalogThemeBanner(themeToShow, Boolean(currentCampaignTheme));
+    updateCampaignFilterBar();
   } catch (err) {
     console.warn('Falha ao buscar tema do catalogo:', err.message);
   }
@@ -1098,10 +1137,13 @@ function updatePrice(val) {
 function applyFilters() {
   const search = normalizeSearchText(document.getElementById('searchInput').value);
   const sort = document.getElementById('sortSelect').value;
+  const campaignProductIds = currentCampaignTheme?.produto_ids?.length
+    ? new Set(currentCampaignTheme.produto_ids.map(Number))
+    : null;
 
   filtered = allProducts.filter(p => {
     if (!p.ativo) return false;
-    if (currentCampaignTheme?.produto_ids?.length && !currentCampaignTheme.produto_ids.map(Number).includes(Number(p.id))) return false;
+    if (campaignProductIds && !campaignProductIds.has(Number(p.id))) return false;
     if (currentBrand !== 'todos' && p.marca !== currentBrand) return false;
     if (currentCategory !== 'todos' && !p.categoria?.includes(currentCategory)) return false;
     if (currentStock === 'estoque' && getCatalogProductStock(p) <= 0) return false;
@@ -1116,6 +1158,7 @@ function applyFilters() {
   else if (sort === 'novos') filtered.sort((a,b) => b.id - a.id);
 
   document.getElementById('resultCount').textContent = filtered.length;
+  updateCampaignFilterBar();
   renderPage();
   renderPagination();
 }
