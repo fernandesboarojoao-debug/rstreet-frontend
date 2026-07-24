@@ -348,6 +348,25 @@ function statusFromPedido(pedido, fallback) {
   return fallback || 'pending';
 }
 
+function statusFromUrl(value) {
+  const status = String(value || '').toLowerCase();
+  if (['pending', 'in_process', 'cancelled', 'failure'].includes(status)) return status;
+  if (['rejected'].includes(status)) return 'failure';
+  if (['approved', 'success'].includes(status)) return 'pending';
+  return 'pending';
+}
+
+function renderStatus(status, pedidoId = '') {
+  const safeStatus = STATUS_MAP[status] ? status : 'pending';
+  const data = STATUS_MAP[safeStatus];
+  document.getElementById('statusIcon').className = `status-icon-wrap ${data.cls}`;
+  document.getElementById('statusIcon').innerHTML = `<span class="status-icon">${data.icon}</span>`;
+  document.getElementById('statusTitle').className = `status-title ${data.cls}`;
+  document.getElementById('statusTitle').textContent = data.title;
+  document.getElementById('statusSub').textContent = data.sub;
+  if (pedidoId) document.getElementById('statusId').innerHTML = `Pedido: <strong>#${escapeHtml(pedidoId)}</strong>`;
+}
+
 function normalizeBackendPedido(pedido, itens) {
   if (!pedido) return null;
   return {
@@ -407,34 +426,22 @@ async function init() {
   // Pega status do Mercado Pago da URL
   const params = new URLSearchParams(window.location.search);
   const statusUrl = params.get('collection_status') || params.get('status') || 'pending';
-  const status = statusUrl === 'failure' ? 'cancelled' : statusUrl;
+  const status = statusFromUrl(statusUrl);
   const pedidoLocal = JSON.parse(localStorage.getItem('rstreet_pedido') || 'null');
   const pedidoId = params.get('pedido_id') || params.get('external_reference') || pedidoLocal?.pedido_id || '';
   const paymentId = params.get('payment_id') || params.get('collection_id') || params.get('id') || '';
   let finalStatus = status;
 
   // Atualiza header de status
-  const s = STATUS_MAP[status] || STATUS_MAP['approved'];
-  document.getElementById('statusIcon').className = `status-icon-wrap ${s.cls}`;
-  document.getElementById('statusIcon').innerHTML = `<span class="status-icon">${s.icon}</span>`;
-  document.getElementById('statusTitle').className = `status-title ${s.cls}`;
-  document.getElementById('statusTitle').textContent = s.title;
-  document.getElementById('statusSub').textContent = s.sub;
-  if (pedidoId) document.getElementById('statusId').innerHTML = `Pedido: <strong>#${escapeHtml(pedidoId)}</strong>`;
+  renderStatus(status, pedidoId);
 
   // Carrega dados do backend quando voltar do Mercado Pago; localStorage fica como reserva.
-  let pedido = await loadPedidoFromBackend(pedidoId, paymentId);
-  if (!pedido) pedido = pedidoLocal;
+  const pedidoBackend = await loadPedidoFromBackend(pedidoId, paymentId);
+  let pedido = pedidoBackend || pedidoLocal;
 
   if (pedido) {
-    finalStatus = statusFromPedido(pedido, status);
-    const final = STATUS_MAP[finalStatus] || STATUS_MAP['approved'];
-    document.getElementById('statusIcon').className = `status-icon-wrap ${final.cls}`;
-    document.getElementById('statusIcon').innerHTML = `<span class="status-icon">${final.icon}</span>`;
-    document.getElementById('statusTitle').className = `status-title ${final.cls}`;
-    document.getElementById('statusTitle').textContent = final.title;
-    document.getElementById('statusSub').textContent = final.sub;
-    document.getElementById('statusId').innerHTML = `Pedido: <strong>#${escapeHtml(pedido.pedido_id || pedidoId)}</strong>`;
+    finalStatus = pedidoBackend ? statusFromPedido(pedidoBackend, status) : status;
+    renderStatus(finalStatus, pedido.pedido_id || pedidoId);
 
     // Itens
     document.getElementById('orderItems').innerHTML = pedido.itens.map(item => {
