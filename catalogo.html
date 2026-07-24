@@ -1476,6 +1476,7 @@ function updateCatalogShowcases() {
   const campaignProducts = getCampaignProducts();
   const activeInStock = allProducts.filter(product => product.ativo !== false && getCatalogProductStock(product) > 0);
   const featuredProducts = activeInStock
+    .filter(product => product.destaque_catalogo === true)
     .filter(product => !campaignProducts.some(item => Number(item.id) === Number(product.id)))
     .slice(0, 10);
   const saleProducts = activeInStock

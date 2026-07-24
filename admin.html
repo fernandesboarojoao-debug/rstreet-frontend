@@ -988,6 +988,14 @@
             <span class="toggle-label" id="f-ativo-label">Ativo (visível no catálogo)</span>
           </div>
         </div>
+        <div class="form-group full">
+          <label>Destaque no catálogo</label>
+          <div class="toggle-wrap">
+            <button class="toggle" id="f-destaque-catalogo-toggle" onclick="toggleCatalogFeatured(this)"></button>
+            <span class="toggle-label" id="f-destaque-catalogo-label">Fora das Escolhas da R Street</span>
+          </div>
+          <div class="form-hint">Quando ativado, o produto aparece na vitrine "Escolhas da R Street" do catálogo.</div>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2044,10 +2052,13 @@ function buildRow(p, simple = false) {
     : p.estoque <= 5
     ? `<span class="stock-cell stock-low">${p.estoque} unid. ⚠️</span>`
     : `<span class="stock-cell stock-ok">${p.estoque} unid.</span>`;
+  const catalogFeatured = p.destaque_catalogo
+    ? '<small><span class="badge badge-active">Destaque</span></small>'
+    : '';
 
   if (simple) return `
     <tr>
-      <td class="td-name">${p.nome}<small>Ref: ${p.referencia || '#'+p.id}</small></td>
+      <td class="td-name">${p.nome}<small>Ref: ${p.referencia || '#'+p.id}</small>${catalogFeatured}</td>
       <td><span class="brand-tag">${p.marca}</span></td>
       <td class="price-cell">R$ ${p.preco?.toFixed(2).replace('.',',')}</td>
       <td>${stock}</td>
@@ -2059,7 +2070,7 @@ function buildRow(p, simple = false) {
 
   return `
     <tr>
-      <td class="td-name">${p.nome}<small>Ref: ${p.referencia || '#'+p.id}</small></td>
+      <td class="td-name">${p.nome}<small>Ref: ${p.referencia || '#'+p.id}</small>${catalogFeatured}</td>
       <td><span class="brand-tag">${p.marca}</span></td>
       <td>${p.categoria || '—'}</td>
       <td class="price-cell">R$ ${p.preco?.toFixed(2).replace('.',',')}</td>
@@ -2107,6 +2118,7 @@ function openProductModal(id = null) {
     const toggle = document.getElementById('f-ativo-toggle');
     toggle.classList.toggle('on', p.ativo !== false);
     document.getElementById('f-ativo-label').textContent = p.ativo !== false ? 'Ativo (visível no catálogo)' : 'Inativo (oculto)';
+    setCatalogFeaturedToggle(p.destaque_catalogo === true);
     currentSizes = Array.isArray(p.tamanhos) ? [...p.tamanhos] : [];
     renderSizeTags();
     loadPhotosIntoPreview(p.imagens || (p.imagem_url ? [p.imagem_url] : []));
@@ -2120,6 +2132,7 @@ function openProductModal(id = null) {
     const toggle = document.getElementById('f-ativo-toggle');
     toggle.classList.add('on');
     document.getElementById('f-ativo-label').textContent = 'Ativo (visível no catálogo)';
+    setCatalogFeaturedToggle(false);
     uploadedPhotos = [];
     renderPhotoPreview();
   }
@@ -2136,6 +2149,18 @@ function closeProductModal() {
 function toggleStatus(btn) {
   btn.classList.toggle('on');
   document.getElementById('f-ativo-label').textContent = btn.classList.contains('on') ? 'Ativo (visível no catálogo)' : 'Inativo (oculto)';
+}
+
+function setCatalogFeaturedToggle(active) {
+  const toggle = document.getElementById('f-destaque-catalogo-toggle');
+  const label = document.getElementById('f-destaque-catalogo-label');
+  if (!toggle || !label) return;
+  toggle.classList.toggle('on', Boolean(active));
+  label.textContent = active ? 'Aparece nas Escolhas da R Street' : 'Fora das Escolhas da R Street';
+}
+
+function toggleCatalogFeatured(btn) {
+  setCatalogFeaturedToggle(!btn.classList.contains('on'));
 }
 
 function handleSizeInput(e) {
@@ -2200,6 +2225,7 @@ async function saveProduct() {
     especificacoes_tecnicas: document.getElementById('f-specs').value.trim() || null,
     dicas_conservacao: document.getElementById('f-care').value.trim() || null,
     tamanhos: currentSizes,
+    destaque_catalogo: document.getElementById('f-destaque-catalogo-toggle')?.classList.contains('on') || false,
     ativo: document.getElementById('f-ativo-toggle').classList.contains('on')
   };
   const duplicatedReference = payload.referencia && allProducts.find(p =>
@@ -2458,6 +2484,7 @@ CREATE TABLE IF NOT EXISTS produtos (
   descricao   TEXT,
   especificacoes_tecnicas TEXT,
   dicas_conservacao TEXT,
+  destaque_catalogo BOOLEAN NOT NULL DEFAULT FALSE,
   ativo       BOOLEAN NOT NULL DEFAULT TRUE,
   criado_em   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   atualizado_em TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -2467,6 +2494,7 @@ CREATE TABLE IF NOT EXISTS produtos (
 CREATE INDEX IF NOT EXISTS idx_produtos_marca ON produtos(marca);
 CREATE INDEX IF NOT EXISTS idx_produtos_ativo ON produtos(ativo);
 CREATE INDEX IF NOT EXISTS idx_produtos_ref ON produtos(referencia);
+CREATE INDEX IF NOT EXISTS idx_produtos_destaque_catalogo ON produtos(destaque_catalogo) WHERE destaque_catalogo = TRUE;
 
 -- Atualiza automaticamente o campo atualizado_em
 CREATE OR REPLACE FUNCTION update_atualizado_em()
