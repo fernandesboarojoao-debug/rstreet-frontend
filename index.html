@@ -1782,15 +1782,22 @@
     const button = document.getElementById('heroPrimaryBtn');
     const color = /^#[0-9a-f]{6}$/i.test(theme.cor_destaque || '') ? theme.cor_destaque : '#c8a96e';
 
-    document.documentElement.style.setProperty('--gold', color);
     if (heroBg && theme.banner_url) {
       heroBg.style.background = `linear-gradient(135deg, rgba(10,10,10,0.62), rgba(10,10,10,0.34)), url('${String(theme.banner_url).replace(/'/g, '%27')}') center/cover no-repeat`;
     }
-    if (title && theme.titulo) title.innerHTML = buildThemeHeroTitle(theme.titulo);
+    if (title && theme.titulo) {
+      title.innerHTML = buildThemeHeroTitle(theme.titulo);
+      title.querySelector('.line-gold')?.style.setProperty('color', color);
+    }
     if (desc && theme.texto) desc.textContent = theme.texto;
-    if (eyebrow && theme.nome) eyebrow.textContent = theme.nome;
+    if (eyebrow && theme.nome) {
+      eyebrow.textContent = theme.nome;
+      eyebrow.style.color = color;
+    }
     if (button) {
       button.href = safeThemeLink(theme);
+      button.style.background = color;
+      button.style.borderColor = color;
       button.innerHTML = `${escapeHtml(theme.botao_texto || 'Ver campanha')}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
     }

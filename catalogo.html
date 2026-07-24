@@ -1067,7 +1067,6 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   const banner = document.getElementById('catalogThemeBanner');
   if (!banner || !theme) return;
   const color = /^#[0-9a-f]{6}$/i.test(theme.cor_destaque || '') ? theme.cor_destaque : '#c8a96e';
-  document.documentElement.style.setProperty('--gold', color);
   banner.classList.add('is-visible');
   banner.style.borderColor = color;
   const oldImg = banner.querySelector('img');
