@@ -153,6 +153,7 @@
   }
   .catalog-mobile-menu-chip { justify-content:center; }
   .catalog-mobile-menu-link:active,
+  .catalog-mobile-menu-link.active,
   .catalog-mobile-menu-chip.active {
     background:var(--gold);
     border-color:var(--gold);
@@ -202,6 +203,7 @@
   .catalog-header-sub { font-size: 15px; color: var(--gray-400); font-weight: 300; max-width: 500px; }
   .catalog-theme-banner { display:none; margin:24px 60px 0; border:1px solid rgba(200,169,110,.25); background:var(--gray-800); min-height:220px; position:relative; overflow:hidden; border-radius:4px; }
   .catalog-theme-banner.is-visible { display:flex; align-items:flex-end; }
+  .catalog-theme-banner.is-linkable { cursor:pointer; }
   .catalog-theme-banner img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.72); }
   .catalog-theme-banner::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,10,10,.84), rgba(10,10,10,.28)); }
   .catalog-theme-content { position:relative; z-index:1; padding:28px; max-width:620px; }
@@ -735,6 +737,7 @@
     .catalog-theme-controls { right:14px; bottom:14px; }
     .campaign-filter-bar { margin:12px 20px 0; align-items:flex-start; flex-direction:column; }
     .catalog-showcase { margin:16px 20px 0; gap:16px; }
+    .catalog-showcase { display:none !important; }
     .catalog-rail { grid-auto-columns:minmax(142px,170px); }
     .catalog-rail-head { align-items:flex-start; flex-direction:column; gap:8px; }
     .toolbar {
@@ -847,13 +850,15 @@
     <div class="catalog-mobile-menu-links">
       <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
       <a class="catalog-mobile-menu-link" href="catalogo.html">Catálogo completo</a>
-      <a class="catalog-mobile-menu-link" href="#catalogThemeBanner" onclick="closeCatalogMenu()">Campanhas</a>
       <a class="catalog-mobile-menu-link" href="#featuredProductsSection" onclick="closeCatalogMenu()">Escolhas da R Street</a>
       <a class="catalog-mobile-menu-link" href="#saleProductsSection" onclick="closeCatalogMenu()">Produtos com desconto</a>
       <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
       <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
       <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
     </div>
+
+    <div class="catalog-mobile-menu-title" id="catalogMenuCampaignTitle" style="display:none">Campanhas</div>
+    <div class="catalog-mobile-menu-links" id="catalogMenuCampaigns"></div>
 
     <div class="catalog-mobile-menu-title">Categorias</div>
     <div class="catalog-mobile-menu-grid" id="catalogMenuCategories">
@@ -888,7 +893,7 @@
   <p class="catalog-header-sub">Explore nossa coleção completa. Produtos atualizados em tempo real.</p>
 </div>
 
-<div class="catalog-theme-banner" id="catalogThemeBanner">
+<div class="catalog-theme-banner" id="catalogThemeBanner" onclick="openCatalogThemeBanner(event)" onkeydown="handleCatalogThemeBannerKey(event)">
   <div class="catalog-theme-content">
     <div class="catalog-theme-label" id="catalogThemeLabel">Campanha</div>
     <div class="catalog-theme-title" id="catalogThemeTitle"></div>
@@ -1244,9 +1249,9 @@ async function loadProductVariants() {
 // ─────────────────────────────────────────────
 function safeCatalogThemeLink(theme) {
   const clean = String(theme?.botao_link || '').trim();
+  if (theme?.slug) return `catalogo.html?campanha=${encodeURIComponent(theme.slug)}`;
   if (clean && /^(https?:)?\/\//i.test(clean)) return clean;
   if (clean && /^[a-z0-9_\-./?=&%#]+$/i.test(clean)) return clean;
-  if (theme?.slug) return `catalogo.html?campanha=${encodeURIComponent(theme.slug)}`;
   return 'catalogo.html';
 }
 
@@ -1254,7 +1259,13 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   const banner = document.getElementById('catalogThemeBanner');
   if (!banner || !theme) return;
   const color = /^#[0-9a-f]{6}$/i.test(theme.cor_destaque || '') ? theme.cor_destaque : '#c8a96e';
+  const themeLink = safeCatalogThemeLink(theme);
   banner.classList.add('is-visible');
+  banner.classList.add('is-linkable');
+  banner.dataset.href = themeLink;
+  banner.setAttribute('role', 'link');
+  banner.setAttribute('tabindex', '0');
+  banner.setAttribute('aria-label', `Abrir campanha ${theme.nome || theme.titulo || ''}`.trim());
   banner.style.borderColor = color;
   const oldImg = banner.querySelector('img');
   if (oldImg) oldImg.remove();
@@ -1270,9 +1281,40 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   document.getElementById('catalogThemeText').textContent = theme.texto || '';
   const btn = document.getElementById('catalogThemeBtn');
   btn.textContent = theme.botao_texto || 'Ver campanha';
-  btn.href = safeCatalogThemeLink(theme);
+  btn.href = themeLink;
   btn.style.background = color;
   renderCatalogThemeControls();
+}
+
+function openCatalogThemeBanner(event) {
+  if (event?.target?.closest?.('a, button')) return;
+  const banner = document.getElementById('catalogThemeBanner');
+  const href = banner?.dataset?.href;
+  if (href) window.location.href = href;
+}
+
+function handleCatalogThemeBannerKey(event) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  openCatalogThemeBanner(event);
+}
+
+function renderCatalogMenuCampaigns() {
+  const title = document.getElementById('catalogMenuCampaignTitle');
+  const list = document.getElementById('catalogMenuCampaigns');
+  if (!title || !list) return;
+  const themes = allCatalogThemes.filter(theme => theme?.slug || theme?.botao_link);
+  if (!themes.length) {
+    title.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  title.style.display = '';
+  list.innerHTML = themes.map(theme => {
+    const titleText = theme.titulo || theme.nome || 'Campanha';
+    const isActive = currentCampaignTheme && Number(currentCampaignTheme.id) === Number(theme.id);
+    return `<a class="catalog-mobile-menu-link${isActive ? ' active' : ''}" href="${escapeAttr(safeCatalogThemeLink(theme))}">${escapeHtml(titleText)}</a>`;
+  }).join('');
 }
 
 function renderCatalogThemeControls() {
@@ -1352,6 +1394,7 @@ async function loadActiveCatalogTheme() {
     catalogThemeIndex = Math.max(0, themes.findIndex(item => Number(item.id) === Number((currentCampaignTheme || activeCatalogTheme)?.id)));
     const themeToShow = currentCampaignTheme || activeCatalogTheme;
     if (themeToShow) applyCatalogThemeBanner(themeToShow, Boolean(currentCampaignTheme));
+    renderCatalogMenuCampaigns();
     updateCampaignFilterBar();
     startCatalogThemeCarousel();
   } catch (err) {
