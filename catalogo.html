@@ -150,6 +150,7 @@
     cursor:pointer;
     font-family:'Inter', sans-serif;
     text-align:left;
+    width:100%;
   }
   .catalog-mobile-menu-chip { justify-content:center; }
   .catalog-mobile-menu-link:active,
@@ -224,6 +225,41 @@
   .campaign-filter-title { color:var(--white); font-size:14px; font-weight:800; line-height:1.35; }
   .campaign-filter-sub { color:var(--gray-400); font-size:12px; margin-top:3px; }
   .campaign-filter-clear { flex:0 0 auto; color:var(--gold); border:1px solid rgba(200,169,110,.35); background:transparent; text-decoration:none; min-height:36px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; border-radius:2px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
+  .mobile-catalog-hub { display:none; }
+  .mobile-hub-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .mobile-hub-kicker { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:800; margin-bottom:4px; }
+  .mobile-hub-title { font-family:'Bebas Neue', sans-serif; font-size:30px; line-height:1; }
+  .mobile-hub-clear { display:none; color:var(--gold); background:transparent; border:1px solid rgba(200,169,110,.34); min-height:34px; padding:0 10px; font-size:10px; letter-spacing:1px; text-transform:uppercase; font-weight:800; border-radius:2px; }
+  .mobile-hub-clear.is-visible { display:inline-flex; align-items:center; justify-content:center; }
+  .mobile-hub-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .mobile-hub-card {
+    min-height:96px;
+    border:1px solid rgba(255,255,255,.1);
+    background:linear-gradient(135deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+    color:var(--white);
+    text-decoration:none;
+    border-radius:4px;
+    padding:13px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    text-align:left;
+    font-family:'Inter', sans-serif;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+  }
+  .mobile-hub-card::after { content:''; position:absolute; inset:auto -25px -32px auto; width:76px; height:76px; border-radius:50%; border:1px solid rgba(200,169,110,.16); }
+  .mobile-hub-card.active { border-color:rgba(200,169,110,.8); background:linear-gradient(135deg, rgba(200,169,110,.18), rgba(255,255,255,.03)); }
+  .mobile-hub-card-featured { grid-column:span 2; min-height:118px; background:linear-gradient(135deg, rgba(200,169,110,.22), rgba(255,255,255,.04)); }
+  .mobile-hub-card-wide { grid-column:span 2; min-height:82px; }
+  .mobile-hub-label { color:var(--gold); font-size:9px; letter-spacing:2px; text-transform:uppercase; font-weight:900; position:relative; z-index:1; }
+  .mobile-hub-name { font-family:'Bebas Neue', sans-serif; font-size:26px; line-height:1; letter-spacing:.5px; position:relative; z-index:1; }
+  .mobile-hub-sub { color:var(--gray-400); font-size:11px; line-height:1.35; position:relative; z-index:1; }
+  .mobile-current-collection { display:none; margin:12px 0 0; border:1px solid rgba(200,169,110,.22); background:rgba(200,169,110,.07); padding:10px 12px; border-radius:3px; }
+  .mobile-current-collection.is-visible { display:block; }
+  .mobile-current-collection strong { display:block; color:var(--white); font-size:13px; margin-bottom:2px; }
+  .mobile-current-collection span { color:var(--gray-400); font-size:11px; line-height:1.4; }
   .catalog-showcase { display:none; margin:18px 60px 0; gap:18px; flex-direction:column; }
   .catalog-showcase.is-visible { display:flex; }
   .catalog-rail-section { display:none; }
@@ -736,6 +772,7 @@
     .catalog-theme-title { font-size:34px; }
     .catalog-theme-controls { right:14px; bottom:14px; }
     .campaign-filter-bar { margin:12px 20px 0; align-items:flex-start; flex-direction:column; }
+    .mobile-catalog-hub { display:block; padding:18px 16px 0; background:var(--black); }
     .catalog-showcase { margin:16px 20px 0; gap:16px; }
     .catalog-showcase { display:none !important; }
     .catalog-rail { grid-auto-columns:minmax(142px,170px); }
@@ -781,6 +818,7 @@
     .catalog-theme-text { font-size:13px; margin-bottom:12px; }
     .catalog-theme-controls { position:relative; right:auto; bottom:auto; margin:0 18px 14px auto; }
     .campaign-filter-bar { margin:10px 12px 0; }
+    .mobile-catalog-hub { padding:16px 12px 0; }
     .catalog-showcase { margin:14px 12px 0; gap:14px; }
     .catalog-rail-title { font-size:28px; }
     .catalog-rail { grid-auto-columns:minmax(134px,155px); gap:9px; }
@@ -849,9 +887,9 @@
     <div class="catalog-mobile-menu-title">Atalhos</div>
     <div class="catalog-mobile-menu-links">
       <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
-      <a class="catalog-mobile-menu-link" href="catalogo.html">Catálogo completo</a>
-      <a class="catalog-mobile-menu-link" href="#featuredProductsSection" onclick="closeCatalogMenu()">Escolhas da R Street</a>
-      <a class="catalog-mobile-menu-link" href="#saleProductsSection" onclick="closeCatalogMenu()">Produtos com desconto</a>
+      <button type="button" class="catalog-mobile-menu-link" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="setMobileCatalogMode('featured')">Escolhas da R Street</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="setMobileCatalogMode('sale')">Produtos com desconto</button>
       <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
       <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
       <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
@@ -920,6 +958,37 @@
   <div class="catalog-rail-section" id="campaignProductsSection"></div>
   <div class="catalog-rail-section" id="featuredProductsSection"></div>
   <div class="catalog-rail-section" id="saleProductsSection"></div>
+</section>
+
+<section class="mobile-catalog-hub" aria-label="Explorar catalogo">
+  <div class="mobile-hub-head">
+    <div>
+      <div class="mobile-hub-kicker">Escolha sua vitrine</div>
+      <div class="mobile-hub-title">Explorar</div>
+    </div>
+    <button type="button" class="mobile-hub-clear" id="mobileHubClear" onclick="setMobileCatalogMode('all')">Ver tudo</button>
+  </div>
+  <div class="mobile-hub-grid">
+    <button type="button" class="mobile-hub-card" id="mobileHubFeatured" onclick="setMobileCatalogMode('featured')">
+      <span class="mobile-hub-label">Destaques</span>
+      <span class="mobile-hub-name">Escolhas</span>
+      <span class="mobile-hub-sub">Produtos selecionados pela loja.</span>
+    </button>
+    <button type="button" class="mobile-hub-card" id="mobileHubSale" onclick="setMobileCatalogMode('sale')">
+      <span class="mobile-hub-label">Ofertas</span>
+      <span class="mobile-hub-name">Promoções</span>
+      <span class="mobile-hub-sub">Peças com desconto ativo.</span>
+    </button>
+    <button type="button" class="mobile-hub-card mobile-hub-card-wide" id="mobileHubAll" onclick="setMobileCatalogMode('all')">
+      <span class="mobile-hub-label">Todos os produtos</span>
+      <span class="mobile-hub-name">Catálogo completo</span>
+      <span class="mobile-hub-sub">Ver todas as peças disponíveis da R Street.</span>
+    </button>
+  </div>
+  <div class="mobile-current-collection" id="mobileCurrentCollection">
+    <strong id="mobileCurrentTitle">Catálogo completo</strong>
+    <span id="mobileCurrentSub">Mostrando todos os produtos disponíveis.</span>
+  </div>
 </section>
 
 <!-- TOOLBAR -->
@@ -1136,6 +1205,7 @@ let currentBrand = 'todos';
 let currentCategory = 'todos';
 let currentStock = 'todos';
 let currentMaxPrice = 1000;
+let currentMobileCatalogMode = 'all';
 let currentPage = 1;
 const PER_PAGE = 12;
 
@@ -1516,6 +1586,66 @@ function setCategoryFromMenu(cat, el) {
   document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
 }
 
+function setMobileCatalogMode(mode = 'all') {
+  if (mode === 'all' && currentCampaignTheme) {
+    window.location.href = 'catalogo.html';
+    return;
+  }
+  currentMobileCatalogMode = mode;
+  currentPage = 1;
+  closeCatalogMenu();
+  applyFilters();
+  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function openMobileCampaignHub() {
+  const target = currentCampaignTheme || activeCatalogTheme || allCatalogThemes[0];
+  if (target) {
+    window.location.href = safeCatalogThemeLink(target);
+    return;
+  }
+  setMobileCatalogMode('all');
+}
+
+function updateMobileCatalogHub() {
+  const campaign = currentCampaignTheme || activeCatalogTheme || allCatalogThemes[0];
+  const campaignCard = document.getElementById('mobileHubCampaign');
+  const campaignName = document.getElementById('mobileHubCampaignName');
+  const campaignSub = document.getElementById('mobileHubCampaignSub');
+  if (campaignCard) {
+    campaignCard.classList.toggle('active', Boolean(currentCampaignTheme));
+    campaignCard.style.display = campaign ? '' : 'none';
+  }
+  if (campaignName && campaign) campaignName.textContent = campaign.titulo || campaign.nome || 'Campanha R Street';
+  if (campaignSub) {
+    campaignSub.textContent = currentCampaignTheme
+      ? 'Você está vendo somente os produtos desta campanha.'
+      : 'Toque para abrir os produtos selecionados da campanha.';
+  }
+
+  document.getElementById('mobileHubFeatured')?.classList.toggle('active', currentMobileCatalogMode === 'featured');
+  document.getElementById('mobileHubSale')?.classList.toggle('active', currentMobileCatalogMode === 'sale');
+  document.getElementById('mobileHubAll')?.classList.toggle('active', currentMobileCatalogMode === 'all' && !currentCampaignTheme);
+
+  const clear = document.getElementById('mobileHubClear');
+  if (clear) clear.classList.toggle('is-visible', currentMobileCatalogMode !== 'all' || Boolean(currentCampaignTheme));
+
+  const current = document.getElementById('mobileCurrentCollection');
+  const title = document.getElementById('mobileCurrentTitle');
+  const sub = document.getElementById('mobileCurrentSub');
+  const labels = {
+    all: ['Catálogo completo', 'Mostrando todos os produtos disponíveis.'],
+    featured: ['Escolhas da R Street', 'Uma vitrine com produtos selecionados pela loja.'],
+    sale: ['Produtos com desconto', 'Peças com promoção ativa no catálogo.']
+  };
+  const activeLabel = currentCampaignTheme
+    ? [`Campanha: ${currentCampaignTheme.titulo || currentCampaignTheme.nome || 'R Street'}`, 'Mostrando somente os produtos selecionados para esta campanha.']
+    : (labels[currentMobileCatalogMode] || labels.all);
+  if (title) title.textContent = activeLabel[0];
+  if (sub) sub.textContent = activeLabel[1];
+  if (current) current.classList.toggle('is-visible', currentMobileCatalogMode !== 'all' || Boolean(currentCampaignTheme));
+}
+
 function applyFilters() {
   const search = normalizeSearchText(document.getElementById('searchInput').value);
   const sort = document.getElementById('sortSelect').value;
@@ -1529,6 +1659,8 @@ function applyFilters() {
     if (currentBrand !== 'todos' && p.marca !== currentBrand) return false;
     if (currentCategory !== 'todos' && !p.categoria?.includes(currentCategory)) return false;
     if (currentStock === 'estoque' && getCatalogProductStock(p) <= 0) return false;
+    if (!campaignProductIds && currentMobileCatalogMode === 'featured' && p.destaque_catalogo !== true) return false;
+    if (!campaignProductIds && currentMobileCatalogMode === 'sale' && getProductDiscountValue(p) <= 0) return false;
     if (p.preco > currentMaxPrice) return false;
     if (search && !matchesProductSearch(p, search)) return false;
     return true;
@@ -1540,6 +1672,7 @@ function applyFilters() {
   else if (sort === 'novos') filtered.sort((a,b) => b.id - a.id);
 
   document.getElementById('resultCount').textContent = filtered.length;
+  updateMobileCatalogHub();
   updateCampaignFilterBar();
   updateCatalogShowcases();
   renderPage();
