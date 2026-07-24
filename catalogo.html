@@ -84,7 +84,7 @@
   .catalog-header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 7vw, 90px); line-height: 1; margin-bottom: 16px; }
   .catalog-header-title span { color: var(--gold); }
   .catalog-header-sub { font-size: 15px; color: var(--gray-400); font-weight: 300; max-width: 500px; }
-  .catalog-theme-banner { display:none; margin:24px 60px 0; border:1px solid rgba(200,169,110,.25); background:var(--gray-800); min-height:190px; position:relative; overflow:hidden; border-radius:4px; }
+  .catalog-theme-banner { display:none; margin:24px 60px 0; border:1px solid rgba(200,169,110,.25); background:var(--gray-800); min-height:220px; position:relative; overflow:hidden; border-radius:4px; }
   .catalog-theme-banner.is-visible { display:flex; align-items:flex-end; }
   .catalog-theme-banner img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(.72); }
   .catalog-theme-banner::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(10,10,10,.84), rgba(10,10,10,.28)); }
@@ -93,6 +93,12 @@
   .catalog-theme-title { font-family:'Bebas Neue', sans-serif; font-size:42px; line-height:1; margin-bottom:8px; }
   .catalog-theme-text { color:var(--gray-300); font-size:14px; line-height:1.6; margin-bottom:16px; }
   .catalog-theme-btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:0 18px; background:var(--gold); color:var(--black); text-decoration:none; font-weight:800; text-transform:uppercase; letter-spacing:1px; font-size:12px; border-radius:2px; }
+  .catalog-theme-controls { position:absolute; z-index:2; right:22px; bottom:20px; display:none; align-items:center; gap:8px; }
+  .catalog-theme-controls.is-visible { display:flex; }
+  .catalog-theme-arrow { width:34px; height:34px; border:1px solid rgba(255,255,255,.24); background:rgba(10,10,10,.62); color:var(--white); cursor:pointer; border-radius:50%; font-size:21px; line-height:1; display:flex; align-items:center; justify-content:center; }
+  .catalog-theme-dots { display:flex; gap:6px; align-items:center; }
+  .catalog-theme-dot { width:8px; height:8px; border-radius:50%; border:0; background:rgba(255,255,255,.42); cursor:pointer; padding:0; }
+  .catalog-theme-dot.active { width:22px; border-radius:8px; background:var(--gold); }
   .campaign-filter-bar { display:none; margin:14px 60px 0; border:1px solid rgba(200,169,110,.28); background:rgba(200,169,110,.08); padding:12px 14px; border-radius:4px; align-items:center; justify-content:space-between; gap:14px; }
   .campaign-filter-bar.is-visible { display:flex; }
   .campaign-filter-info { min-width:0; }
@@ -100,6 +106,27 @@
   .campaign-filter-title { color:var(--white); font-size:14px; font-weight:800; line-height:1.35; }
   .campaign-filter-sub { color:var(--gray-400); font-size:12px; margin-top:3px; }
   .campaign-filter-clear { flex:0 0 auto; color:var(--gold); border:1px solid rgba(200,169,110,.35); background:transparent; text-decoration:none; min-height:36px; padding:0 12px; display:inline-flex; align-items:center; justify-content:center; border-radius:2px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; }
+  .catalog-showcase { display:none; margin:18px 60px 0; gap:18px; flex-direction:column; }
+  .catalog-showcase.is-visible { display:flex; }
+  .catalog-rail-section { display:none; }
+  .catalog-rail-section.is-visible { display:block; }
+  .catalog-rail-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:12px; }
+  .catalog-rail-kicker { color:var(--gold); font-size:10px; letter-spacing:3px; text-transform:uppercase; font-weight:800; margin-bottom:4px; }
+  .catalog-rail-title { font-family:'Bebas Neue', sans-serif; font-size:34px; line-height:1; }
+  .catalog-rail-sub { color:var(--gray-400); font-size:13px; margin-top:5px; }
+  .catalog-rail-link { color:var(--gold); text-decoration:none; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; border:1px solid rgba(200,169,110,.3); padding:9px 12px; border-radius:2px; white-space:nowrap; }
+  .catalog-rail { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(156px,190px); gap:12px; overflow-x:auto; padding-bottom:8px; scroll-snap-type:x mandatory; }
+  .catalog-rail::-webkit-scrollbar { height:6px; }
+  .catalog-rail::-webkit-scrollbar-thumb { background:rgba(200,169,110,.35); border-radius:10px; }
+  .showcase-card { background:var(--gray-800); border:1px solid rgba(255,255,255,.08); border-radius:4px; overflow:hidden; text-decoration:none; color:var(--white); scroll-snap-align:start; min-width:0; }
+  .showcase-card-media { aspect-ratio:1/1; background:var(--gray-700); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .showcase-card-media img, .showcase-card-media video { width:100%; height:100%; object-fit:contain; display:block; }
+  .showcase-card-badge { position:absolute; top:8px; left:8px; background:var(--gold); color:var(--black); font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; padding:4px 6px; border-radius:2px; }
+  .showcase-card-body { padding:10px; }
+  .showcase-card-brand { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:800; margin-bottom:5px; }
+  .showcase-card-name { font-size:13px; font-weight:800; line-height:1.35; min-height:36px; }
+  .showcase-card-price { margin-top:8px; font-family:'Bebas Neue', sans-serif; color:var(--gold); font-size:22px; line-height:1; }
+  .showcase-card-old { color:var(--gray-400); text-decoration:line-through; font-size:12px; margin-top:4px; }
 
   /* TOOLBAR */
   .toolbar {
@@ -565,10 +592,14 @@
     .nav-action { padding: 8px 12px; font-size: 11px; letter-spacing: .6px; }
     .catalog-header { padding: 40px 20px 28px; }
     .catalog-header-title { font-size: 48px; }
-    .catalog-theme-banner { margin:18px 20px 0; min-height:170px; }
+    .catalog-theme-banner { margin:18px 20px 0; min-height:180px; }
     .catalog-theme-content { padding:22px; }
     .catalog-theme-title { font-size:34px; }
+    .catalog-theme-controls { right:14px; bottom:14px; }
     .campaign-filter-bar { margin:12px 20px 0; align-items:flex-start; flex-direction:column; }
+    .catalog-showcase { margin:16px 20px 0; gap:16px; }
+    .catalog-rail { grid-auto-columns:minmax(142px,170px); }
+    .catalog-rail-head { align-items:flex-start; flex-direction:column; gap:8px; }
     .toolbar {
       padding: 12px 16px;
       top: 57px;
@@ -604,10 +635,17 @@
     .catalog-header-label { letter-spacing: 3px; line-height: 1.6; }
     .catalog-header-title { font-size: 46px; }
     .catalog-header-sub { font-size: 14px; line-height: 1.55; width: min(100%, 320px); overflow-wrap: break-word; }
-    .catalog-theme-banner { margin:16px 12px 0; min-height:160px; }
+    .catalog-theme-banner { margin:16px 12px 0; min-height:176px; }
     .catalog-theme-content { padding:18px; }
     .catalog-theme-title { font-size:30px; }
+    .catalog-theme-text { font-size:13px; margin-bottom:12px; }
+    .catalog-theme-controls { position:relative; right:auto; bottom:auto; margin:0 18px 14px auto; }
     .campaign-filter-bar { margin:10px 12px 0; }
+    .catalog-showcase { margin:14px 12px 0; gap:14px; }
+    .catalog-rail-title { font-size:28px; }
+    .catalog-rail { grid-auto-columns:minmax(134px,155px); gap:9px; }
+    .showcase-card-body { padding:9px; }
+    .showcase-card-name { font-size:12px; min-height:34px; }
     .toolbar { top: 55px; }
     .filter-mobile-btn { min-height: 40px; }
     .catalog-main { width:100%; max-width:100%; overflow:hidden; padding-left:12px; padding-right:12px; }
@@ -670,6 +708,11 @@
     <div class="catalog-theme-text" id="catalogThemeText"></div>
     <a class="catalog-theme-btn" id="catalogThemeBtn" href="catalogo.html">Ver campanha</a>
   </div>
+  <div class="catalog-theme-controls" id="catalogThemeControls">
+    <button type="button" class="catalog-theme-arrow" onclick="moveCatalogTheme(-1)" aria-label="Campanha anterior">&#8249;</button>
+    <div class="catalog-theme-dots" id="catalogThemeDots"></div>
+    <button type="button" class="catalog-theme-arrow" onclick="moveCatalogTheme(1)" aria-label="Proxima campanha">&#8250;</button>
+  </div>
 </div>
 
 <div class="campaign-filter-bar" id="campaignFilterBar">
@@ -680,6 +723,12 @@
   </div>
   <a href="catalogo.html" class="campaign-filter-clear">Ver todos</a>
 </div>
+
+<section class="catalog-showcase" id="catalogShowcase" aria-label="Vitrines do catalogo">
+  <div class="catalog-rail-section" id="campaignProductsSection"></div>
+  <div class="catalog-rail-section" id="featuredProductsSection"></div>
+  <div class="catalog-rail-section" id="saleProductsSection"></div>
+</section>
 
 <!-- TOOLBAR -->
 <div class="toolbar">
@@ -888,6 +937,9 @@ let catalogDataSignature = '';
 let catalogVideoObserver = null;
 let activeCatalogTheme = null;
 let currentCampaignTheme = null;
+let allCatalogThemes = [];
+let catalogThemeIndex = 0;
+let catalogThemeTimer = null;
 let currentBrand = 'todos';
 let currentCategory = 'todos';
 let currentStock = 'todos';
@@ -1034,6 +1086,42 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   btn.textContent = theme.botao_texto || 'Ver campanha';
   btn.href = safeCatalogThemeLink(theme);
   btn.style.background = color;
+  renderCatalogThemeControls();
+}
+
+function renderCatalogThemeControls() {
+  const controls = document.getElementById('catalogThemeControls');
+  const dots = document.getElementById('catalogThemeDots');
+  if (!controls || !dots) return;
+  if (currentCampaignTheme || !allCatalogThemes.length || allCatalogThemes.length < 2) {
+    controls.classList.remove('is-visible');
+    dots.innerHTML = '';
+    return;
+  }
+  controls.classList.add('is-visible');
+  dots.innerHTML = allCatalogThemes.map((theme, index) => `
+    <button type="button" class="catalog-theme-dot ${index === catalogThemeIndex ? 'active' : ''}"
+      aria-label="Ver campanha ${escapeAttr(theme.nome || index + 1)}"
+      onclick="selectCatalogTheme(${index})"></button>
+  `).join('');
+}
+
+function selectCatalogTheme(index) {
+  if (!allCatalogThemes.length) return;
+  catalogThemeIndex = (index + allCatalogThemes.length) % allCatalogThemes.length;
+  applyCatalogThemeBanner(allCatalogThemes[catalogThemeIndex], false);
+}
+
+function moveCatalogTheme(delta) {
+  selectCatalogTheme(catalogThemeIndex + delta);
+}
+
+function startCatalogThemeCarousel() {
+  clearInterval(catalogThemeTimer);
+  if (currentCampaignTheme || allCatalogThemes.length < 2) return;
+  catalogThemeTimer = setInterval(() => {
+    if (!document.hidden) moveCatalogTheme(1);
+  }, 6500);
 }
 
 function updateCampaignFilterBar() {
@@ -1070,13 +1158,16 @@ async function loadActiveCatalogTheme() {
     if (!res.ok) return;
     const themes = (await res.json() || [])
       .filter(item => item.local_exibicao === 'catalogo' || item.local_exibicao === 'ambos');
+    allCatalogThemes = themes;
     activeCatalogTheme = themes[0] || null;
     currentCampaignTheme = campaignSlug
       ? themes.find(item => String(item.slug || '') === campaignSlug) || null
       : null;
+    catalogThemeIndex = Math.max(0, themes.findIndex(item => Number(item.id) === Number((currentCampaignTheme || activeCatalogTheme)?.id)));
     const themeToShow = currentCampaignTheme || activeCatalogTheme;
     if (themeToShow) applyCatalogThemeBanner(themeToShow, Boolean(currentCampaignTheme));
     updateCampaignFilterBar();
+    startCatalogThemeCarousel();
   } catch (err) {
     console.warn('Falha ao buscar tema do catalogo:', err.message);
   }
@@ -1159,6 +1250,7 @@ function applyFilters() {
 
   document.getElementById('resultCount').textContent = filtered.length;
   updateCampaignFilterBar();
+  updateCatalogShowcases();
   renderPage();
   renderPagination();
 }
@@ -1297,6 +1389,131 @@ function renderCard(p) {
 // ─────────────────────────────────────────────
 // CARRINHO
 // ─────────────────────────────────────────────
+function getShowcaseProductInfo(product, preferSale = false) {
+  const groups = getCatalogColorGroups(product.id);
+  const group = preferSale
+    ? groups.reduce((best, item) => getProductDiscountValue(product, item) > getProductDiscountValue(product, best) ? item : best, groups[0] || null)
+    : (groups[0] || null);
+  const media = getCatalogGroupMedia(group, product)[0] || null;
+  const price = getCatalogGroupPrice(group, product);
+  const stock = getCatalogGroupStock(group, product);
+  return { group, media, price, stock };
+}
+
+function getProductDiscountValue(product, specificGroup) {
+  const candidates = specificGroup !== undefined
+    ? [specificGroup]
+    : (getCatalogColorGroups(product.id).length ? getCatalogColorGroups(product.id) : [null]);
+  return candidates.reduce((best, group) => {
+    const price = getCatalogGroupPrice(group, product);
+    const oldPrice = Number(price.preco_antigo || 0);
+    const newPrice = Number(price.preco || 0);
+    return oldPrice > newPrice && newPrice > 0 ? Math.max(best, oldPrice - newPrice) : best;
+  }, 0);
+}
+
+function renderShowcaseCard(product, badge = '', preferSale = false) {
+  const info = getShowcaseProductInfo(product, preferSale);
+  const color = info.group?.cor || '';
+  const href = buildProductUrl(product.id, color);
+  const oldPrice = Number(info.price.preco_antigo || 0);
+  const mediaHtml = info.media
+    ? (info.media.type === 'video'
+      ? `<video src="${escapeAttr(info.media.url)}" muted loop playsinline preload="metadata"></video>`
+      : `<img src="${escapeAttr(info.media.url)}" alt="${escapeAttr(product.nome)}" loading="lazy">`)
+    : `<div class="product-img-placeholder">${escapeHtml(product.marca || 'R Street')}</div>`;
+  return `
+    <a class="showcase-card" href="${href}">
+      <div class="showcase-card-media">
+        ${mediaHtml}
+        ${badge ? `<span class="showcase-card-badge">${escapeHtml(badge)}</span>` : ''}
+      </div>
+      <div class="showcase-card-body">
+        <div class="showcase-card-brand">${escapeHtml(product.marca || '')}</div>
+        <div class="showcase-card-name">${escapeHtml(product.nome || '')}</div>
+        ${oldPrice > 0 ? `<div class="showcase-card-old">R$ ${formatCatalogPrice(oldPrice)}</div>` : ''}
+        <div class="showcase-card-price">R$ ${formatCatalogPrice(info.price.preco)}</div>
+      </div>
+    </a>
+  `;
+}
+
+function renderCatalogRail(sectionId, options) {
+  const section = document.getElementById(sectionId);
+  if (!section) return false;
+  const products = (options.products || []).filter(product => product?.ativo !== false && getCatalogProductStock(product) > 0).slice(0, options.limit || 10);
+  if (!products.length) {
+    section.classList.remove('is-visible');
+    section.innerHTML = '';
+    return false;
+  }
+  section.classList.add('is-visible');
+  section.innerHTML = `
+    <div class="catalog-rail-head">
+      <div>
+        <div class="catalog-rail-kicker">${escapeHtml(options.kicker || 'R Street')}</div>
+        <div class="catalog-rail-title">${escapeHtml(options.title || '')}</div>
+        ${options.sub ? `<div class="catalog-rail-sub">${escapeHtml(options.sub)}</div>` : ''}
+      </div>
+      ${options.link ? `<a class="catalog-rail-link" href="${escapeAttr(options.link)}">${escapeHtml(options.linkText || 'Ver tudo')}</a>` : ''}
+    </div>
+    <div class="catalog-rail">
+      ${products.map(product => renderShowcaseCard(product, options.badge || '', Boolean(options.preferSale))).join('')}
+    </div>
+  `;
+  prepareCatalogVideos(section);
+  return true;
+}
+
+function getCampaignProducts() {
+  if (!currentCampaignTheme?.produto_ids?.length) return [];
+  const ids = currentCampaignTheme.produto_ids.map(Number);
+  return ids.map(id => allProducts.find(product => Number(product.id) === id)).filter(Boolean);
+}
+
+function updateCatalogShowcases() {
+  const wrapper = document.getElementById('catalogShowcase');
+  if (!wrapper) return;
+  const campaignProducts = getCampaignProducts();
+  const activeInStock = allProducts.filter(product => product.ativo !== false && getCatalogProductStock(product) > 0);
+  const featuredProducts = activeInStock
+    .filter(product => !campaignProducts.some(item => Number(item.id) === Number(product.id)))
+    .slice(0, 10);
+  const saleProducts = activeInStock
+    .filter(product => getProductDiscountValue(product) > 0)
+    .sort((a, b) => getProductDiscountValue(b) - getProductDiscountValue(a))
+    .slice(0, 10);
+
+  const visibleSections = [
+    renderCatalogRail('campaignProductsSection', {
+      products: campaignProducts,
+      kicker: 'Campanha ativa',
+      title: currentCampaignTheme ? (currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Produtos da campanha') : '',
+      sub: 'Pecas escolhidas especialmente para esta campanha.',
+      badge: 'Campanha',
+      link: 'catalogo.html',
+      linkText: 'Ver todos'
+    }),
+    renderCatalogRail('featuredProductsSection', {
+      products: featuredProducts,
+      kicker: 'Destaques',
+      title: 'Escolhas da R Street',
+      sub: 'Produtos em evidencia no catalogo.',
+      badge: 'Destaque'
+    }),
+    renderCatalogRail('saleProductsSection', {
+      products: saleProducts,
+      kicker: 'Ofertas',
+      title: 'Produtos com desconto',
+      sub: 'Itens com preco promocional ativo.',
+      badge: 'Oferta',
+      preferSale: true
+    })
+  ].filter(Boolean);
+
+  wrapper.classList.toggle('is-visible', visibleSections.length > 0);
+}
+
 function getCatalogColorGroups(productId) {
   const rows = allProductVariants.filter(v => Number(v.produto_id) === Number(productId) && v.ativo !== false);
   const groups = new Map();
