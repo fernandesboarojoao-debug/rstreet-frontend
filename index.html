@@ -1343,15 +1343,15 @@
   <div class="hero-content">
     <div class="hero-eyebrow">
       <div class="hero-eyebrow-line"></div>
-      <span>São José do Rio Pardo · SP</span>
+      <span id="heroEyebrowText">São José do Rio Pardo · SP</span>
     </div>
-    <h1 class="hero-title">
+    <h1 class="hero-title" id="heroTitle">
       <span class="line-gold">Moda</span>
       <span>Masculi</span><span class="line-outline">na</span>
     </h1>
-    <p class="hero-desc">Estilo, atitude e qualidade em cada peça. As melhores marcas do Brasil reunidas em um só lugar para compor seu look com personalidade.</p>
+    <p class="hero-desc" id="heroDesc">Estilo, atitude e qualidade em cada peça. As melhores marcas do Brasil reunidas em um só lugar para compor seu look com personalidade.</p>
     <div class="hero-buttons">
-      <a href="catalogo.html" class="btn-primary">
+      <a href="catalogo.html" class="btn-primary" id="heroPrimaryBtn">
         Ver Catálogo
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
@@ -1757,6 +1757,58 @@
     return 'catalogo.html';
   }
 
+  function safeThemeLink(theme) {
+    const clean = String(theme?.botao_link || '').trim();
+    if (clean && /^(https?:)?\/\//i.test(clean)) return clean;
+    if (clean && /^[a-z0-9_\-./?=&%#]+$/i.test(clean)) return clean;
+    if (theme?.slug) return `catalogo.html?campanha=${encodeURIComponent(theme.slug)}`;
+    return 'catalogo.html';
+  }
+
+  function buildThemeHeroTitle(title) {
+    const words = String(title || '').trim().split(/\s+/).filter(Boolean);
+    if (!words.length) return '';
+    if (words.length === 1) return `<span class="line-gold">${escapeHtml(words[0])}</span>`;
+    const first = words.shift();
+    return `<span class="line-gold">${escapeHtml(first)}</span><span>${escapeHtml(words.join(' '))}</span>`;
+  }
+
+  function applySiteTheme(theme) {
+    if (!theme) return;
+    const heroBg = document.getElementById('heroBg');
+    const title = document.getElementById('heroTitle');
+    const desc = document.getElementById('heroDesc');
+    const eyebrow = document.getElementById('heroEyebrowText');
+    const button = document.getElementById('heroPrimaryBtn');
+    const color = /^#[0-9a-f]{6}$/i.test(theme.cor_destaque || '') ? theme.cor_destaque : '#c8a96e';
+
+    document.documentElement.style.setProperty('--gold', color);
+    if (heroBg && theme.banner_url) {
+      heroBg.style.background = `linear-gradient(135deg, rgba(10,10,10,0.62), rgba(10,10,10,0.34)), url('${String(theme.banner_url).replace(/'/g, '%27')}') center/cover no-repeat`;
+    }
+    if (title && theme.titulo) title.innerHTML = buildThemeHeroTitle(theme.titulo);
+    if (desc && theme.texto) desc.textContent = theme.texto;
+    if (eyebrow && theme.nome) eyebrow.textContent = theme.nome;
+    if (button) {
+      button.href = safeThemeLink(theme);
+      button.innerHTML = `${escapeHtml(theme.botao_texto || 'Ver campanha')}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+    }
+  }
+
+  async function loadActiveSiteTheme() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/temas_site?select=*&order=criado_em.desc`, {
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+      });
+      if (!res.ok) return;
+      const themes = await res.json();
+      const theme = (Array.isArray(themes) ? themes : [])
+        .find(item => item.local_exibicao === 'home' || item.local_exibicao === 'ambos');
+      applySiteTheme(theme);
+    } catch {}
+  }
+
   function renderHighlightCard(item, index) {
     const link = escapeAttr(safeHighlightLink(item.link_url));
     const title = escapeHtml(item.titulo || '');
@@ -1815,6 +1867,7 @@
   }
 
   loadHomeHighlights();
+  loadActiveSiteTheme();
 
   // Cursor
   const cursor = document.getElementById('cursor');

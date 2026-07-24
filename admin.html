@@ -325,6 +325,30 @@
   .home-highlight-media-thumb button { position:absolute; width:18px; height:18px; border:0; border-radius:50%; background:rgba(0,0,0,.72); color:var(--white); cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; }
   .home-highlight-media-main { left:2px; bottom:2px; }
   .home-highlight-media-remove { right:2px; top:2px; }
+  .theme-admin-layout { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(300px,.95fr); gap:18px; align-items:start; }
+  .theme-preview-box { min-height:170px; border:1px solid var(--border); border-radius:6px; background:var(--surface2); overflow:hidden; position:relative; display:flex; align-items:flex-end; padding:18px; }
+  .theme-preview-box::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.78)); z-index:1; }
+  .theme-preview-box img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .theme-preview-content { position:relative; z-index:2; display:flex; flex-direction:column; gap:6px; max-width:90%; }
+  .theme-preview-label { font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:2px; font-weight:700; }
+  .theme-preview-title { font-size:24px; font-weight:800; line-height:1.1; }
+  .theme-preview-text { font-size:12px; color:var(--gray1); line-height:1.45; }
+  .theme-products-box { border:1px solid var(--border); border-radius:4px; background:var(--surface2); padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .theme-products-controls { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:end; }
+  .theme-product-list { display:flex; flex-wrap:wrap; gap:8px; min-height:34px; }
+  .theme-product-chip { display:flex; align-items:center; gap:8px; background:var(--gold-bg); border:1px solid rgba(200,169,110,.28); color:var(--gold); border-radius:18px; padding:5px 9px; font-size:12px; font-weight:700; max-width:100%; }
+  .theme-product-chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:210px; }
+  .theme-product-chip button { border:0; background:transparent; color:inherit; cursor:pointer; font-size:15px; line-height:1; }
+  .theme-list { display:flex; flex-direction:column; gap:10px; }
+  .theme-card { border:1px solid var(--border); border-radius:6px; background:var(--surface2); padding:14px; display:grid; grid-template-columns:72px minmax(0,1fr) auto; gap:12px; align-items:center; }
+  .theme-card-img { width:72px; height:54px; border-radius:4px; background:var(--surface); object-fit:cover; border:1px solid var(--border); }
+  .theme-card-title { font-size:14px; font-weight:800; margin-bottom:4px; }
+  .theme-card-meta { font-size:11px; color:var(--gray1); line-height:1.5; }
+  .theme-card-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .theme-status { display:inline-flex; align-items:center; border-radius:12px; padding:3px 8px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+  .theme-status.ativo { background:rgba(76,175,80,.15); color:#81c784; }
+  .theme-status.inativo { background:rgba(158,158,158,.15); color:var(--gray1); }
+  .theme-status.programado { background:rgba(200,169,110,.16); color:var(--gold); }
 
   @media(max-width:900px){
     body{display:block}
@@ -358,7 +382,7 @@
     .variant-tools .btn{grid-column:1/-1}
     .variant-row{grid-template-columns:1fr 70px 80px 74px 36px}
     .variant-color-tools,.variant-color-fields,.variant-size-add{grid-template-columns:1fr}
-    .home-highlights-editor{grid-template-columns:1fr}
+    .home-highlights-editor,.theme-admin-layout{grid-template-columns:1fr}
     .variant-tabs-row{align-items:stretch;flex-direction:column}
     .variant-tabs-row .btn{width:100%}
     .variant-size-row{grid-template-columns:1fr 80px auto}
@@ -478,6 +502,7 @@
     <a class="nav-item" href="catalogo.html" target="_blank"><span class="nav-icon">🛍</span> Ver Catálogo</a>
     <a class="nav-item" href="index.html" target="_blank"><span class="nav-icon">🌐</span> Ver Site</a>
     <div class="nav-section-title">Config</div>
+    <button class="nav-item" onclick="showTab('temas')"><span class="nav-icon">★</span> Temas do Site</button>
     <button class="nav-item" onclick="showTab('config')"><span class="nav-icon">⚙️</span> Configurações</button>
   </nav>
   <div class="sidebar-bottom">
@@ -684,6 +709,118 @@
         <p>Copie e execute o SQL abaixo no <strong>SQL Editor</strong> do Supabase para criar a tabela de produtos:</p>
         <pre id="sqlCode" style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:20px;overflow-x:auto;font-size:12px;line-height:1.7;color:#81c784;white-space:pre-wrap;margin-top:12px"></pre>
         <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="copySQL()">📋 Copiar SQL</button>
+      </div>
+    </div>
+
+    <!-- ─── TEMAS DO SITE ─── -->
+    <div id="tab-temas" style="display:none">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Temas do Site</div>
+          <p style="font-size:13px;color:var(--gray1);margin-top:6px">Cadastre campanhas para home e catalogo. Fora do periodo ativo, o site volta sozinho ao normal.</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="resetTemaSiteForm()">Novo tema</button>
+      </div>
+
+      <div class="theme-admin-layout">
+        <div class="import-card">
+          <h3>Campanha / Tema</h3>
+          <div class="alert alert-info">
+            <span class="alert-icon">i</span>
+            <span>Por seguranca, o tema novo fica inativo ate voce escolher status ativo/programado e definir o periodo.</span>
+          </div>
+          <input type="hidden" id="tema-id">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Nome do tema</label>
+              <input type="text" id="tema-nome" placeholder="Dia dos Pais" oninput="updateTemaSitePreview()">
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="tema-status">
+                <option value="inativo">Inativo</option>
+                <option value="programado">Programado</option>
+                <option value="ativo">Ativo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Onde aparece</label>
+              <select id="tema-local">
+                <option value="ambos">Home e catalogo</option>
+                <option value="home">Somente home</option>
+                <option value="catalogo">Somente catalogo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cor de destaque</label>
+              <input type="color" id="tema-cor" value="#c8a96e" style="height:42px;padding:4px" oninput="updateTemaSitePreview()">
+            </div>
+            <div class="form-group">
+              <label>Inicio</label>
+              <input type="datetime-local" id="tema-inicio">
+            </div>
+            <div class="form-group">
+              <label>Fim</label>
+              <input type="datetime-local" id="tema-fim">
+            </div>
+            <div class="form-group full">
+              <label>Titulo / frase</label>
+              <input type="text" id="tema-titulo" placeholder="Presentes para o Dia dos Pais" oninput="updateTemaSitePreview()">
+            </div>
+            <div class="form-group full">
+              <label>Texto curto</label>
+              <textarea id="tema-texto" placeholder="Pecas selecionadas para presentear com estilo." oninput="updateTemaSitePreview()"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Texto do botao</label>
+              <input type="text" id="tema-botao-texto" placeholder="Ver campanha">
+            </div>
+            <div class="form-group">
+              <label>Link do botao</label>
+              <input type="text" id="tema-botao-link" placeholder="catalogo.html?campanha=dia-dos-pais">
+            </div>
+            <div class="form-group full">
+              <label>Banner principal</label>
+              <input type="url" id="tema-banner" placeholder="URL da imagem" oninput="updateTemaSitePreview()">
+              <input type="file" id="tema-banner-file" accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif" onchange="handleTemaBannerFile(event)">
+              <div class="home-highlight-actions" style="margin-top:8px">
+                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('tema-banner-file').click()">Enviar banner</button>
+              </div>
+            </div>
+            <div class="form-group full">
+              <label>Produtos da campanha</label>
+              <div class="theme-products-box">
+                <div class="theme-products-controls">
+                  <select id="tema-produto-select"></select>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="addTemaProduct()">Adicionar</button>
+                </div>
+                <div class="theme-product-list" id="tema-produto-list"></div>
+              </div>
+              <div class="form-hint">Se escolher produtos, o link padrao da campanha abre o catalogo ja filtrado.</div>
+            </div>
+          </div>
+          <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-gold" onclick="saveTemaSite()">Salvar tema</button>
+            <button class="btn btn-outline btn-sm" onclick="resetTemaSiteForm()">Limpar</button>
+          </div>
+        </div>
+
+        <div class="import-card">
+          <h3>Previa e temas salvos</h3>
+          <div class="theme-preview-box" id="tema-preview">
+            <div class="theme-preview-content">
+              <div class="theme-preview-label" id="tema-preview-label">Tema</div>
+              <div class="theme-preview-title" id="tema-preview-title">Titulo da campanha</div>
+              <div class="theme-preview-text" id="tema-preview-text">O banner aparece aqui antes de salvar.</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-outline btn-sm" onclick="loadTemasSiteAdmin()">Recarregar temas</button>
+          </div>
+          <div class="theme-list" id="temasSiteList" style="margin-top:16px">
+            <div class="table-empty">Carregando temas...</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -955,6 +1092,9 @@ let currentVariants = [];
 let selectedVariantColorKey = null;
 let importRows = [];
 let homeHighlightsState = [];
+let siteThemesState = [];
+let editingThemeId = null;
+let selectedThemeProductIds = [];
 
 // ─────────────────────────────────────────────────────
 // UPLOAD DE FOTOS
@@ -2575,7 +2715,272 @@ async function saveHomeHighlights() {
 // ─────────────────────────────────────────────────────
 // TABS
 // ─────────────────────────────────────────────────────
-const tabs = { dashboard:'Dashboard', produtos:'Produtos', importar:'Importar Produtos', pedidos:'Pedidos', config:'Configurações' };
+function dateToLocalInput(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
+function localInputToIso(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function getThemeProductName(id) {
+  const product = allProducts.find(p => Number(p.id) === Number(id));
+  return product ? `${product.nome} ${product.referencia ? '(Ref: ' + product.referencia + ')' : ''}` : `Produto #${id}`;
+}
+
+function updateTemaProductSelect() {
+  const select = document.getElementById('tema-produto-select');
+  if (!select) return;
+  const selected = new Set(selectedThemeProductIds.map(Number));
+  const options = allProducts
+    .filter(p => p.ativo !== false && !selected.has(Number(p.id)))
+    .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || '')))
+    .map(p => `<option value="${p.id}">${escapeHtml(p.nome || 'Produto')} ${p.referencia ? '- Ref: ' + escapeHtml(p.referencia) : ''}</option>`)
+    .join('');
+  select.innerHTML = options || '<option value="">Nenhum produto disponivel</option>';
+}
+
+function renderTemaProducts() {
+  const list = document.getElementById('tema-produto-list');
+  if (!list) return;
+  if (!selectedThemeProductIds.length) {
+    list.innerHTML = '<div class="variant-muted">Nenhum produto selecionado.</div>';
+  } else {
+    list.innerHTML = selectedThemeProductIds.map(id => `
+      <div class="theme-product-chip">
+        <span>${escapeHtml(getThemeProductName(id))}</span>
+        <button type="button" onclick="removeTemaProduct(${Number(id)})" title="Remover">x</button>
+      </div>
+    `).join('');
+  }
+  updateTemaProductSelect();
+}
+
+function addTemaProduct() {
+  const select = document.getElementById('tema-produto-select');
+  const id = Number(select?.value || 0);
+  if (!id || selectedThemeProductIds.includes(id)) return;
+  selectedThemeProductIds.push(id);
+  renderTemaProducts();
+}
+
+function removeTemaProduct(id) {
+  selectedThemeProductIds = selectedThemeProductIds.filter(productId => Number(productId) !== Number(id));
+  renderTemaProducts();
+}
+
+function updateTemaSitePreview() {
+  const box = document.getElementById('tema-preview');
+  if (!box) return;
+  const name = document.getElementById('tema-nome')?.value || 'Tema';
+  const title = document.getElementById('tema-titulo')?.value || 'Titulo da campanha';
+  const text = document.getElementById('tema-texto')?.value || 'O banner aparece aqui antes de salvar.';
+  const banner = document.getElementById('tema-banner')?.value.trim();
+  const color = document.getElementById('tema-cor')?.value || '#c8a96e';
+  const oldImg = box.querySelector('img');
+  if (oldImg) oldImg.remove();
+  if (banner) {
+    const img = document.createElement('img');
+    img.src = banner;
+    img.alt = name;
+    box.prepend(img);
+  }
+  box.style.borderColor = color;
+  const labelEl = document.getElementById('tema-preview-label');
+  const titleEl = document.getElementById('tema-preview-title');
+  const textEl = document.getElementById('tema-preview-text');
+  if (labelEl) {
+    labelEl.textContent = name;
+    labelEl.style.color = color;
+  }
+  if (titleEl) titleEl.textContent = title;
+  if (textEl) textEl.textContent = text;
+}
+
+function resetTemaSiteForm() {
+  editingThemeId = null;
+  selectedThemeProductIds = [];
+  ['tema-id','tema-nome','tema-titulo','tema-texto','tema-botao-link','tema-banner','tema-inicio','tema-fim'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('tema-status').value = 'inativo';
+  document.getElementById('tema-local').value = 'ambos';
+  document.getElementById('tema-cor').value = '#c8a96e';
+  document.getElementById('tema-botao-texto').value = 'Ver campanha';
+  renderTemaProducts();
+  updateTemaSitePreview();
+}
+
+function setTemaSiteForm(theme = {}) {
+  editingThemeId = theme.id ? Number(theme.id) : null;
+  document.getElementById('tema-id').value = editingThemeId || '';
+  document.getElementById('tema-nome').value = theme.nome || '';
+  document.getElementById('tema-status').value = theme.status || 'inativo';
+  document.getElementById('tema-local').value = theme.local_exibicao || 'ambos';
+  document.getElementById('tema-cor').value = theme.cor_destaque || '#c8a96e';
+  document.getElementById('tema-inicio').value = dateToLocalInput(theme.inicio);
+  document.getElementById('tema-fim').value = dateToLocalInput(theme.fim);
+  document.getElementById('tema-titulo').value = theme.titulo || '';
+  document.getElementById('tema-texto').value = theme.texto || '';
+  document.getElementById('tema-botao-texto').value = theme.botao_texto || 'Ver campanha';
+  document.getElementById('tema-botao-link').value = theme.botao_link || '';
+  document.getElementById('tema-banner').value = theme.banner_url || '';
+  selectedThemeProductIds = Array.isArray(theme.produto_ids) ? theme.produto_ids.map(Number).filter(Boolean) : [];
+  renderTemaProducts();
+  updateTemaSitePreview();
+}
+
+function getTemaSitePayload() {
+  const nome = document.getElementById('tema-nome').value.trim();
+  const titulo = document.getElementById('tema-titulo').value.trim();
+  if (!nome || !titulo) {
+    toast('Informe nome e titulo do tema.', 'error');
+    return null;
+  }
+  return {
+    id: editingThemeId,
+    nome,
+    status: document.getElementById('tema-status').value,
+    local_exibicao: document.getElementById('tema-local').value,
+    cor_destaque: document.getElementById('tema-cor').value || '#c8a96e',
+    inicio: localInputToIso(document.getElementById('tema-inicio').value),
+    fim: localInputToIso(document.getElementById('tema-fim').value),
+    titulo,
+    texto: document.getElementById('tema-texto').value.trim(),
+    botao_texto: document.getElementById('tema-botao-texto').value.trim() || 'Ver campanha',
+    botao_link: document.getElementById('tema-botao-link').value.trim(),
+    banner_url: document.getElementById('tema-banner').value.trim(),
+    produto_ids: selectedThemeProductIds,
+  };
+}
+
+function renderTemasSiteList() {
+  const list = document.getElementById('temasSiteList');
+  if (!list) return;
+  if (!siteThemesState.length) {
+    list.innerHTML = '<div class="table-empty">Nenhum tema cadastrado ainda.</div>';
+    return;
+  }
+  list.innerHTML = siteThemesState.map(theme => {
+    const period = `${theme.inicio ? new Date(theme.inicio).toLocaleString('pt-BR') : 'sem inicio'} ate ${theme.fim ? new Date(theme.fim).toLocaleString('pt-BR') : 'sem fim'}`;
+    const img = theme.banner_url
+      ? `<img class="theme-card-img" src="${escapeAttr(theme.banner_url)}" alt="${escapeAttr(theme.nome)}">`
+      : '<div class="theme-card-img"></div>';
+    return `
+      <div class="theme-card">
+        ${img}
+        <div>
+          <div class="theme-card-title">${escapeHtml(theme.nome || 'Tema')}</div>
+          <div class="theme-card-meta">
+            <span class="theme-status ${escapeAttr(theme.status || 'inativo')}">${escapeHtml(theme.status || 'inativo')}</span>
+            ${escapeHtml(theme.local_exibicao || 'ambos')} | ${escapeHtml(period)}<br>
+            ${Number(theme.produto_ids?.length || 0)} produto(s) selecionado(s)
+          </div>
+        </div>
+        <div class="theme-card-actions">
+          <button class="btn btn-outline btn-sm" onclick="editTemaSite(${Number(theme.id)})">Editar</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteTemaSite(${Number(theme.id)})">Excluir</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function loadTemasSiteAdmin() {
+  const list = document.getElementById('temasSiteList');
+  if (list) list.innerHTML = '<div class="table-empty">Carregando temas...</div>';
+  try {
+    if (!allProducts.length) await loadProducts();
+    const res = await fetch(`${API}/temas-site`, { headers: authHeaders({ 'Content-Type': 'application/json' }) });
+    if (!res.ok) throw new Error(await res.text());
+    siteThemesState = await res.json() || [];
+    renderTemasSiteList();
+    renderTemaProducts();
+  } catch (err) {
+    if (list) list.innerHTML = '<div class="table-empty">Nao foi possivel carregar temas.</div>';
+    toast('Erro ao carregar temas: ' + (err.message || 'tente novamente.'), 'error');
+  }
+}
+
+function editTemaSite(id) {
+  const theme = siteThemesState.find(item => Number(item.id) === Number(id));
+  if (!theme) return;
+  setTemaSiteForm(theme);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function deleteTemaSite(id) {
+  if (!confirm('Excluir este tema?')) return;
+  try {
+    const res = await fetch(`${API}/temas-site/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders({ 'Content-Type': 'application/json' })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    siteThemesState = siteThemesState.filter(theme => Number(theme.id) !== Number(id));
+    renderTemasSiteList();
+    if (editingThemeId === Number(id)) resetTemaSiteForm();
+    toast('Tema excluido.', 'success');
+  } catch (err) {
+    toast('Erro ao excluir tema: ' + (err.message || 'tente novamente.'), 'error');
+  }
+}
+
+async function handleTemaBannerFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    const kind = validateMediaFile(file);
+    if (kind !== 'image') return toast('Use uma imagem para o banner.', 'error');
+    const media = await prepareMediaForUpload(file, kind);
+    const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ dataUrl: media.dataUrl, name: media.name || file.name || 'banner.jpg' })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    document.getElementById('tema-banner').value = data.url;
+    updateTemaSitePreview();
+    toast('Banner enviado.', 'success');
+  } catch (err) {
+    toast(err.message || 'Erro ao enviar banner.', 'error');
+  } finally {
+    event.target.value = '';
+  }
+}
+
+async function saveTemaSite() {
+  const payload = getTemaSitePayload();
+  if (!payload) return;
+  try {
+    const res = await fetch(`${API}/temas-site`, {
+      method: 'POST',
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const saved = await res.json();
+    const idx = siteThemesState.findIndex(theme => Number(theme.id) === Number(saved.id));
+    if (idx >= 0) siteThemesState[idx] = saved;
+    else siteThemesState.unshift(saved);
+    setTemaSiteForm(saved);
+    renderTemasSiteList();
+    toast('Tema salvo.', 'success');
+  } catch (err) {
+    toast('Erro ao salvar tema: ' + (err.message || 'tente novamente.'), 'error');
+  }
+}
+
+const tabs = { dashboard:'Dashboard', produtos:'Produtos', importar:'Importar Produtos', pedidos:'Pedidos', temas:'Temas do Site', config:'Configurações' };
 function showTab(name) {
   Object.keys(tabs).forEach(t => {
     document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
@@ -2589,6 +2994,10 @@ function showTab(name) {
     // Só carrega se ainda não carregou
     if (!allPedidos.length) loadPedidos();
     else renderPedidosTable();
+  }
+  if (name === 'temas') {
+    loadTemasSiteAdmin();
+    resetTemaSiteForm();
   }
   if (name === 'config') loadHomeHighlightsAdmin();
 }
