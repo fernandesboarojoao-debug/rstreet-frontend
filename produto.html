@@ -142,6 +142,17 @@
   .btn-wpp:hover { background:#1db954; transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,211,102,0.3); }
   .btn-secondary-act { display:flex; align-items:center; justify-content:center; gap:8px; background:transparent; color:var(--gray-200); border:1px solid rgba(255,255,255,0.15); padding:14px 28px; border-radius:3px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.25s; font-family:'Inter',sans-serif; }
   .btn-secondary-act:hover { border-color:var(--gold); color:var(--gold); }
+  .product-trust-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; margin:0 0 18px; }
+  .product-trust-item { display:flex; gap:10px; align-items:flex-start; min-width:0; padding:12px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.025); border-radius:4px; }
+  .product-trust-icon { flex:0 0 30px; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:var(--gold-bg); color:var(--gold); font-size:15px; }
+  .product-trust-copy { min-width:0; }
+  .product-trust-title { display:block; color:var(--white); font-size:11px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; margin-bottom:3px; }
+  .product-trust-text { display:block; color:var(--gray-400); font-size:12px; line-height:1.35; }
+  .product-buy-info { border:1px solid rgba(200,169,110,0.24); border-radius:4px; background:rgba(200,169,110,0.055); margin:0 0 24px; overflow:hidden; }
+  .product-buy-info-row { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.08); }
+  .product-buy-info-row:last-child { border-bottom:0; }
+  .product-buy-info-row strong { flex:0 0 auto; color:var(--gold); font-size:11px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; }
+  .product-buy-info-row span { color:var(--gray-200); font-size:13px; line-height:1.45; text-align:right; }
   .size-chart-trigger { display:flex; align-items:center; justify-content:space-between; gap:14px; width:100%; margin:4px 0 24px; padding:13px 16px; border-radius:3px; border:1px solid rgba(200,169,110,0.35); background:var(--gold-bg); color:var(--white); cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.2s; text-align:left; }
   .size-chart-trigger:hover { border-color:var(--gold); transform:translateY(-1px); }
   .size-chart-trigger strong { color:var(--gold); font-size:12px; letter-spacing:1.7px; text-transform:uppercase; }
@@ -253,6 +264,10 @@
     .product-name { font-size:40px; overflow-wrap:anywhere; }
     .price-current { font-size:44px; }
     .color-btn { width:56px; }
+    .product-trust-grid { grid-template-columns:1fr; gap:8px; }
+    .product-trust-item { padding:11px; }
+    .product-buy-info-row { flex-direction:column; gap:5px; padding:12px; }
+    .product-buy-info-row span { text-align:left; }
     .size-chart-modal { padding:14px; }
     .size-chart-head { padding:12px; }
     .size-chart-trigger { padding:12px 14px; margin-bottom:20px; }
@@ -536,6 +551,9 @@ function renderProduct() {
           <button class="btn-secondary-act" onclick="copyLink()">🔗 Copiar link do produto</button>
         </div>
 
+        ${renderProductTrustBlocks()}
+        ${renderProductPurchaseInfo()}
+
         <hr class="divider">
 
         ${renderSizeChartButton(p)}
@@ -573,17 +591,34 @@ function changeImg(url, el) {
 }
 
 function getSizeChart(product) {
-  const text = `${product?.categoria || ''} ${product?.nome || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  if (text.includes('tenis') || text.includes('chinelo') || text.includes('sandalia') || text.includes('sapato') || text.includes('calcado')) {
+  const text = `${product?.categoria || ''} ${product?.nome || ''} ${product?.descricao || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (text.includes('tenis') || text.includes('chinelo') || text.includes('sandalia') || text.includes('sapato') || text.includes('calcado') || text.includes('sapateni') || text.includes('bota') || text.includes('slide')) {
     return { title: 'Tabela de medidas - Calçados', src: 'tabela-medidas-tenis.jpeg' };
   }
-  if (text.includes('calca') || text.includes('jeans')) {
+  if (text.includes('calca') || text.includes('jeans') || text.includes('bermuda') || text.includes('short') || text.includes('shorts') || text.includes('sarja') || text.includes('cargo')) {
     return { title: 'Tabela de medidas - Calça', src: 'tabela-medidas-calca.jpg' };
   }
-  if (text.includes('camisa') || text.includes('camiseta') || text.includes('polo') || text.includes('moletom') || text.includes('moleton') || text.includes('blusa') || text.includes('frio')) {
+  if (text.includes('camisa') || text.includes('camiseta') || text.includes('polo') || text.includes('moletom') || text.includes('moleton') || text.includes('blusa') || text.includes('blusao') || text.includes('frio') || text.includes('regata') || text.includes('jaqueta') || text.includes('casaco') || text.includes('sueter')) {
     return { title: 'Tabela de medidas - Parte superior', src: 'tabela-medidas-camisa.jpg' };
   }
+  const sizes = getProductChartSizes(product);
+  if (sizes.some(size => ['37', '39', '41', '43'].includes(size))) {
+    return { title: 'Tabela de medidas - Calçados', src: 'tabela-medidas-tenis.jpeg' };
+  }
+  if (sizes.some(size => ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XGG', 'EXG', 'EG'].includes(size))) {
+    return { title: 'Tabela de medidas - Parte superior', src: 'tabela-medidas-camisa.jpg' };
+  }
+  if (sizes.some(size => ['36', '38', '40', '42', '44', '46', '48', '50'].includes(size))) {
+    return { title: 'Tabela de medidas - Calça', src: 'tabela-medidas-calca.jpg' };
+  }
   return null;
+}
+
+function getProductChartSizes(product) {
+  const sizes = [];
+  if (Array.isArray(product?.tamanhos)) sizes.push(...product.tamanhos);
+  if (Array.isArray(product?.variantes)) product.variantes.forEach(variant => sizes.push(variant?.tamanho));
+  return [...new Set(sizes.map(size => String(size || '').trim().toUpperCase()).filter(Boolean))];
 }
 
 function renderSizeChartButton(product) {
@@ -593,6 +628,56 @@ function renderSizeChartButton(product) {
     <span><strong>Tabela de medidas</strong><br>Confira as medidas antes de escolher o tamanho</span>
     <span>Ver tabela</span>
   </button>`;
+}
+
+function renderProductTrustBlocks() {
+  return `<div class="product-trust-grid" aria-label="Informa&ccedil;&otilde;es de confian&ccedil;a">
+    <div class="product-trust-item">
+      <span class="product-trust-icon">&#127970;</span>
+      <span class="product-trust-copy">
+        <strong class="product-trust-title">Loja f&iacute;sica</strong>
+        <span class="product-trust-text">Av. 9 de Julho, 530 - Centro</span>
+      </span>
+    </div>
+    <div class="product-trust-item">
+      <span class="product-trust-icon">&#128274;</span>
+      <span class="product-trust-copy">
+        <strong class="product-trust-title">Pagamento seguro</strong>
+        <span class="product-trust-text">Compra processada pelo Mercado Pago</span>
+      </span>
+    </div>
+    <div class="product-trust-item">
+      <span class="product-trust-icon">&#128717;</span>
+      <span class="product-trust-copy">
+        <strong class="product-trust-title">Retirada ou entrega</strong>
+        <span class="product-trust-text">Escolha no checkout a melhor op&ccedil;&atilde;o</span>
+      </span>
+    </div>
+    <div class="product-trust-item">
+      <span class="product-trust-icon">&#128172;</span>
+      <span class="product-trust-copy">
+        <strong class="product-trust-title">Atendimento</strong>
+        <span class="product-trust-text">Tire d&uacute;vidas pelo WhatsApp da loja</span>
+      </span>
+    </div>
+  </div>`;
+}
+
+function renderProductPurchaseInfo() {
+  return `<div class="product-buy-info" aria-label="Detalhes de compra">
+    <div class="product-buy-info-row">
+      <strong>Pagamento</strong>
+      <span>Cart&atilde;o, Pix e op&ccedil;&otilde;es do Mercado Pago. Parcelamento em at&eacute; 6x.</span>
+    </div>
+    <div class="product-buy-info-row">
+      <strong>Envio</strong>
+      <span>Retire na loja ou receba no endere&ccedil;o informado no checkout.</span>
+    </div>
+    <div class="product-buy-info-row">
+      <strong>Trocas</strong>
+      <span>Consulte a pol&iacute;tica da loja e fale com a R Street se precisar de ajuda.</span>
+    </div>
+  </div>`;
 }
 
 function openSizeChart(title, src) {
