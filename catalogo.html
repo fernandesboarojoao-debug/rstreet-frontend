@@ -395,10 +395,16 @@
   .brand-orbit-track {
     display:flex;
     align-items:center;
-    gap:14px;
     width:max-content;
-    animation:brandOrbitRun 38s linear infinite;
+    animation:brandOrbitRun 28s linear infinite;
     will-change:transform;
+  }
+  .brand-orbit-group {
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding-right:14px;
+    flex:0 0 auto;
   }
   .brand-orbit:hover .brand-orbit-track { animation-play-state:paused; }
   .brand-orbit-item {
@@ -435,7 +441,7 @@
   .brand-orbit-item.active .brand-orbit-name { color:var(--gold); }
   @keyframes brandOrbitRun {
     from { transform:translateX(0); }
-    to { transform:translateX(-50%); }
+    to { transform:translateX(-33.3333%); }
   }
   .campaign-products-heading { display:none; margin:18px 60px 0; padding:18px 0 0; border-top:1px solid rgba(255,255,255,.08); }
   .campaign-products-heading.is-visible { display:block; }
@@ -986,7 +992,8 @@
     .brand-orbit { margin:12px 0 0; padding:11px 0; }
     .brand-orbit::before,
     .brand-orbit::after { width:34px; }
-    .brand-orbit-track { gap:10px; animation-duration:44s; }
+    .brand-orbit-track { animation-duration:34s; }
+    .brand-orbit-group { gap:10px; padding-right:10px; }
     .brand-orbit-item { width:70px; gap:6px; }
     .brand-orbit-logo { width:58px; height:58px; }
     .brand-orbit-name { font-size:8px; max-width:70px; }
@@ -1293,54 +1300,84 @@
 
 <section class="brand-orbit" aria-label="Comprar por marca">
   <div class="brand-orbit-track" id="brandOrbitTrack">
-    <button type="button" class="brand-orbit-item" data-brand="Acostamento" onclick="setBrandFromCarousel('Acostamento')">
-      <span class="brand-orbit-logo"><img src="marca-acostamento.jpg" alt="Acostamento" loading="lazy"></span>
-      <span class="brand-orbit-name">Acostamento</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Aeropostale" onclick="setBrandFromCarousel('Aeropostale')">
-      <span class="brand-orbit-logo is-contain"><img src="marca-aeropostale.webp" alt="Aeropostale" loading="lazy"></span>
-      <span class="brand-orbit-name">Aeropostale</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Nike" onclick="setBrandFromCarousel('Nike')">
-      <span class="brand-orbit-logo is-contain"><img src="marca-nike.jpg" alt="Nike" loading="lazy"></span>
-      <span class="brand-orbit-name">Nike</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="TXC" onclick="setBrandFromCarousel('TXC')">
-      <span class="brand-orbit-logo"><img src="marca-txc.jpg" alt="TXC" loading="lazy"></span>
-      <span class="brand-orbit-name">TXC</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Ogochi" onclick="setBrandFromCarousel('Ogochi')">
-      <span class="brand-orbit-logo"><img src="marca-ogochi.jpg" alt="Ogochi" loading="lazy"></span>
-      <span class="brand-orbit-name">Ogochi</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Freeway" onclick="setBrandFromCarousel('Freeway')">
-      <span class="brand-orbit-logo"><img src="marca-freeway.jpg" alt="Freeway" loading="lazy"></span>
-      <span class="brand-orbit-name">Freeway</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Acostamento" onclick="setBrandFromCarousel('Acostamento')">
-      <span class="brand-orbit-logo"><img src="marca-acostamento.jpg" alt="Acostamento" loading="lazy"></span>
-      <span class="brand-orbit-name">Acostamento</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Aeropostale" onclick="setBrandFromCarousel('Aeropostale')">
-      <span class="brand-orbit-logo is-contain"><img src="marca-aeropostale.webp" alt="Aeropostale" loading="lazy"></span>
-      <span class="brand-orbit-name">Aeropostale</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Nike" onclick="setBrandFromCarousel('Nike')">
-      <span class="brand-orbit-logo is-contain"><img src="marca-nike.jpg" alt="Nike" loading="lazy"></span>
-      <span class="brand-orbit-name">Nike</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="TXC" onclick="setBrandFromCarousel('TXC')">
-      <span class="brand-orbit-logo"><img src="marca-txc.jpg" alt="TXC" loading="lazy"></span>
-      <span class="brand-orbit-name">TXC</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Ogochi" onclick="setBrandFromCarousel('Ogochi')">
-      <span class="brand-orbit-logo"><img src="marca-ogochi.jpg" alt="Ogochi" loading="lazy"></span>
-      <span class="brand-orbit-name">Ogochi</span>
-    </button>
-    <button type="button" class="brand-orbit-item" data-brand="Freeway" onclick="setBrandFromCarousel('Freeway')">
-      <span class="brand-orbit-logo"><img src="marca-freeway.jpg" alt="Freeway" loading="lazy"></span>
-      <span class="brand-orbit-name">Freeway</span>
-    </button>
+    <div class="brand-orbit-group">
+      <button type="button" class="brand-orbit-item" data-brand="Acostamento" onclick="setBrandFromCarousel('Acostamento')">
+        <span class="brand-orbit-logo"><img src="marca-acostamento.jpg" alt="Acostamento" loading="lazy"></span>
+        <span class="brand-orbit-name">Acostamento</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Aeropostale" onclick="setBrandFromCarousel('Aeropostale')">
+        <span class="brand-orbit-logo is-contain"><img src="marca-aeropostale.webp" alt="Aeropostale" loading="lazy"></span>
+        <span class="brand-orbit-name">Aeropostale</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Nike" onclick="setBrandFromCarousel('Nike')">
+        <span class="brand-orbit-logo is-contain"><img src="marca-nike.jpg" alt="Nike" loading="lazy"></span>
+        <span class="brand-orbit-name">Nike</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="TXC" onclick="setBrandFromCarousel('TXC')">
+        <span class="brand-orbit-logo"><img src="marca-txc.jpg" alt="TXC" loading="lazy"></span>
+        <span class="brand-orbit-name">TXC</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Ogochi" onclick="setBrandFromCarousel('Ogochi')">
+        <span class="brand-orbit-logo"><img src="marca-ogochi.jpg" alt="Ogochi" loading="lazy"></span>
+        <span class="brand-orbit-name">Ogochi</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Freeway" onclick="setBrandFromCarousel('Freeway')">
+        <span class="brand-orbit-logo"><img src="marca-freeway.jpg" alt="Freeway" loading="lazy"></span>
+        <span class="brand-orbit-name">Freeway</span>
+      </button>
+    </div>
+    <div class="brand-orbit-group" aria-hidden="true">
+      <button type="button" class="brand-orbit-item" data-brand="Acostamento" onclick="setBrandFromCarousel('Acostamento')">
+        <span class="brand-orbit-logo"><img src="marca-acostamento.jpg" alt="Acostamento" loading="lazy"></span>
+        <span class="brand-orbit-name">Acostamento</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Aeropostale" onclick="setBrandFromCarousel('Aeropostale')">
+        <span class="brand-orbit-logo is-contain"><img src="marca-aeropostale.webp" alt="Aeropostale" loading="lazy"></span>
+        <span class="brand-orbit-name">Aeropostale</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Nike" onclick="setBrandFromCarousel('Nike')">
+        <span class="brand-orbit-logo is-contain"><img src="marca-nike.jpg" alt="Nike" loading="lazy"></span>
+        <span class="brand-orbit-name">Nike</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="TXC" onclick="setBrandFromCarousel('TXC')">
+        <span class="brand-orbit-logo"><img src="marca-txc.jpg" alt="TXC" loading="lazy"></span>
+        <span class="brand-orbit-name">TXC</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Ogochi" onclick="setBrandFromCarousel('Ogochi')">
+        <span class="brand-orbit-logo"><img src="marca-ogochi.jpg" alt="Ogochi" loading="lazy"></span>
+        <span class="brand-orbit-name">Ogochi</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Freeway" onclick="setBrandFromCarousel('Freeway')">
+        <span class="brand-orbit-logo"><img src="marca-freeway.jpg" alt="Freeway" loading="lazy"></span>
+        <span class="brand-orbit-name">Freeway</span>
+      </button>
+    </div>
+    <div class="brand-orbit-group" aria-hidden="true">
+      <button type="button" class="brand-orbit-item" data-brand="Acostamento" onclick="setBrandFromCarousel('Acostamento')">
+        <span class="brand-orbit-logo"><img src="marca-acostamento.jpg" alt="Acostamento" loading="lazy"></span>
+        <span class="brand-orbit-name">Acostamento</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Aeropostale" onclick="setBrandFromCarousel('Aeropostale')">
+        <span class="brand-orbit-logo is-contain"><img src="marca-aeropostale.webp" alt="Aeropostale" loading="lazy"></span>
+        <span class="brand-orbit-name">Aeropostale</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Nike" onclick="setBrandFromCarousel('Nike')">
+        <span class="brand-orbit-logo is-contain"><img src="marca-nike.jpg" alt="Nike" loading="lazy"></span>
+        <span class="brand-orbit-name">Nike</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="TXC" onclick="setBrandFromCarousel('TXC')">
+        <span class="brand-orbit-logo"><img src="marca-txc.jpg" alt="TXC" loading="lazy"></span>
+        <span class="brand-orbit-name">TXC</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Ogochi" onclick="setBrandFromCarousel('Ogochi')">
+        <span class="brand-orbit-logo"><img src="marca-ogochi.jpg" alt="Ogochi" loading="lazy"></span>
+        <span class="brand-orbit-name">Ogochi</span>
+      </button>
+      <button type="button" class="brand-orbit-item" data-brand="Freeway" onclick="setBrandFromCarousel('Freeway')">
+        <span class="brand-orbit-logo"><img src="marca-freeway.jpg" alt="Freeway" loading="lazy"></span>
+        <span class="brand-orbit-name">Freeway</span>
+      </button>
+    </div>
   </div>
 </section>
 
