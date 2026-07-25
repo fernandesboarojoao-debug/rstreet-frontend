@@ -292,6 +292,14 @@
   .campaign-products-sub { color:var(--gray-400); font-size:13px; margin-top:5px; }
   .catalog-showcase { display:none; margin:18px 60px 0; gap:18px; flex-direction:column; }
   .catalog-showcase.is-visible { display:flex; }
+  .catalog-collection-bar { margin:18px 60px 0; display:flex; align-items:center; justify-content:space-between; gap:16px; border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.025); padding:14px; border-radius:4px; }
+  .catalog-collection-copy { min-width:0; }
+  .catalog-collection-kicker { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:900; margin-bottom:4px; }
+  .catalog-collection-title { font-family:'Bebas Neue', sans-serif; font-size:30px; line-height:1; }
+  .catalog-collection-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .catalog-collection-btn { min-height:38px; border:1px solid rgba(200,169,110,.28); background:transparent; color:var(--gray-200); padding:0 12px; border-radius:2px; font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:'Inter', sans-serif; }
+  .catalog-collection-btn:hover,
+  .catalog-collection-btn.active { background:var(--gold); border-color:var(--gold); color:var(--black); }
   .catalog-rail-section { display:none; }
   .catalog-rail-section.is-visible { display:block; }
   .catalog-rail-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:12px; }
@@ -820,6 +828,7 @@
     .mobile-catalog-hub { display:block; padding:18px 16px 0; background:var(--black); }
     .catalog-showcase { margin:16px 20px 0; gap:16px; }
     .catalog-showcase { display:none !important; }
+    .catalog-collection-bar { display:none; }
     .catalog-rail { grid-auto-columns:minmax(142px,170px); }
     .catalog-rail-head { align-items:flex-start; flex-direction:column; gap:8px; }
     .toolbar {
@@ -1021,6 +1030,18 @@
   <div class="catalog-rail-section" id="saleProductsSection"></div>
 </section>
 
+<section class="catalog-collection-bar" aria-label="Vitrines do catalogo">
+  <div class="catalog-collection-copy">
+    <div class="catalog-collection-kicker">Vitrines</div>
+    <div class="catalog-collection-title" id="desktopCollectionTitle">Catalogo completo</div>
+  </div>
+  <div class="catalog-collection-actions">
+    <button type="button" class="catalog-collection-btn active" data-collection-mode="all" onclick="setMobileCatalogMode('all')">Todos</button>
+    <button type="button" class="catalog-collection-btn" data-collection-mode="featured" onclick="setMobileCatalogMode('featured')">Escolhas</button>
+    <button type="button" class="catalog-collection-btn" data-collection-mode="sale" onclick="setMobileCatalogMode('sale')">Descontos</button>
+  </div>
+</section>
+
 <section class="mobile-catalog-hub" aria-label="Explorar catalogo">
   <div class="mobile-hub-head">
     <div>
@@ -1056,7 +1077,7 @@
 <div class="toolbar">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Buscar produto..." oninput="applyFilters()">
+    <input type="text" id="searchInput" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="applyFilters()">
   </div>
   <div class="filter-group" id="brandFilters">
     <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
@@ -1744,6 +1765,13 @@ function updateMobileCatalogHub() {
   if (title) title.textContent = activeLabel[0];
   if (sub) sub.textContent = activeLabel[1];
   if (current) current.classList.toggle('is-visible', currentMobileCatalogMode !== 'all' || Boolean(currentCampaignTheme));
+
+  const desktopTitle = document.getElementById('desktopCollectionTitle');
+  if (desktopTitle) desktopTitle.textContent = activeLabel[0].replace(/^Campanha:\s*/i, '');
+  document.querySelectorAll('.catalog-collection-btn').forEach(btn => {
+    const mode = btn.dataset.collectionMode || 'all';
+    btn.classList.toggle('active', !currentCampaignTheme && mode === currentMobileCatalogMode);
+  });
 }
 
 function applyFilters() {
@@ -1817,12 +1845,17 @@ function matchesSearchText(haystack, search) {
 }
 
 function matchesProductSearch(product, search) {
+  const variantText = allProductVariants
+    .filter(v => Number(v.produto_id) === Number(product?.id))
+    .map(v => [v.cor, v.tamanho, v.codigo_cor].filter(Boolean).join(' '))
+    .join(' ');
   return matchesSearchText([
     product?.nome,
     product?.marca,
     product?.referencia,
     product?.categoria,
-    product?.descricao
+    product?.descricao,
+    variantText
   ].filter(Boolean).join(' '), search);
 }
 
@@ -2625,11 +2658,25 @@ function goPage(p) {
 function checkURLParams() {
   const params = new URLSearchParams(window.location.search);
   const marca = params.get('marca');
+  const categoria = params.get('categoria');
   const tipo = String(params.get('tipo') || '').toLowerCase();
   if (marca) {
     const btn = Array.from(document.querySelectorAll('#brandFilters .filter-btn'))
       .find(b => b.textContent.trim() === marca);
     if (btn) setBrandFilter(marca, btn);
+  }
+  if (categoria) {
+    const cleanCategory = categoria.trim();
+    const sidebarBtn = Array.from(document.querySelectorAll('.sidebar-option'))
+      .find(btn => (btn.getAttribute('onclick') || '').includes(`'${cleanCategory}'`));
+    currentCategory = cleanCategory;
+    currentPage = 1;
+    syncCatalogMenuCategory(cleanCategory);
+    if (sidebarBtn) {
+      document.querySelectorAll('.sidebar-option').forEach(btn => btn.classList.remove('active'));
+      sidebarBtn.classList.add('active');
+    }
+    applyFilters();
   }
   if (tipo === 'destaques') {
     setMobileCatalogMode('featured');

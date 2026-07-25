@@ -541,6 +541,23 @@
   }
 
   /* ── BRANDS ── */
+  .shop-path-section {
+    background: var(--black);
+    padding: 54px 60px 36px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .shop-path-wrap { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 0.9fr 1.5fr; gap: 28px; align-items: stretch; }
+  .shop-path-copy { border: 1px solid rgba(200,169,110,0.18); background: rgba(255,255,255,0.025); padding: 24px; border-radius: 4px; }
+  .shop-path-title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; line-height: 1; margin-top: 8px; }
+  .shop-path-text { color: var(--gray-400); font-size: 14px; line-height: 1.7; margin-top: 12px; }
+  .shop-path-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .shop-path-card { min-height: 112px; border: 1px solid rgba(255,255,255,0.08); background: var(--gray-900); color: var(--white); text-decoration: none; padding: 16px; border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transition: border-color 0.25s, transform 0.25s; }
+  .shop-path-card:hover { border-color: rgba(200,169,110,0.55); transform: translateY(-2px); }
+  .shop-path-card::after { content: ''; position: absolute; right: -28px; bottom: -32px; width: 92px; height: 92px; border-radius: 50%; border: 1px solid rgba(200,169,110,0.16); }
+  .shop-path-kicker { color: var(--gold); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 900; position: relative; z-index: 1; }
+  .shop-path-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; line-height: 1; letter-spacing: .5px; position: relative; z-index: 1; }
+  .shop-path-note { color: var(--gray-400); font-size: 11px; line-height: 1.35; position: relative; z-index: 1; }
+
   .brands-section {
     background: var(--gray-900);
     position: relative;
@@ -1258,6 +1275,14 @@
       transform: translateY(-50%);
     }
     section { padding: 80px 24px; }
+    .shop-path-section { padding: 36px 24px 18px; }
+    .shop-path-wrap { grid-template-columns: 1fr; gap: 12px; }
+    .shop-path-copy { padding: 18px; }
+    .shop-path-title { font-size: 34px; }
+    .shop-path-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+    .shop-path-card { flex: 0 0 155px; min-height: 102px; scroll-snap-align: start; padding: 14px; }
+    .hero-bg { filter: brightness(0.72); }
+    .hero-overlay { background: linear-gradient(180deg, rgba(10,10,10,0.32) 0%, rgba(10,10,10,0.74) 58%, rgba(10,10,10,0.72) 100%); }
     .hero-content { padding: 0 24px; }
     .hero-stats { display: none; }
     .hero-title { font-size: 64px; }
@@ -1337,7 +1362,7 @@
     .nav-logo { font-size: 24px; letter-spacing: 4px; }
     .mobile-menu-toggle { left: 18px; width: 38px; height: 38px; font-size: 21px; }
     .nav-logo { left: 50%; }
-    .nav-mobile-catalog { right: 18px; }
+    .nav-mobile-catalog { display: none !important; }
     .hero { min-height: 100svh; }
     .hero-content { padding: 72px 20px 32px; width: 100%; }
     .hero-eyebrow { gap: 10px; margin-bottom: 18px; }
@@ -1404,6 +1429,8 @@
     .exp-label { font-size: 10px; letter-spacing: 1.3px; }
     .about-visual { height: 320px; }
     .section-title { font-size: 46px; }
+    .shop-path-section { padding-left: 18px; padding-right: 18px; }
+    .shop-path-grid { margin-right: -18px; padding-right: 18px; }
     .footer-bottom { align-items: flex-start; }
   }
 </style>
@@ -1496,6 +1523,48 @@
   <div class="hero-scroll" onclick="scrollToNext()">
     <span>Scroll</span>
     <div class="scroll-line"></div>
+  </div>
+</section>
+
+<section class="shop-path-section" aria-label="Comprar por categoria">
+  <div class="shop-path-wrap">
+    <div class="shop-path-copy reveal">
+      <div class="section-label">Comece por aqui</div>
+      <div class="shop-path-title">Encontre seu estilo</div>
+      <p class="shop-path-text">Atalhos rápidos para as principais vitrines da R Street, sem precisar procurar no catálogo inteiro.</p>
+    </div>
+    <div class="shop-path-grid reveal">
+      <a class="shop-path-card" href="catalogo.html?tipo=destaques">
+        <span class="shop-path-kicker">Selecionados</span>
+        <span class="shop-path-name">Escolhas</span>
+        <span class="shop-path-note">Produtos em destaque da loja</span>
+      </a>
+      <a class="shop-path-card" href="catalogo.html?tipo=promocoes">
+        <span class="shop-path-kicker">Ofertas</span>
+        <span class="shop-path-name">Descontos</span>
+        <span class="shop-path-note">Peças com promoção ativa</span>
+      </a>
+      <a class="shop-path-card" href="catalogo.html?categoria=Camiseta">
+        <span class="shop-path-kicker">Categoria</span>
+        <span class="shop-path-name">Camisetas</span>
+        <span class="shop-path-note">Modelos casuais e streetwear</span>
+      </a>
+      <a class="shop-path-card" href="catalogo.html?categoria=Cal%C3%A7a">
+        <span class="shop-path-kicker">Categoria</span>
+        <span class="shop-path-name">Calças</span>
+        <span class="shop-path-note">Jeans, sarja e opções casuais</span>
+      </a>
+      <a class="shop-path-card" href="catalogo.html?categoria=T%C3%AAnis">
+        <span class="shop-path-kicker">Categoria</span>
+        <span class="shop-path-name">Tênis</span>
+        <span class="shop-path-note">Modelos para completar o look</span>
+      </a>
+      <a class="shop-path-card" href="catalogo.html">
+        <span class="shop-path-kicker">Tudo</span>
+        <span class="shop-path-name">Catálogo</span>
+        <span class="shop-path-note">Veja todas as peças disponíveis</span>
+      </a>
+    </div>
   </div>
 </section>
 

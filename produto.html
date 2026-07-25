@@ -135,6 +135,35 @@
   .stock-text.low { color:#ff9800; }
   .stock-text.out { color:var(--red); }
 
+  .product-buy-panel {
+    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.02);
+    border-radius:4px;
+    padding:18px;
+    margin-bottom:22px;
+  }
+  .product-buy-panel-head {
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+    padding-bottom:14px;
+    margin-bottom:16px;
+    border-bottom:1px solid rgba(255,255,255,0.07);
+  }
+  .product-buy-panel-title {
+    font-size:11px;
+    color:var(--gold);
+    letter-spacing:2px;
+    text-transform:uppercase;
+    font-weight:800;
+  }
+  .product-buy-panel-sub {
+    color:var(--gray-400);
+    font-size:12px;
+    line-height:1.45;
+    margin-top:4px;
+  }
   .section-label { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--gray-400); margin-bottom:12px; }
   .colors-grid { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
   .color-btn { width:64px; border:2px solid rgba(255,255,255,0.16); background:var(--gray-800); border-radius:4px; padding:4px; cursor:pointer; transition:all 0.2s; position:relative; color:var(--gray-200); font-family:'Inter',sans-serif; }
@@ -285,6 +314,8 @@
     .product-name { font-size:40px; overflow-wrap:anywhere; }
     .price-current { font-size:44px; }
     .price-block { padding:14px; margin-bottom:20px; }
+    .product-buy-panel { padding:14px; }
+    .product-buy-panel-head { flex-direction:column; gap:8px; }
     .color-btn { width:56px; }
     .product-trust-grid { grid-template-columns:1fr; gap:8px; }
     .product-trust-item { padding:11px; }
@@ -609,6 +640,14 @@ function renderProduct() {
           <span class="stock-text ${stockClass}">${stockText}</span>
         </div>
 
+        <div class="product-buy-panel">
+          <div class="product-buy-panel-head">
+            <div>
+              <div class="product-buy-panel-title">Comprar produto</div>
+              <div class="product-buy-panel-sub">Escolha cor e tamanho para liberar o carrinho.</div>
+            </div>
+          </div>
+
         ${colors ? `<div class="section-label">Cor</div><div class="colors-grid">${colors}</div>` : ''}
         ${sizes ? `<div class="section-label">Tamanho</div><div class="sizes-grid">${sizes}</div>` : ''}
 
@@ -622,6 +661,7 @@ function renderProduct() {
             <span style="font-size:20px">💬</span> Pedir pelo WhatsApp
           </a>
           <button class="btn-secondary-act" onclick="copyLink()">🔗 Copiar link do produto</button>
+        </div>
         </div>
 
         ${renderProductTrustBlocks()}
