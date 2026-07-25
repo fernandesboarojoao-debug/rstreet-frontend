@@ -546,10 +546,11 @@
     padding: 54px 60px 36px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
-  .shop-path-wrap { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 0.9fr 1.5fr; gap: 28px; align-items: stretch; }
-  .shop-path-copy { border: 1px solid rgba(200,169,110,0.18); background: rgba(255,255,255,0.025); padding: 24px; border-radius: 4px; }
+  .shop-path-wrap { max-width: 1180px; margin: 0 auto; }
+  .shop-path-copy { display:flex; align-items:flex-end; justify-content:space-between; gap:28px; padding:0 0 18px; margin-bottom:14px; border-bottom:1px solid rgba(200,169,110,0.18); }
   .shop-path-title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; line-height: 1; margin-top: 8px; }
-  .shop-path-text { color: var(--gray-400); font-size: 14px; line-height: 1.7; margin-top: 12px; }
+  .shop-path-text { color: var(--gray-400); font-size: 14px; line-height: 1.7; max-width:440px; }
+  .shop-path-hint { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:900; white-space:nowrap; }
   .shop-path-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
   .shop-path-card { min-height: 112px; border: 1px solid rgba(255,255,255,0.08); background: var(--gray-900); color: var(--white); text-decoration: none; padding: 16px; border-radius: 4px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transition: border-color 0.25s, transform 0.25s; }
   .shop-path-card:hover { border-color: rgba(200,169,110,0.55); transform: translateY(-2px); }
@@ -1276,9 +1277,10 @@
     }
     section { padding: 80px 24px; }
     .shop-path-section { padding: 36px 24px 18px; }
-    .shop-path-wrap { grid-template-columns: 1fr; gap: 12px; }
-    .shop-path-copy { padding: 18px; }
+    .shop-path-copy { display:block; padding:0 0 14px; margin-bottom:12px; }
     .shop-path-title { font-size: 34px; }
+    .shop-path-text { margin-top:8px; }
+    .shop-path-hint { display:block; margin-top:12px; }
     .shop-path-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
     .shop-path-card { flex: 0 0 155px; min-height: 102px; scroll-snap-align: start; padding: 14px; }
     .hero-bg { filter: brightness(0.72); }
@@ -1529,9 +1531,14 @@
 <section class="shop-path-section" aria-label="Comprar por categoria">
   <div class="shop-path-wrap">
     <div class="shop-path-copy reveal">
-      <div class="section-label">Comece por aqui</div>
-      <div class="shop-path-title">Encontre seu estilo</div>
-      <p class="shop-path-text">Atalhos rápidos para as principais vitrines da R Street, sem precisar procurar no catálogo inteiro.</p>
+      <div>
+        <div class="section-label">Comece por aqui</div>
+        <div class="shop-path-title">Encontre seu estilo</div>
+      </div>
+      <div>
+        <p class="shop-path-text">Escolha uma vitrine abaixo para ir direto ao que procura, sem precisar abrir o catálogo inteiro.</p>
+        <span class="shop-path-hint">Opções clicáveis abaixo</span>
+      </div>
     </div>
     <div class="shop-path-grid reveal">
       <a class="shop-path-card" href="catalogo.html?tipo=destaques">
