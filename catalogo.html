@@ -281,12 +281,17 @@
   .catalog-rail { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(156px,190px); gap:12px; overflow-x:auto; padding-bottom:8px; scroll-snap-type:x mandatory; }
   .catalog-rail::-webkit-scrollbar { height:6px; }
   .catalog-rail::-webkit-scrollbar-thumb { background:rgba(200,169,110,.35); border-radius:10px; }
-  .showcase-card { background:var(--gray-800); border:1px solid rgba(255,255,255,.08); border-radius:4px; overflow:hidden; text-decoration:none; color:var(--white); scroll-snap-align:start; min-width:0; }
+  .showcase-card { background:var(--gray-800); border:1px solid rgba(255,255,255,.08); border-radius:4px; overflow:hidden; text-decoration:none; color:var(--white); scroll-snap-align:start; min-width:0; cursor:pointer; }
   .showcase-card-media { aspect-ratio:1/1; background:var(--gray-700); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .showcase-media-slot { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
   .showcase-card-media img, .showcase-card-media video { width:100%; height:100%; object-fit:contain; display:block; }
+  .showcase-card .video-play-overlay { width:36px; height:36px; font-size:15px; }
+  .showcase-card .catalog-media-arrow { width:24px; height:32px; font-size:19px; }
+  .showcase-card .catalog-media-arrow.prev { left:6px; }
+  .showcase-card .catalog-media-arrow.next { right:6px; }
   .showcase-card-badge { position:absolute; top:8px; left:8px; background:var(--gold); color:var(--black); font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; padding:4px 6px; border-radius:2px; }
   .showcase-color-swatches { position:absolute; left:8px; bottom:8px; display:flex; align-items:center; gap:5px; z-index:3; }
-  .showcase-color-dot { width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,.78); background:var(--gray-700); box-shadow:0 3px 10px rgba(0,0,0,.35); overflow:hidden; }
+  .showcase-color-dot { width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,.78); background:var(--gray-700); box-shadow:0 3px 10px rgba(0,0,0,.35); overflow:hidden; padding:0; cursor:pointer; }
   .showcase-color-dot img { width:100%; height:100%; object-fit:cover; display:block; }
   .showcase-color-dot.is-active { border-color:var(--gold); transform:scale(1.08); }
   .showcase-card-body { padding:10px; }
@@ -846,6 +851,7 @@
     .catalog-rail { grid-auto-columns:minmax(134px,155px); gap:9px; }
     .showcase-color-swatches { left:6px; bottom:6px; gap:4px; }
     .showcase-color-dot { width:18px; height:18px; }
+    .showcase-card .catalog-media-arrow { width:22px; height:30px; font-size:17px; }
     .showcase-card-body { padding:9px; }
     .showcase-card-name { font-size:12px; min-height:34px; }
     .toolbar { top: 55px; }
@@ -1223,6 +1229,7 @@ let allProducts = [];
 let allProductVariants = [];
 let filtered = [];
 let catalogMediaState = {};
+let showcaseMediaState = {};
 let refreshTimer = null;
 let isRefreshingProducts = false;
 let lastProductsRefreshAt = 0;
@@ -1875,7 +1882,7 @@ function renderCard(p) {
           <div id="catalog-old-price-${p.id}">${oldPrice}</div>
           <div class="product-price" id="catalog-price-${p.id}">R$ ${formatCatalogPrice(initialPrice.preco)}</div>
           <div class="product-installment">em at&eacute; 6x</div>
-          <div class="product-pix-price" id="catalog-pix-${p.id}">At&eacute; 5% off no Pix: R$ ${formatCatalogPrice(getPixPrice(initialPrice.preco))}</div>
+          <div class="product-pix-price" id="catalog-pix-${p.id}">At&eacute; 5% off no Pix</div>
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
@@ -1913,47 +1920,132 @@ function getProductDiscountValue(product, specificGroup) {
   }, 0);
 }
 
-function renderShowcaseCard(product, badge = '', preferSale = false) {
+function renderShowcaseCard(product, badge = '', preferSale = false, showcaseKey = `showcase-${product.id}`) {
   const info = getShowcaseProductInfo(product, preferSale);
-  const color = info.group?.cor || '';
+  const savedState = showcaseMediaState[showcaseKey] || {};
+  const savedGroup = info.groups.find(group => sameCatalogText(group.cor, savedState.color));
+  const activeGroup = savedGroup || info.group || info.groups[0] || null;
+  const color = activeGroup?.cor || '';
   const href = buildProductUrl(product.id, color);
-  const oldPrice = Number(info.price.preco_antigo || 0);
-  const mediaHtml = info.media
-    ? (info.media.type === 'video'
-      ? `<video src="${escapeAttr(info.media.url)}" muted loop playsinline preload="metadata"></video>`
-      : `<img src="${escapeAttr(info.media.url)}" alt="${escapeAttr(product.nome)}" loading="lazy">`)
-    : `<div class="product-img-placeholder">${escapeHtml(product.marca || 'R Street')}</div>`;
+  const medias = getCatalogGroupMedia(activeGroup, product);
+  const mediaIndex = clampCatalogMediaIndex(savedState.mediaIndex, medias);
+  const activeMedia = medias[mediaIndex] || null;
+  const price = getCatalogGroupPrice(activeGroup, product);
+  const oldPrice = Number(price.preco_antigo || 0);
   return `
-    <a class="showcase-card" href="${href}">
+    <div class="showcase-card" data-showcase-key="${escapeAttr(showcaseKey)}" data-product-id="${product.id}" data-selected-color="${escapeAttr(color)}" data-media-index="${mediaIndex}" onclick="openShowcaseProduct('${escapeAttr(showcaseKey)}')">
       <div class="showcase-card-media">
-        ${mediaHtml}
+        <div class="showcase-media-slot" id="showcase-media-${escapeAttr(showcaseKey)}">
+          ${activeMedia ? renderShowcaseMedia(product, activeMedia) : `<div class="product-img-placeholder">${escapeHtml(product.marca || 'R Street')}</div>`}
+        </div>
+        ${medias.length > 1 ? renderShowcaseMediaArrows(showcaseKey) : ''}
         ${badge ? `<span class="showcase-card-badge">${escapeHtml(badge)}</span>` : ''}
-        ${renderShowcaseColorSwatches(product, info.groups, color)}
+        ${renderShowcaseColorSwatches(product, info.groups, color, showcaseKey)}
       </div>
       <div class="showcase-card-body">
         <div class="showcase-card-brand">${escapeHtml(product.marca || '')}</div>
         <div class="showcase-card-name">${escapeHtml(product.nome || '')}</div>
-        ${oldPrice > 0 ? `<div class="showcase-card-old">R$ ${formatCatalogPrice(oldPrice)}</div>` : ''}
-        <div class="showcase-card-price">R$ ${formatCatalogPrice(info.price.preco)}</div>
+        <div class="showcase-card-old-wrap">${oldPrice > 0 ? `<div class="showcase-card-old">R$ ${formatCatalogPrice(oldPrice)}</div>` : ''}</div>
+        <div class="showcase-card-price">R$ ${formatCatalogPrice(price.preco)}</div>
         <div class="showcase-card-installment">em at&eacute; 6x</div>
-        <div class="showcase-card-pix">At&eacute; 5% off no Pix: R$ ${formatCatalogPrice(getPixPrice(info.price.preco))}</div>
+        <div class="showcase-card-pix">At&eacute; 5% off no Pix</div>
       </div>
-    </a>
+    </div>
   `;
 }
 
-function renderShowcaseColorSwatches(product, groups, selectedColor = '') {
+function renderShowcaseMedia(product, media) {
+  if (media?.type === 'video') {
+    return `<video class="product-img" src="${escapeAttr(media.url)}" loop playsinline webkit-playsinline muted preload="metadata" disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback" onclick="playInlineCatalogVideo(event,this)" onplaying="hideCatalogVideoOverlay(this)" oncontextmenu="return false" onended="this.currentTime=0;this.play()"></video><button type="button" class="video-play-overlay" aria-label="Reproduzir video" onclick="playInlineCatalogVideo(event,this.previousElementSibling)">&#9658;</button>`;
+  }
+  return `<img src="${escapeAttr(media.url)}" alt="${escapeAttr(product.nome)}" loading="lazy">`;
+}
+
+function renderShowcaseMediaArrows(showcaseKey) {
+  return `
+    <button type="button" class="catalog-media-arrow prev" aria-label="Midia anterior" onclick="moveShowcaseMedia(event, '${escapeAttr(showcaseKey)}', -1)">&#8249;</button>
+    <button type="button" class="catalog-media-arrow next" aria-label="Proxima midia" onclick="moveShowcaseMedia(event, '${escapeAttr(showcaseKey)}', 1)">&#8250;</button>`;
+}
+
+function renderShowcaseColorSwatches(product, groups, selectedColor = '', showcaseKey = '') {
   if (!groups || groups.length < 2) return '';
   return `<div class="showcase-color-swatches" aria-label="Cores disponiveis">
     ${groups.slice(0, 6).map(group => {
       const image = getCatalogGroupImage(group, product);
       const fallbackColor = group.cor_hex || getColorValue(group.cor);
-      return `<span class="showcase-color-dot ${sameCatalogText(group.cor, selectedColor) ? 'is-active' : ''}"
+      return `<button type="button" class="showcase-color-dot ${sameCatalogText(group.cor, selectedColor) ? 'is-active' : ''}"
         style="background:${escapeAttr(fallbackColor)}"
         title="${escapeAttr(group.cor)}"
-        aria-label="Cor ${escapeAttr(group.cor)}">${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(group.cor)}" loading="lazy">` : ''}</span>`;
+        aria-label="Ver cor ${escapeAttr(group.cor)}"
+        onclick="selectShowcaseColor(event, '${escapeAttr(showcaseKey)}', '${escapeAttr(group.cor)}')">${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(group.cor)}" loading="lazy">` : ''}</button>`;
     }).join('')}
   </div>`;
+}
+
+function getShowcaseCard(showcaseKey) {
+  return Array.from(document.querySelectorAll('.showcase-card')).find(card => card.dataset.showcaseKey === showcaseKey) || null;
+}
+
+function getShowcaseProduct(showcaseKey) {
+  const card = getShowcaseCard(showcaseKey);
+  const productId = Number(card?.dataset.productId || 0);
+  return productId ? allProducts.find(product => Number(product.id) === productId) : null;
+}
+
+function selectShowcaseColor(event, showcaseKey, color) {
+  event.stopPropagation();
+  const card = getShowcaseCard(showcaseKey);
+  const product = getShowcaseProduct(showcaseKey);
+  if (!card || !product) return;
+  card.dataset.selectedColor = color || '';
+  card.dataset.mediaIndex = '0';
+  showcaseMediaState[showcaseKey] = { color: color || '', mediaIndex: 0 };
+  card.querySelectorAll('.showcase-color-dot').forEach(btn => btn.classList.remove('is-active'));
+  event.currentTarget?.classList.add('is-active');
+  updateShowcaseCard(showcaseKey);
+}
+
+function moveShowcaseMedia(event, showcaseKey, delta) {
+  event.stopPropagation();
+  const card = getShowcaseCard(showcaseKey);
+  const product = getShowcaseProduct(showcaseKey);
+  if (!card || !product) return;
+  const group = getCatalogColorGroups(product.id).find(item => sameCatalogText(item.cor, card.dataset.selectedColor));
+  const medias = getCatalogGroupMedia(group, product);
+  if (medias.length < 2) return;
+  const nextIndex = (Number(card.dataset.mediaIndex || 0) + delta + medias.length) % medias.length;
+  card.dataset.mediaIndex = String(nextIndex);
+  showcaseMediaState[showcaseKey] = { color: card.dataset.selectedColor || '', mediaIndex: nextIndex };
+  updateShowcaseCard(showcaseKey);
+}
+
+function updateShowcaseCard(showcaseKey) {
+  const card = getShowcaseCard(showcaseKey);
+  const product = getShowcaseProduct(showcaseKey);
+  if (!card || !product) return;
+  const group = getCatalogColorGroups(product.id).find(item => sameCatalogText(item.cor, card.dataset.selectedColor));
+  const medias = getCatalogGroupMedia(group, product);
+  const index = clampCatalogMediaIndex(card.dataset.mediaIndex, medias);
+  card.dataset.mediaIndex = String(index);
+  const slot = card.querySelector('.showcase-media-slot');
+  if (slot) {
+    slot.innerHTML = medias[index]
+      ? renderShowcaseMedia(product, medias[index])
+      : `<div class="product-img-placeholder">${escapeHtml(product.marca || 'R Street')}</div>`;
+    prepareCatalogVideos(slot);
+  }
+  const price = getCatalogGroupPrice(group, product);
+  const oldPrice = Number(price.preco_antigo || 0);
+  const oldWrap = card.querySelector('.showcase-card-old-wrap');
+  if (oldWrap) oldWrap.innerHTML = oldPrice > 0 ? `<div class="showcase-card-old">R$ ${formatCatalogPrice(oldPrice)}</div>` : '';
+  const priceEl = card.querySelector('.showcase-card-price');
+  if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
+}
+
+function openShowcaseProduct(showcaseKey) {
+  const card = getShowcaseCard(showcaseKey);
+  if (!card) return;
+  window.location.href = buildProductUrl(card.dataset.productId, card.dataset.selectedColor || '');
 }
 
 function renderCatalogRail(sectionId, options) {
@@ -1976,7 +2068,7 @@ function renderCatalogRail(sectionId, options) {
       ${options.link ? `<a class="catalog-rail-link" href="${escapeAttr(options.link)}">${escapeHtml(options.linkText || 'Ver tudo')}</a>` : ''}
     </div>
     <div class="catalog-rail">
-      ${products.map(product => renderShowcaseCard(product, options.badge || '', Boolean(options.preferSale))).join('')}
+      ${products.map((product, index) => renderShowcaseCard(product, options.badge || '', Boolean(options.preferSale), `${sectionId}-${product.id}-${index}`)).join('')}
     </div>
   `;
   prepareCatalogVideos(section);
@@ -2267,7 +2359,7 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   const priceEl = card.querySelector(`#catalog-price-${productId}`);
   if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
   const pixEl = card.querySelector(`#catalog-pix-${productId}`);
-  if (pixEl) pixEl.textContent = `At\u00e9 5% off no Pix: R$ ${formatCatalogPrice(getPixPrice(price.preco))}`;
+  if (pixEl) pixEl.textContent = 'At\u00e9 5% off no Pix';
   const oldPriceEl = card.querySelector(`#catalog-old-price-${productId}`);
   if (oldPriceEl) oldPriceEl.innerHTML = renderCatalogOldPrice(price.preco_antigo);
   const stockEl = card.querySelector(`#catalog-stock-${productId}`);

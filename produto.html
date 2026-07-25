@@ -535,7 +535,7 @@ function renderProduct() {
             ${discount ? `<span class="price-discount">-${discount}%</span>` : ''}
           </div>
           <span class="price-installment">em at&eacute; 6x</span>
-          <span class="price-pix">At&eacute; 5% off no Pix: R$ ${fmt(getPixPrice(colorData.preco))}</span>
+          <span class="price-pix">At&eacute; 5% off no Pix</span>
         </div>
 
         <div class="stock-info">
@@ -1070,7 +1070,7 @@ function renderRelated() {
         <div class="related-name">${p.nome}</div>
         <div class="related-price">R$ ${fmt(p.preco)}</div>
         <div class="related-installment">em at&eacute; 6x</div>
-        <div class="related-pix">At&eacute; 5% off no Pix: R$ ${fmt(getPixPrice(p.preco))}</div>
+        <div class="related-pix">At&eacute; 5% off no Pix</div>
       </div>
     </a>`;
   }).join('');
