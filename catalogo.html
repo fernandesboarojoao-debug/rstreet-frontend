@@ -1874,8 +1874,8 @@ function renderCard(p) {
         <div>
           <div id="catalog-old-price-${p.id}">${oldPrice}</div>
           <div class="product-price" id="catalog-price-${p.id}">R$ ${formatCatalogPrice(initialPrice.preco)}</div>
-          <div class="product-installment">em at&eacute; 6x com juros</div>
-          <div class="product-pix-price" id="catalog-pix-${p.id}">Pix: R$ ${formatCatalogPrice(getPixPrice(initialPrice.preco))} (-5%)</div>
+          <div class="product-installment">em at&eacute; 6x</div>
+          <div class="product-pix-price" id="catalog-pix-${p.id}">At&eacute; 5% off no Pix: R$ ${formatCatalogPrice(getPixPrice(initialPrice.preco))}</div>
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
@@ -1935,8 +1935,8 @@ function renderShowcaseCard(product, badge = '', preferSale = false) {
         <div class="showcase-card-name">${escapeHtml(product.nome || '')}</div>
         ${oldPrice > 0 ? `<div class="showcase-card-old">R$ ${formatCatalogPrice(oldPrice)}</div>` : ''}
         <div class="showcase-card-price">R$ ${formatCatalogPrice(info.price.preco)}</div>
-        <div class="showcase-card-installment">em at&eacute; 6x com juros</div>
-        <div class="showcase-card-pix">Pix: R$ ${formatCatalogPrice(getPixPrice(info.price.preco))} (-5%)</div>
+        <div class="showcase-card-installment">em at&eacute; 6x</div>
+        <div class="showcase-card-pix">At&eacute; 5% off no Pix: R$ ${formatCatalogPrice(getPixPrice(info.price.preco))}</div>
       </div>
     </a>
   `;
@@ -2267,7 +2267,7 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   const priceEl = card.querySelector(`#catalog-price-${productId}`);
   if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
   const pixEl = card.querySelector(`#catalog-pix-${productId}`);
-  if (pixEl) pixEl.textContent = `Pix: R$ ${formatCatalogPrice(getPixPrice(price.preco))} (-5%)`;
+  if (pixEl) pixEl.textContent = `At\u00e9 5% off no Pix: R$ ${formatCatalogPrice(getPixPrice(price.preco))}`;
   const oldPriceEl = card.querySelector(`#catalog-old-price-${productId}`);
   if (oldPriceEl) oldPriceEl.innerHTML = renderCatalogOldPrice(price.preco_antigo);
   const stockEl = card.querySelector(`#catalog-stock-${productId}`);
