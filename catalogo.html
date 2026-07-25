@@ -152,6 +152,27 @@
     text-align:left;
     width:100%;
   }
+  .catalog-mobile-menu-link.is-primary {
+    background:var(--gold);
+    border-color:var(--gold);
+    color:var(--black);
+  }
+  .catalog-mobile-menu-link.is-soft {
+    background:rgba(200,169,110,0.1);
+    border-color:rgba(200,169,110,0.28);
+    color:var(--gold-light);
+  }
+  .catalog-mobile-menu-title {
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .catalog-mobile-menu-title::after {
+    content:'';
+    flex:1;
+    height:1px;
+    background:rgba(255,255,255,0.08);
+  }
   .catalog-mobile-menu-chip { justify-content:center; }
   .catalog-mobile-menu-link:active,
   .catalog-mobile-menu-link.active,
@@ -914,12 +935,15 @@
       <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
     </div>
 
-    <div class="catalog-mobile-menu-title">Atalhos</div>
+    <div class="catalog-mobile-menu-title">Comprar</div>
     <div class="catalog-mobile-menu-links">
-      <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
-      <button type="button" class="catalog-mobile-menu-link" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
-      <button type="button" class="catalog-mobile-menu-link" onclick="setMobileCatalogMode('featured')">Escolhas da R Street</button>
-      <button type="button" class="catalog-mobile-menu-link" onclick="setMobileCatalogMode('sale')">Produtos com desconto</button>
+      <button type="button" class="catalog-mobile-menu-link is-primary" onclick="setMobileCatalogMode('all')">Catalogo completo</button>
+      <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('featured')">Escolhas da R Street</button>
+      <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('sale')">Produtos com desconto</button>
+    </div>
+    <div class="catalog-mobile-menu-title">Loja</div>
+    <div class="catalog-mobile-menu-links">
+      <a class="catalog-mobile-menu-link" href="index.html">Pagina inicial</a>
       <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
       <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
       <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
@@ -1608,6 +1632,7 @@ function toggleCatalogMenu() {
   if (!menu) return;
   const open = !menu.classList.contains('open');
   menu.classList.toggle('open', open);
+  document.body.style.overflow = open ? 'hidden' : '';
   if (btn) {
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     btn.textContent = open ? '×' : '☰';
@@ -1618,6 +1643,7 @@ function closeCatalogMenu() {
   const menu = document.getElementById('catalogMobileMenu');
   const btn = document.querySelector('.mobile-menu-toggle');
   if (menu) menu.classList.remove('open');
+  document.body.style.overflow = '';
   if (btn) {
     btn.setAttribute('aria-expanded', 'false');
     btn.textContent = '☰';
@@ -1627,6 +1653,10 @@ function closeCatalogMenu() {
 function handleCatalogMenuBackdrop(event) {
   if (event.target?.id === 'catalogMobileMenu') closeCatalogMenu();
 }
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeCatalogMenu();
+});
 
 function syncCatalogMenuCategory(activeCategory) {
   document.querySelectorAll('#catalogMenuCategories .catalog-mobile-menu-chip').forEach(btn => {
@@ -2595,10 +2625,16 @@ function goPage(p) {
 function checkURLParams() {
   const params = new URLSearchParams(window.location.search);
   const marca = params.get('marca');
+  const tipo = String(params.get('tipo') || '').toLowerCase();
   if (marca) {
     const btn = Array.from(document.querySelectorAll('#brandFilters .filter-btn'))
       .find(b => b.textContent.trim() === marca);
     if (btn) setBrandFilter(marca, btn);
+  }
+  if (tipo === 'destaques') {
+    setMobileCatalogMode('featured');
+  } else if (tipo === 'promocoes' || tipo === 'promoções') {
+    setMobileCatalogMode('sale');
   }
 }
 

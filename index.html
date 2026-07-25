@@ -183,6 +183,93 @@
     color: var(--white) !important;
     transform: translateY(-1px);
   }
+  .mobile-menu-toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(200,169,110,0.34);
+    background: rgba(10,10,10,0.2);
+    color: var(--gold);
+    border-radius: 2px;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .site-mobile-menu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    background: rgba(0,0,0,0.62);
+  }
+  .site-mobile-menu.open { display: block; }
+  .site-mobile-menu-panel {
+    width: min(86vw, 340px);
+    height: 100%;
+    background: var(--gray-900);
+    border-right: 1px solid rgba(200,169,110,0.22);
+    padding: 18px;
+    overflow-y: auto;
+    box-shadow: 18px 0 40px rgba(0,0,0,0.38);
+  }
+  .site-mobile-menu-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .site-mobile-menu-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 4px;
+    color: var(--white);
+  }
+  .site-mobile-menu-logo span { color: var(--gold); }
+  .site-mobile-menu-close {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: var(--gray-800);
+    color: var(--white);
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 20px;
+  }
+  .site-mobile-menu-title {
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 18px 0 9px;
+  }
+  .site-mobile-menu-links { display: grid; gap: 8px; }
+  .site-mobile-menu-link {
+    min-height: 44px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: var(--gray-800);
+    color: var(--gray-200);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 12px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+  }
+  .site-mobile-menu-link.is-primary {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--black);
+  }
 
   /* ── HERO ── */
   .hero {
@@ -1130,11 +1217,19 @@
       padding: 0 20px;
     }
     .nav-links { display: none; }
-    .nav-logo {
+    .mobile-menu-toggle {
+      display: inline-flex;
       position: absolute;
       left: 20px;
       top: 50%;
       transform: translateY(-50%);
+      z-index: 2;
+    }
+    .nav-logo {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
       line-height: 1;
       height: 28px;
       display: flex;
@@ -1240,7 +1335,8 @@
   @media (max-width: 520px) {
     nav, nav.scrolled { padding-left: 18px; padding-right: 18px; }
     .nav-logo { font-size: 24px; letter-spacing: 4px; }
-    .nav-logo { left: 18px; }
+    .mobile-menu-toggle { left: 18px; width: 38px; height: 38px; font-size: 21px; }
+    .nav-logo { left: 50%; }
     .nav-mobile-catalog { right: 18px; }
     .hero { min-height: 100svh; }
     .hero-content { padding: 72px 20px 32px; width: 100%; }
@@ -1319,6 +1415,7 @@
 
 <!-- NAV -->
 <nav id="navbar">
+  <button type="button" class="mobile-menu-toggle" onclick="toggleSiteMenu()" aria-label="Abrir menu" aria-expanded="false">☰</button>
   <a href="#" class="nav-logo">R<span>.</span>Street</a>
   <a href="catalogo.html" class="nav-mobile-catalog">Catálogo</a>
   <ul class="nav-links">
@@ -1330,6 +1427,30 @@
     <li><a href="catalogo.html" class="nav-cta">Ver Catálogo</a></li>
   </ul>
 </nav>
+
+<div class="site-mobile-menu" id="siteMobileMenu" onclick="handleSiteMenuBackdrop(event)">
+  <div class="site-mobile-menu-panel">
+    <div class="site-mobile-menu-head">
+      <div class="site-mobile-menu-logo">R<span>.</span>Street</div>
+      <button type="button" class="site-mobile-menu-close" onclick="closeSiteMenu()" aria-label="Fechar menu">×</button>
+    </div>
+    <div class="site-mobile-menu-title">Comprar</div>
+    <div class="site-mobile-menu-links">
+      <a class="site-mobile-menu-link is-primary" href="catalogo.html">Ver catalogo</a>
+      <a class="site-mobile-menu-link" href="catalogo.html?tipo=destaques">Escolhas da R Street</a>
+      <a class="site-mobile-menu-link" href="catalogo.html?tipo=promocoes">Produtos com desconto</a>
+    </div>
+    <div class="site-mobile-menu-title">Loja</div>
+    <div class="site-mobile-menu-links">
+      <a class="site-mobile-menu-link" href="#marcas" onclick="closeSiteMenu()">Marcas</a>
+      <a class="site-mobile-menu-link" href="#sobre" onclick="closeSiteMenu()">Sobre a loja</a>
+      <a class="site-mobile-menu-link" href="#contato" onclick="closeSiteMenu()">Contato</a>
+      <a class="site-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
+      <a class="site-mobile-menu-link" href="politica.html">Politica e privacidade</a>
+      <a class="site-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+    </div>
+  </div>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -1875,6 +1996,32 @@
 
   loadHomeHighlights();
   loadActiveSiteTheme();
+
+  function toggleSiteMenu() {
+    const menu = document.getElementById('siteMobileMenu');
+    const btn = document.querySelector('.mobile-menu-toggle');
+    if (!menu) return;
+    const open = !menu.classList.contains('open');
+    menu.classList.toggle('open', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+    if (btn) btn.setAttribute('aria-expanded', String(open));
+  }
+
+  function closeSiteMenu() {
+    const menu = document.getElementById('siteMobileMenu');
+    const btn = document.querySelector('.mobile-menu-toggle');
+    if (menu) menu.classList.remove('open');
+    document.body.style.overflow = '';
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function handleSiteMenuBackdrop(event) {
+    if (event.target?.id === 'siteMobileMenu') closeSiteMenu();
+  }
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeSiteMenu();
+  });
 
   // Cursor
   const cursor = document.getElementById('cursor');
