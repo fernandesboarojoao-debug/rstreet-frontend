@@ -111,6 +111,7 @@
   .price-old { font-size:14px; color:var(--gray-400); text-decoration:line-through; margin-bottom:4px; }
   .price-current { font-family:'Bebas Neue',sans-serif; font-size:52px; color:var(--gold); line-height:1; letter-spacing:1px; }
   .price-discount { display:inline-block; background:var(--red); color:#fff; font-size:11px; font-weight:700; letter-spacing:1px; padding:3px 10px; border-radius:2px; margin-left:12px; vertical-align:middle; }
+  .price-installment { display:block; margin-top:6px; color:var(--gray-300); font-size:13px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; }
 
   .stock-info { display:flex; align-items:center; gap:8px; font-size:13px; margin-bottom:28px; }
   .stock-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
@@ -529,6 +530,7 @@ function renderProduct() {
             R$ ${fmt(colorData.preco)}
             ${discount ? `<span class="price-discount">-${discount}%</span>` : ''}
           </div>
+          <span class="price-installment">em at&eacute; 6x</span>
         </div>
 
         <div class="stock-info">
@@ -667,7 +669,7 @@ function renderProductPurchaseInfo() {
   return `<div class="product-buy-info" aria-label="Detalhes de compra">
     <div class="product-buy-info-row">
       <strong>Pagamento</strong>
-      <span>Cart&atilde;o, Pix e op&ccedil;&otilde;es do Mercado Pago. Parcelamento em at&eacute; 6x.</span>
+      <span>Cart&atilde;o, Pix e op&ccedil;&otilde;es do Mercado Pago.</span>
     </div>
     <div class="product-buy-info-row">
       <strong>Envio</strong>
