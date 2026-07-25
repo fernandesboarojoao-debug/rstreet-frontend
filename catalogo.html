@@ -285,6 +285,10 @@
   .showcase-card-media { aspect-ratio:1/1; background:var(--gray-700); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
   .showcase-card-media img, .showcase-card-media video { width:100%; height:100%; object-fit:contain; display:block; }
   .showcase-card-badge { position:absolute; top:8px; left:8px; background:var(--gold); color:var(--black); font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; padding:4px 6px; border-radius:2px; }
+  .showcase-color-swatches { position:absolute; left:8px; bottom:8px; display:flex; align-items:center; gap:5px; z-index:3; }
+  .showcase-color-dot { width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,.78); background:var(--gray-700); box-shadow:0 3px 10px rgba(0,0,0,.35); overflow:hidden; }
+  .showcase-color-dot img { width:100%; height:100%; object-fit:cover; display:block; }
+  .showcase-color-dot.is-active { border-color:var(--gold); transform:scale(1.08); }
   .showcase-card-body { padding:10px; }
   .showcase-card-brand { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:800; margin-bottom:5px; }
   .showcase-card-name { font-size:13px; font-weight:800; line-height:1.35; min-height:36px; }
@@ -836,6 +840,8 @@
     .catalog-showcase { margin:14px 12px 0; gap:14px; }
     .catalog-rail-title { font-size:28px; }
     .catalog-rail { grid-auto-columns:minmax(134px,155px); gap:9px; }
+    .showcase-color-swatches { left:6px; bottom:6px; gap:4px; }
+    .showcase-color-dot { width:18px; height:18px; }
     .showcase-card-body { padding:9px; }
     .showcase-card-name { font-size:12px; min-height:34px; }
     .toolbar { top: 55px; }
@@ -1885,7 +1891,7 @@ function getShowcaseProductInfo(product, preferSale = false) {
   const media = getCatalogGroupMedia(group, product)[0] || null;
   const price = getCatalogGroupPrice(group, product);
   const stock = getCatalogGroupStock(group, product);
-  return { group, media, price, stock };
+  return { group, groups, media, price, stock };
 }
 
 function getProductDiscountValue(product, specificGroup) {
@@ -1915,6 +1921,7 @@ function renderShowcaseCard(product, badge = '', preferSale = false) {
       <div class="showcase-card-media">
         ${mediaHtml}
         ${badge ? `<span class="showcase-card-badge">${escapeHtml(badge)}</span>` : ''}
+        ${renderShowcaseColorSwatches(product, info.groups, color)}
       </div>
       <div class="showcase-card-body">
         <div class="showcase-card-brand">${escapeHtml(product.marca || '')}</div>
@@ -1924,6 +1931,20 @@ function renderShowcaseCard(product, badge = '', preferSale = false) {
       </div>
     </a>
   `;
+}
+
+function renderShowcaseColorSwatches(product, groups, selectedColor = '') {
+  if (!groups || groups.length < 2) return '';
+  return `<div class="showcase-color-swatches" aria-label="Cores disponiveis">
+    ${groups.slice(0, 6).map(group => {
+      const image = getCatalogGroupImage(group, product);
+      const fallbackColor = group.cor_hex || getColorValue(group.cor);
+      return `<span class="showcase-color-dot ${sameCatalogText(group.cor, selectedColor) ? 'is-active' : ''}"
+        style="background:${escapeAttr(fallbackColor)}"
+        title="${escapeAttr(group.cor)}"
+        aria-label="Cor ${escapeAttr(group.cor)}">${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(group.cor)}" loading="lazy">` : ''}</span>`;
+    }).join('')}
+  </div>`;
 }
 
 function renderCatalogRail(sectionId, options) {
