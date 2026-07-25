@@ -492,14 +492,17 @@
   }
   .marquee-track {
     display: flex;
+    width: max-content;
     white-space: nowrap;
-    animation: marqueeRun 20s linear infinite;
+    animation: marqueeRun 34s linear infinite;
+    will-change: transform;
   }
   .marquee-item {
     display: inline-flex;
     align-items: center;
     gap: 24px;
     padding: 0 24px;
+    flex: 0 0 auto;
     font-family: 'Bebas Neue', sans-serif;
     font-size: 18px;
     letter-spacing: 4px;
@@ -581,7 +584,7 @@
   }
   .brands-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 2px;
   }
   .brand-card {
@@ -1354,7 +1357,9 @@
     .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
     .cta-banner { padding: 80px 24px; }
     footer { padding: 60px 24px 32px; }
-    .marquee-item { font-size: 14px; }
+    .marquee-wrap { padding: 11px 0; }
+    .marquee-track { animation-duration: 42s; }
+    .marquee-item { font-size: 14px; gap: 14px; padding: 0 14px; letter-spacing: 3px; }
     .hero-buttons { flex-direction: column; }
     .btn-primary, .btn-secondary { width: 100%; justify-content: center; text-align: center; }
   }
@@ -1579,17 +1584,29 @@
 <div class="marquee-wrap">
   <div class="marquee-track" id="marqueeTrack">
     <div class="marquee-item">Acostamento <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Aeropostale <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Nike <div class="marquee-dot"></div></div>
     <div class="marquee-item">TXC <div class="marquee-dot"></div></div>
-    <div class="marquee-item">Freeway <div class="marquee-dot"></div></div>
     <div class="marquee-item">Ogochi <div class="marquee-dot"></div></div>
-    <div class="marquee-item">R Street <div class="marquee-dot"></div></div>
-    <div class="marquee-item">Moda Masculina <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Freeway <div class="marquee-dot"></div></div>
     <div class="marquee-item">Acostamento <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Aeropostale <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Nike <div class="marquee-dot"></div></div>
     <div class="marquee-item">TXC <div class="marquee-dot"></div></div>
-    <div class="marquee-item">Freeway <div class="marquee-dot"></div></div>
     <div class="marquee-item">Ogochi <div class="marquee-dot"></div></div>
-    <div class="marquee-item">R Street <div class="marquee-dot"></div></div>
-    <div class="marquee-item">Moda Masculina <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Freeway <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Acostamento <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Aeropostale <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Nike <div class="marquee-dot"></div></div>
+    <div class="marquee-item">TXC <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Ogochi <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Freeway <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Acostamento <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Aeropostale <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Nike <div class="marquee-dot"></div></div>
+    <div class="marquee-item">TXC <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Ogochi <div class="marquee-dot"></div></div>
+    <div class="marquee-item">Freeway <div class="marquee-dot"></div></div>
   </div>
 </div>
 
@@ -1604,33 +1621,48 @@
   </div>
   <div class="brands-grid reveal">
     <div class="brand-card" onclick="filterBrand('Acostamento')">
-      <div class="brand-card-bg" style="background-image: url('marca-acostamento.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome marca-acostamento.jpg -->
+      <div class="brand-card-bg" style="background-image: url('marca-acostamento.jpg')"></div>
       <div class="brand-card-content">
         <div class="brand-name">Acosta<br>mento</div>
         <div class="brand-tagline">Estilo Urbano</div>
       </div>
       <div class="brand-card-tag">Premium</div>
     </div>
+    <div class="brand-card" onclick="filterBrand('Aeropostale')">
+      <div class="brand-card-bg" style="background-image: url('marca-aeropostale.jpg')"></div>
+      <div class="brand-card-content">
+        <div class="brand-name">Aero<br>postale</div>
+        <div class="brand-tagline">Casual Wear</div>
+      </div>
+    </div>
+    <div class="brand-card" onclick="filterBrand('Nike')">
+      <div class="brand-card-bg" style="background-image: url('marca-nike.jpg')"></div>
+      <div class="brand-card-content">
+        <div class="brand-name">Nike</div>
+        <div class="brand-tagline">Sport Lifestyle</div>
+      </div>
+      <div class="brand-card-tag">Novo</div>
+    </div>
     <div class="brand-card" onclick="filterBrand('TXC')">
-      <div class="brand-card-bg" style="background-image: url('marca-txc.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome marca-txc.jpg -->
+      <div class="brand-card-bg" style="background-image: url('marca-txc.jpg')"></div>
       <div class="brand-card-content">
         <div class="brand-name">TXC</div>
         <div class="brand-tagline">Country & Lifestyle</div>
       </div>
       <div class="brand-card-tag">Destaque</div>
     </div>
-    <div class="brand-card" onclick="filterBrand('Freeway')">
-      <div class="brand-card-bg" style="background-image: url('marca-freeway.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome marca-freeway.jpg -->
-      <div class="brand-card-content">
-        <div class="brand-name">Free<br>way</div>
-        <div class="brand-tagline">Street Fashion</div>
-      </div>
-    </div>
     <div class="brand-card" onclick="filterBrand('Ogochi')">
-      <div class="brand-card-bg" style="background-image: url('marca-ogochi.jpg')"></div> <!-- 📸 COLOQUE AQUI: salve com o nome marca-ogochi.jpg -->
+      <div class="brand-card-bg" style="background-image: url('marca-ogochi.jpg')"></div>
       <div class="brand-card-content">
         <div class="brand-name">Ogochi</div>
         <div class="brand-tagline">Tradição e Qualidade</div>
+      </div>
+    </div>
+    <div class="brand-card" onclick="filterBrand('Freeway')">
+      <div class="brand-card-bg" style="background-image: url('marca-freeway.jpg')"></div>
+      <div class="brand-card-content">
+        <div class="brand-name">Free<br>way</div>
+        <div class="brand-tagline">Street Fashion</div>
       </div>
     </div>
   </div>
@@ -1655,7 +1687,7 @@
       <div class="about-feature">
         <div class="about-feature-icon">👑</div>
         <div class="about-feature-title">Marcas Premium</div>
-        <div class="about-feature-text">Acostamento, TXC, Freeway e Ogochi</div>
+        <div class="about-feature-text">Acostamento, Aeropostale, Nike, TXC, Ogochi e Freeway</div>
       </div>
       <div class="about-feature">
         <div class="about-feature-icon">⭐</div>
@@ -1874,9 +1906,11 @@
       <div class="footer-col-title">Marcas</div>
       <ul class="footer-links">
         <li><a href="catalogo.html?marca=Acostamento">Acostamento</a></li>
+        <li><a href="catalogo.html?marca=Aeropostale">Aeropostale</a></li>
+        <li><a href="catalogo.html?marca=Nike">Nike</a></li>
         <li><a href="catalogo.html?marca=TXC">TXC</a></li>
-        <li><a href="catalogo.html?marca=Freeway">Freeway</a></li>
         <li><a href="catalogo.html?marca=Ogochi">Ogochi</a></li>
+        <li><a href="catalogo.html?marca=Freeway">Freeway</a></li>
       </ul>
     </div>
     <div>

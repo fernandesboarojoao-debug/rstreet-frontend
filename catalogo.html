@@ -199,6 +199,47 @@
   }
   .catalog-mobile-price-row span { color:var(--gold); }
   .catalog-mobile-price input { width:100%; accent-color:var(--gold); }
+  .catalog-menu-section {
+    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.02);
+    border-radius:3px;
+    margin:10px 0;
+    overflow:hidden;
+  }
+  .catalog-menu-section[open] {
+    border-color:rgba(200,169,110,0.28);
+    background:rgba(200,169,110,0.05);
+  }
+  .catalog-menu-summary {
+    min-height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:0 12px;
+    color:var(--gold);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:1.7px;
+    text-transform:uppercase;
+    cursor:pointer;
+    list-style:none;
+  }
+  .catalog-menu-summary::-webkit-details-marker { display:none; }
+  .catalog-menu-summary::after {
+    content:'+';
+    width:22px;
+    height:22px;
+    border:1px solid rgba(200,169,110,0.32);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    line-height:1;
+  }
+  .catalog-menu-section[open] .catalog-menu-summary::after { content:'-'; }
+  .catalog-menu-section-body { padding:0 12px 12px; }
 
   /* HEADER BANNER */
   .catalog-header {
@@ -285,6 +326,28 @@
   .mobile-current-collection.is-visible { display:block; }
   .mobile-current-collection strong { display:block; color:var(--white); font-size:13px; margin-bottom:2px; }
   .mobile-current-collection span { color:var(--gray-400); font-size:11px; line-height:1.4; }
+  .catalog-active-area {
+    display:none;
+    margin:14px 60px 0;
+    border:1px solid rgba(200,169,110,.24);
+    background:rgba(200,169,110,.07);
+    border-radius:4px;
+    padding:12px 14px;
+    color:var(--gray-300);
+    font-size:13px;
+    line-height:1.45;
+  }
+  .catalog-active-area.is-visible { display:block; }
+  .catalog-active-area strong { color:var(--white); }
+  .catalog-active-area a {
+    color:var(--gold);
+    font-weight:800;
+    text-decoration:none;
+    margin-left:8px;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    font-size:11px;
+  }
   .campaign-products-heading { display:none; margin:18px 60px 0; padding:18px 0 0; border-top:1px solid rgba(255,255,255,.08); }
   .campaign-products-heading.is-visible { display:block; }
   .campaign-products-kicker { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:900; margin-bottom:5px; }
@@ -825,9 +888,10 @@
     .catalog-theme-controls { right:14px; bottom:14px; }
     .campaign-filter-bar { margin:12px 20px 0; align-items:flex-start; flex-direction:column; }
     .campaign-products-heading { margin:16px 20px 0; padding-top:14px; }
-    .mobile-catalog-hub { display:block; padding:18px 16px 0; background:var(--black); }
+    .mobile-catalog-hub { display:none !important; }
     .catalog-showcase { margin:16px 20px 0; gap:16px; }
     .catalog-showcase { display:none !important; }
+    .catalog-active-area { margin:12px 16px 0; }
     .catalog-collection-bar { display:none; }
     .catalog-rail { grid-auto-columns:minmax(142px,170px); }
     .catalog-rail-head { align-items:flex-start; flex-direction:column; gap:8px; }
@@ -875,8 +939,9 @@
     .campaign-filter-bar { margin:10px 12px 0; }
     .campaign-products-heading { margin:14px 12px 0; }
     .campaign-products-title { font-size:30px; }
-    .mobile-catalog-hub { padding:16px 12px 0; }
+    .mobile-catalog-hub { display:none !important; }
     .catalog-showcase { margin:14px 12px 0; gap:14px; }
+    .catalog-active-area { margin:10px 12px 0; font-size:12px; }
     .catalog-rail-title { font-size:28px; }
     .catalog-rail { grid-auto-columns:minmax(134px,155px); gap:9px; }
     .showcase-color-swatches { left:6px; bottom:6px; gap:4px; }
@@ -943,47 +1008,59 @@
       <div class="catalog-mobile-menu-logo">R<span>.</span>Street</div>
       <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
     </div>
-
-    <div class="catalog-mobile-menu-title">Comprar</div>
-    <div class="catalog-mobile-menu-links">
-      <button type="button" class="catalog-mobile-menu-link is-primary" onclick="setMobileCatalogMode('all')">Catalogo completo</button>
-      <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('featured')">Escolhas da R Street</button>
-      <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('sale')">Produtos com desconto</button>
-    </div>
-    <div class="catalog-mobile-menu-title">Loja</div>
-    <div class="catalog-mobile-menu-links">
-      <a class="catalog-mobile-menu-link" href="index.html">Pagina inicial</a>
-      <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
-      <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
-      <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
-    </div>
-
-    <div class="catalog-mobile-menu-title" id="catalogMenuCampaignTitle" style="display:none">Campanhas</div>
-    <div class="catalog-mobile-menu-links" id="catalogMenuCampaigns"></div>
-
-    <div class="catalog-mobile-menu-title">Categorias</div>
-    <div class="catalog-mobile-menu-grid" id="catalogMenuCategories">
-      <button class="catalog-mobile-menu-chip active" onclick="setCategoryFromMenu('todos', this)">Todos</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camisa', this)">Camisas</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camiseta', this)">Camisetas</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Regata', this)">Regatas</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Moletom', this)">Moletons</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Blusa de Frio', this)">Blusas</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Calça', this)">Calças</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Bermuda', this)">Bermudas</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Tênis', this)">Tênis</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Chinelo', this)">Chinelos</button>
-      <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Acessório', this)">Acessórios</button>
-    </div>
-
-    <div class="catalog-mobile-menu-title">Preço</div>
-    <div class="catalog-mobile-price">
-      <div class="catalog-mobile-price-row">
-        <strong>Preço máximo</strong>
-        <span id="mobileMenuPriceLabel">R$ 1000</span>
+    <details class="catalog-menu-section" open>
+      <summary class="catalog-menu-summary">Comprar</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-links">
+        <button type="button" class="catalog-mobile-menu-link is-primary" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
+        <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('featured')">Escolhas da R Street</button>
+        <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('sale')">Produtos com desconto</button>
       </div>
-      <input type="range" id="mobileMenuPriceRange" min="0" max="1000" value="1000" step="10" oninput="updatePrice(this.value)">
-    </div>
+    </details>
+
+    <details class="catalog-menu-section">
+      <summary class="catalog-menu-summary">Categorias</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuCategories">
+        <button class="catalog-mobile-menu-chip active" onclick="setCategoryFromMenu('todos', this)">Todos</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camisa', this)">Camisas</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camiseta', this)">Camisetas</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Regata', this)">Regatas</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Moletom', this)">Moletons</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Blusa de Frio', this)">Blusas</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Calca', this)">Calças</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Bermuda', this)">Bermudas</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Tenis', this)">Tênis</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Chinelo', this)">Chinelos</button>
+        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Acessorio', this)">Acessórios</button>
+      </div>
+    </details>
+
+    <details class="catalog-menu-section" id="catalogMenuCampaignSection" style="display:none">
+      <summary class="catalog-menu-summary">Campanhas</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-links" id="catalogMenuCampaigns"></div>
+    </details>
+
+    <details class="catalog-menu-section">
+      <summary class="catalog-menu-summary">Preço</summary>
+      <div class="catalog-menu-section-body">
+        <div class="catalog-mobile-price">
+          <div class="catalog-mobile-price-row">
+            <strong>Preço máximo</strong>
+            <span id="mobileMenuPriceLabel">R$ 1000</span>
+          </div>
+          <input type="range" id="mobileMenuPriceRange" min="0" max="1000" value="1000" step="10" oninput="updatePrice(this.value)">
+        </div>
+      </div>
+    </details>
+
+    <details class="catalog-menu-section">
+      <summary class="catalog-menu-summary">Loja</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-links">
+        <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
+        <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
+        <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
+        <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -1082,10 +1159,11 @@
   <div class="filter-group" id="brandFilters">
     <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
     <button class="filter-btn" onclick="setBrandFilter('Acostamento', this)">Acostamento</button>
-    <button class="filter-btn" onclick="setBrandFilter('TXC', this)">TXC</button>
-    <button class="filter-btn" onclick="setBrandFilter('Freeway', this)">Freeway</button>
-    <button class="filter-btn" onclick="setBrandFilter('Ogochi', this)">Ogochi</button>
+    <button class="filter-btn" onclick="setBrandFilter('Aeropostale', this)">Aeropostale</button>
     <button class="filter-btn" onclick="setBrandFilter('Nike', this)">Nike</button>
+    <button class="filter-btn" onclick="setBrandFilter('TXC', this)">TXC</button>
+    <button class="filter-btn" onclick="setBrandFilter('Ogochi', this)">Ogochi</button>
+    <button class="filter-btn" onclick="setBrandFilter('Freeway', this)">Freeway</button>
   </div>
   <select class="sort-select" id="sortSelect" onchange="applyFilters()">
     <option value="default">Ordenar por</option>
@@ -1097,6 +1175,11 @@
   <div class="result-count">Mostrando <span id="resultCount">0</span> produtos</div>
   <!-- Botão filtrar só aparece no celular -->
   <button class="filter-mobile-btn" id="filterMobileBtn" onclick="toggleMobileFilters()">⚙️ Filtrar</button>
+</div>
+
+<div class="catalog-active-area" id="catalogActiveArea">
+  <span id="catalogActiveAreaText">Você está no catálogo completo.</span>
+  <a href="catalogo.html" id="catalogActiveAreaClear">Ver tudo</a>
 </div>
 
 <!-- PAINEL DE FILTROS MOBILE -->
@@ -1115,10 +1198,11 @@
       <div class="mobile-filter-row" id="mobileBrandFilters">
         <button class="filter-btn active" onclick="setBrandFilterMobile('todos', this)">Todos</button>
         <button class="filter-btn" onclick="setBrandFilterMobile('Acostamento', this)">Acostamento</button>
-        <button class="filter-btn" onclick="setBrandFilterMobile('TXC', this)">TXC</button>
-        <button class="filter-btn" onclick="setBrandFilterMobile('Freeway', this)">Freeway</button>
-        <button class="filter-btn" onclick="setBrandFilterMobile('Ogochi', this)">Ogochi</button>
+        <button class="filter-btn" onclick="setBrandFilterMobile('Aeropostale', this)">Aeropostale</button>
         <button class="filter-btn" onclick="setBrandFilterMobile('Nike', this)">Nike</button>
+        <button class="filter-btn" onclick="setBrandFilterMobile('TXC', this)">TXC</button>
+        <button class="filter-btn" onclick="setBrandFilterMobile('Ogochi', this)">Ogochi</button>
+        <button class="filter-btn" onclick="setBrandFilterMobile('Freeway', this)">Freeway</button>
       </div>
     </div>
 
@@ -1131,11 +1215,11 @@
         <button class="filter-btn" onclick="setCategoryFilterMobile('Regata', this)">Regatas</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Moletom', this)">Moletons</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Blusa de Frio', this)">Blusas de frio</button>
-        <button class="filter-btn" onclick="setCategoryFilterMobile('Calça', this)">Calças</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Calca', this)">Calças</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Bermuda', this)">Bermudas</button>
-        <button class="filter-btn" onclick="setCategoryFilterMobile('Tênis', this)">Tênis</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Tenis', this)">Tênis</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Chinelo', this)">Chinelos</button>
-        <button class="filter-btn" onclick="setCategoryFilterMobile('Acessório', this)">Acessórios</button>
+        <button class="filter-btn" onclick="setCategoryFilterMobile('Acessorio', this)">Acessórios</button>
       </div>
       <div style="margin-top:12px">
         <div class="mobile-filters-title">Disponibilidade</div>
@@ -1191,25 +1275,25 @@
         <span class="sidebar-option-label">Blusas de frio</span>
         <span class="sidebar-option-count" id="cat-Blusa de Frio">0</span>
       </div>
-      <div class="sidebar-option" onclick="setCategoryFilter('Calça', this)">
+      <div class="sidebar-option" onclick="setCategoryFilter('Calca', this)">
         <span class="sidebar-option-label">Calças</span>
-        <span class="sidebar-option-count" id="cat-Calça">0</span>
+        <span class="sidebar-option-count" id="cat-Calca">0</span>
       </div>
       <div class="sidebar-option" onclick="setCategoryFilter('Bermuda', this)">
         <span class="sidebar-option-label">Bermudas</span>
         <span class="sidebar-option-count" id="cat-Bermuda">0</span>
       </div>
-      <div class="sidebar-option" onclick="setCategoryFilter('Tênis', this)">
+      <div class="sidebar-option" onclick="setCategoryFilter('Tenis', this)">
         <span class="sidebar-option-label">Tênis</span>
-        <span class="sidebar-option-count" id="cat-Tênis">0</span>
+        <span class="sidebar-option-count" id="cat-Tenis">0</span>
       </div>
       <div class="sidebar-option" onclick="setCategoryFilter('Chinelo', this)">
         <span class="sidebar-option-label">Chinelos</span>
         <span class="sidebar-option-count" id="cat-Chinelo">0</span>
       </div>
-      <div class="sidebar-option" onclick="setCategoryFilter('Acessório', this)">
+      <div class="sidebar-option" onclick="setCategoryFilter('Acessorio', this)">
         <span class="sidebar-option-label">Acessórios</span>
-        <span class="sidebar-option-count" id="cat-Acessório">0</span>
+        <span class="sidebar-option-count" id="cat-Acessorio">0</span>
       </div>
     </div>
     <div class="sidebar-section">
@@ -1467,16 +1551,16 @@ function handleCatalogThemeBannerKey(event) {
 }
 
 function renderCatalogMenuCampaigns() {
-  const title = document.getElementById('catalogMenuCampaignTitle');
+  const section = document.getElementById('catalogMenuCampaignSection');
   const list = document.getElementById('catalogMenuCampaigns');
-  if (!title || !list) return;
+  if (!section || !list) return;
   const themes = allCatalogThemes.filter(theme => theme?.slug || theme?.botao_link);
   if (!themes.length) {
-    title.style.display = 'none';
+    section.style.display = 'none';
     list.innerHTML = '';
     return;
   }
-  title.style.display = '';
+  section.style.display = '';
   list.innerHTML = themes.map(theme => {
     const titleText = theme.titulo || theme.nome || 'Campanha';
     const isActive = currentCampaignTheme && Number(currentCampaignTheme.id) === Number(theme.id);
@@ -1614,7 +1698,7 @@ function getDemoProducts() {
 function setBrandFilter(brand, el) {
   currentBrand = brand;
   document.querySelectorAll('#brandFilters .filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
   currentPage = 1;
   applyFilters();
 }
@@ -1622,7 +1706,7 @@ function setBrandFilter(brand, el) {
 function setCategoryFilter(cat, el) {
   currentCategory = cat;
   document.querySelectorAll('.sidebar-option').forEach(o => o.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
   currentPage = 1;
   syncCatalogMenuCategory(cat);
   applyFilters();
@@ -1681,17 +1765,17 @@ document.addEventListener('keydown', event => {
 
 function syncCatalogMenuCategory(activeCategory) {
   document.querySelectorAll('#catalogMenuCategories .catalog-mobile-menu-chip').forEach(btn => {
-    const match = btn.getAttribute('onclick')?.includes(`'${activeCategory}'`);
+    const match = normalizeSearchText(btn.getAttribute('onclick') || '').includes(normalizeSearchText(activeCategory));
     btn.classList.toggle('active', Boolean(match));
   });
   document.querySelectorAll('#mobileCatFilters .filter-btn').forEach(btn => {
-    const match = btn.getAttribute('onclick')?.includes(`'${activeCategory}'`);
+    const match = normalizeSearchText(btn.getAttribute('onclick') || '').includes(normalizeSearchText(activeCategory));
     btn.classList.toggle('active', Boolean(match));
   });
   document.querySelectorAll('.sidebar-option').forEach(btn => {
     const call = btn.getAttribute('onclick') || '';
     if (call.includes('setCategoryFilter')) {
-      btn.classList.toggle('active', call.includes(`'${activeCategory}'`));
+      btn.classList.toggle('active', normalizeSearchText(call).includes(normalizeSearchText(activeCategory)));
     }
   });
 }
@@ -1774,6 +1858,31 @@ function updateMobileCatalogHub() {
   });
 }
 
+function updateCatalogActiveArea() {
+  const area = document.getElementById('catalogActiveArea');
+  const text = document.getElementById('catalogActiveAreaText');
+  const clear = document.getElementById('catalogActiveAreaClear');
+  if (!area || !text) return;
+
+  let label = '';
+  if (currentCampaignTheme) {
+    label = currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Campanha';
+  } else if (currentCategory !== 'todos') {
+    label = getCategoryLabel(currentCategory);
+  } else if (currentBrand !== 'todos') {
+    label = currentBrand;
+  } else if (currentMobileCatalogMode === 'featured') {
+    label = 'Escolhas da R Street';
+  } else if (currentMobileCatalogMode === 'sale') {
+    label = 'Produtos com desconto';
+  }
+
+  const hasArea = Boolean(label);
+  area.classList.toggle('is-visible', hasArea);
+  text.innerHTML = hasArea ? `Você está na área <strong>${escapeHtml(label)}</strong>.` : 'Você está no catálogo completo.';
+  if (clear) clear.style.display = hasArea ? 'inline-flex' : 'none';
+}
+
 function applyFilters() {
   const search = normalizeSearchText(document.getElementById('searchInput').value);
   const sort = document.getElementById('sortSelect').value;
@@ -1785,7 +1894,7 @@ function applyFilters() {
     if (!p.ativo) return false;
     if (campaignProductIds && !campaignProductIds.has(Number(p.id))) return false;
     if (currentBrand !== 'todos' && p.marca !== currentBrand) return false;
-    if (currentCategory !== 'todos' && !p.categoria?.includes(currentCategory)) return false;
+    if (currentCategory !== 'todos' && !categoryMatches(p.categoria, currentCategory)) return false;
     if (currentStock === 'estoque' && getCatalogProductStock(p) <= 0) return false;
     if (!campaignProductIds && currentMobileCatalogMode === 'featured' && p.destaque_catalogo !== true) return false;
     if (!campaignProductIds && currentMobileCatalogMode === 'sale' && getProductDiscountValue(p) <= 0) return false;
@@ -1801,6 +1910,7 @@ function applyFilters() {
 
   document.getElementById('resultCount').textContent = filtered.length;
   updateMobileCatalogHub();
+  updateCatalogActiveArea();
   updateCampaignFilterBar();
   updateCatalogShowcases();
   renderPage();
@@ -1844,6 +1954,29 @@ function matchesSearchText(haystack, search) {
   return search.split(/\s+/).filter(Boolean).every(term => text.includes(term));
 }
 
+const CATEGORY_LABELS = {
+  todos: 'Catálogo completo',
+  camisa: 'Camisas',
+  camiseta: 'Camisetas',
+  regata: 'Regatas',
+  moletom: 'Moletons',
+  'blusa de frio': 'Blusas de frio',
+  calca: 'Calças',
+  bermuda: 'Bermudas',
+  tenis: 'Tênis',
+  chinelo: 'Chinelos',
+  acessorio: 'Acessórios'
+};
+
+function categoryMatches(productCategory, selectedCategory) {
+  if (selectedCategory === 'todos') return true;
+  return normalizeSearchText(productCategory).includes(normalizeSearchText(selectedCategory));
+}
+
+function getCategoryLabel(category) {
+  return CATEGORY_LABELS[normalizeSearchText(category)] || category;
+}
+
 function matchesProductSearch(product, search) {
   const variantText = allProductVariants
     .filter(v => Number(v.produto_id) === Number(product?.id))
@@ -1862,9 +1995,9 @@ function matchesProductSearch(product, search) {
 function updateCategoryCounts() {
   const active = allProducts.filter(p => p.ativo);
   document.getElementById('cat-todos').textContent = active.length;
-  ['Camisa','Camiseta','Regata','Moletom','Blusa de Frio','Calça','Bermuda','Tênis','Chinelo','Acessório'].forEach(cat => {
+  ['Camisa','Camiseta','Regata','Moletom','Blusa de Frio','Calca','Bermuda','Tenis','Chinelo','Acessorio'].forEach(cat => {
     const el = document.getElementById('cat-' + cat);
-    if (el) el.textContent = active.filter(p => p.categoria?.includes(cat)).length;
+    if (el) el.textContent = active.filter(p => categoryMatches(p.categoria, cat)).length;
   });
 }
 
@@ -2668,7 +2801,7 @@ function checkURLParams() {
   if (categoria) {
     const cleanCategory = categoria.trim();
     const sidebarBtn = Array.from(document.querySelectorAll('.sidebar-option'))
-      .find(btn => (btn.getAttribute('onclick') || '').includes(`'${cleanCategory}'`));
+      .find(btn => normalizeSearchText(btn.getAttribute('onclick') || '').includes(normalizeSearchText(cleanCategory)));
     currentCategory = cleanCategory;
     currentPage = 1;
     syncCatalogMenuCategory(cleanCategory);
