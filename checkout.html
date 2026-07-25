@@ -122,6 +122,7 @@
   .pay-method:hover, .pay-method.selected { border-color:var(--gold); background:var(--gold-bg); }
   .pay-method-icon { font-size:28px; margin-bottom:6px; }
   .pay-method-label { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--gray-200); }
+  .pay-method-sub { font-size:10px; color:var(--green); font-weight:700; margin-top:4px; }
   .pay-method.selected .pay-method-label { color:var(--gold); }
 
   /* ORDER SUMMARY */
@@ -149,6 +150,8 @@
   .os-divider { border:none; border-top:1px solid var(--border); margin:12px 0; }
   .os-row { display:flex; justify-content:space-between; font-size:13px; padding:4px 0; gap:12px; min-width:0; }
   .os-row .label { color:var(--gray-400); }
+  .os-row.discount { color:var(--green); font-weight:700; }
+  .os-row.discount .label { color:var(--green); }
   .os-total { display:flex; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px solid rgba(200,169,110,0.3); gap:12px; min-width:0; }
   .os-total .label { font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--gold); }
   .os-total .val { font-family:'Bebas Neue',sans-serif; font-size:32px; color:var(--gold); }
@@ -393,6 +396,7 @@
         <div class="pay-method" onclick="selectPayment(this, 'pix')">
           <div class="pay-method-icon">⚡</div>
           <div class="pay-method-label">PIX</div>
+          <div class="pay-method-sub">5% off</div>
         </div>
         <div class="pay-method" onclick="selectPayment(this, 'bolbradesco')">
           <div class="pay-method-icon">📄</div>
@@ -414,6 +418,7 @@
       <hr class="os-divider">
       <div class="os-row"><span class="label">Subtotal</span><span id="osSubtotal">R$ 0,00</span></div>
       <div class="os-row"><span class="label">Frete</span><span id="osFrete">—</span></div>
+      <div class="os-row discount" id="osPixDiscountRow" style="display:none"><span class="label">Desconto Pix</span><span id="osPixDiscount">- R$ 0,00</span></div>
       <div class="os-total">
         <span class="label">Total</span>
         <span class="val" id="osTotal">R$ 0,00</span>
@@ -445,6 +450,7 @@
 const BACKEND_URL = 'https://rstreet-backend.onrender.com';
 const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';
+const PIX_DISCOUNT_RATE = 0.05;
 
 // ─── ESTADO ─────────────────────────────────
 let freteVal = 0;
@@ -506,6 +512,10 @@ const FRETE_REGRAS = {
 function getCart() { return JSON.parse(localStorage.getItem('rstreet_cart') || '[]'); }
 function saveCart(cart) { localStorage.setItem('rstreet_cart', JSON.stringify(cart)); }
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+
+function getPixDiscount(subtotal) {
+  return Math.round(Math.max(0, Number(subtotal || 0)) * PIX_DISCOUNT_RATE * 100) / 100;
+}
 
 async function validarCarrinhoAtual() {
   const cart = getCart();
@@ -605,9 +615,13 @@ function renderSummary() {
 function updateTotals() {
   const cart = getCart();
   const subtotal = cart.reduce((s,i) => s + i.preco * i.qty, 0);
-  const total = subtotal + freteVal;
+  const pixDiscount = paymentMethod === 'pix' ? getPixDiscount(subtotal) : 0;
+  const total = subtotal - pixDiscount + freteVal;
   document.getElementById('osSubtotal').textContent = fmt(subtotal);
   document.getElementById('osFrete').textContent = freteLabel ? (freteVal > 0 ? fmt(freteVal) : 'Grátis') : '—';
+  const discountRow = document.getElementById('osPixDiscountRow');
+  if (discountRow) discountRow.style.display = pixDiscount > 0 ? 'flex' : 'none';
+  document.getElementById('osPixDiscount').textContent = '- ' + fmt(pixDiscount);
   document.getElementById('osTotal').textContent = fmt(total);
 }
 
@@ -689,6 +703,7 @@ function selectPayment(el, method) {
   document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('selected'));
   el.classList.add('selected');
   paymentMethod = method;
+  updateTotals();
 }
 
 // ─── MASKS ──────────────────────────────────
@@ -763,7 +778,7 @@ async function finalizarCompra() {
   }
 
   const subtotal = cart.reduce((s,i) => s + i.preco * i.qty, 0);
-  const total = subtotal + freteVal;
+  const total = subtotal - (paymentMethod === 'pix' ? getPixDiscount(subtotal) : 0) + freteVal;
 
   const pedido = {
     cliente: {

@@ -294,6 +294,8 @@
   .showcase-card-name { font-size:13px; font-weight:800; line-height:1.35; min-height:36px; }
   .showcase-card-price { margin-top:8px; font-family:'Bebas Neue', sans-serif; color:var(--gold); font-size:22px; line-height:1; }
   .showcase-card-old { color:var(--gray-400); text-decoration:line-through; font-size:12px; margin-top:4px; }
+  .showcase-card-installment { color:var(--gray-400); font-size:9px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; margin-top:3px; }
+  .showcase-card-pix { color:var(--green); font-size:10px; font-weight:800; line-height:1.25; margin-top:2px; }
 
   /* TOOLBAR */
   .toolbar {
@@ -585,6 +587,8 @@
   .product-footer { display: flex; align-items: center; justify-content: space-between; }
   .product-price { font-family: 'Bebas Neue', sans-serif; font-size: 26px; color: var(--gold); letter-spacing: 1px; }
   .product-price-old { font-size: 12px; color: var(--gray-400); text-decoration: line-through; margin-bottom: 2px; }
+  .product-installment { color:var(--gray-400); font-size:10px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; margin-top:1px; }
+  .product-pix-price { color:var(--green); font-size:11px; font-weight:800; line-height:1.25; margin-top:2px; }
   .product-stock { font-size: 11px; color: var(--gray-400); }
   .product-stock.low { color: #e63946; }
   .product-stock.ok { color: #4caf50; }
@@ -1209,6 +1213,7 @@
 const SUPABASE_URL      = 'https://dxttqvmrpfwxsgrpancz.supabase.co';  // ← cole sua URL
 const SUPABASE_ANON_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';                // ← cole sua chave
 const WHATSAPP_NUMBER   = '5519993111599';
+const PIX_DISCOUNT_RATE = 0.05;
 // ═══════════════════════════════════════════════
 
 // ─────────────────────────────────────────────
@@ -1869,6 +1874,8 @@ function renderCard(p) {
         <div>
           <div id="catalog-old-price-${p.id}">${oldPrice}</div>
           <div class="product-price" id="catalog-price-${p.id}">R$ ${formatCatalogPrice(initialPrice.preco)}</div>
+          <div class="product-installment">em at&eacute; 6x com juros</div>
+          <div class="product-pix-price" id="catalog-pix-${p.id}">Pix: R$ ${formatCatalogPrice(getPixPrice(initialPrice.preco))} (-5%)</div>
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
@@ -1928,6 +1935,8 @@ function renderShowcaseCard(product, badge = '', preferSale = false) {
         <div class="showcase-card-name">${escapeHtml(product.nome || '')}</div>
         ${oldPrice > 0 ? `<div class="showcase-card-old">R$ ${formatCatalogPrice(oldPrice)}</div>` : ''}
         <div class="showcase-card-price">R$ ${formatCatalogPrice(info.price.preco)}</div>
+        <div class="showcase-card-installment">em at&eacute; 6x com juros</div>
+        <div class="showcase-card-pix">Pix: R$ ${formatCatalogPrice(getPixPrice(info.price.preco))} (-5%)</div>
       </div>
     </a>
   `;
@@ -2220,6 +2229,10 @@ function formatCatalogPrice(value) {
   return Number(value || 0).toFixed(2).replace('.', ',');
 }
 
+function getPixPrice(value) {
+  return Math.max(0, Number(value || 0) * (1 - PIX_DISCOUNT_RATE));
+}
+
 function renderCatalogColorSwatches(product, groups) {
   if (!groups || groups.length < 2) return '';
   const selectedColor = catalogMediaState[product.id]?.color || groups[0]?.cor || '';
@@ -2253,6 +2266,8 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   updateCatalogMedia(productId);
   const priceEl = card.querySelector(`#catalog-price-${productId}`);
   if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
+  const pixEl = card.querySelector(`#catalog-pix-${productId}`);
+  if (pixEl) pixEl.textContent = `Pix: R$ ${formatCatalogPrice(getPixPrice(price.preco))} (-5%)`;
   const oldPriceEl = card.querySelector(`#catalog-old-price-${productId}`);
   if (oldPriceEl) oldPriceEl.innerHTML = renderCatalogOldPrice(price.preco_antigo);
   const stockEl = card.querySelector(`#catalog-stock-${productId}`);
