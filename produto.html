@@ -664,7 +664,6 @@ function renderProduct() {
         </div>
         </div>
 
-        ${renderProductTrustBlocks()}
         ${renderProductPurchaseInfo()}
 
         <hr class="divider">
@@ -741,39 +740,6 @@ function renderSizeChartButton(product) {
     <span><strong>Tabela de medidas</strong><br>Confira as medidas antes de escolher o tamanho</span>
     <span>Ver tabela</span>
   </button>`;
-}
-
-function renderProductTrustBlocks() {
-  return `<div class="product-trust-grid" aria-label="Informa&ccedil;&otilde;es de confian&ccedil;a">
-    <div class="product-trust-item">
-      <span class="product-trust-icon">&#127970;</span>
-      <span class="product-trust-copy">
-        <strong class="product-trust-title">Loja f&iacute;sica</strong>
-        <span class="product-trust-text">Av. 9 de Julho, 530 - Centro</span>
-      </span>
-    </div>
-    <div class="product-trust-item">
-      <span class="product-trust-icon">&#128274;</span>
-      <span class="product-trust-copy">
-        <strong class="product-trust-title">Pagamento seguro</strong>
-        <span class="product-trust-text">Compra processada pelo Mercado Pago</span>
-      </span>
-    </div>
-    <div class="product-trust-item">
-      <span class="product-trust-icon">&#128717;</span>
-      <span class="product-trust-copy">
-        <strong class="product-trust-title">Retirada ou entrega</strong>
-        <span class="product-trust-text">Escolha no checkout a melhor op&ccedil;&atilde;o</span>
-      </span>
-    </div>
-    <div class="product-trust-item">
-      <span class="product-trust-icon">&#128172;</span>
-      <span class="product-trust-copy">
-        <strong class="product-trust-title">Atendimento</strong>
-        <span class="product-trust-text">Tire d&uacute;vidas pelo WhatsApp da loja</span>
-      </span>
-    </div>
-  </div>`;
 }
 
 function renderProductPurchaseInfo() {
