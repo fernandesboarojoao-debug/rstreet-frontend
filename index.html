@@ -566,6 +566,8 @@
     background: var(--gray-900);
     position: relative;
     overflow: hidden;
+    padding-top: 92px;
+    padding-bottom: 96px;
   }
   .brands-section::before {
     content: '';
@@ -584,12 +586,12 @@
   }
   .brands-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 2px;
   }
   .brand-card {
     background: var(--gray-800);
-    aspect-ratio: 4/3;
+    aspect-ratio: 1/1.08;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -616,21 +618,31 @@
     filter: grayscale(60%) brightness(0.4);
     transition: all 0.4s;
   }
+  .brand-card.is-logo .brand-card-bg {
+    background-size: 72%;
+    background-repeat: no-repeat;
+    background-color: #f5f5f5;
+    filter: grayscale(20%) brightness(0.76);
+  }
   .brand-card:hover .brand-card-bg {
     filter: grayscale(0%) brightness(0.5);
     transform: scale(1.05);
+  }
+  .brand-card.is-logo:hover .brand-card-bg {
+    filter: grayscale(0%) brightness(0.82);
+    transform: scale(1.02);
   }
 
   .brand-card-content {
     position: relative;
     z-index: 2;
     text-align: center;
-    padding: 24px;
+    padding: 16px 10px;
   }
   .brand-name {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 42px;
-    letter-spacing: 6px;
+    font-size: 26px;
+    letter-spacing: 3px;
     color: var(--white);
     line-height: 1;
     text-shadow: 0 2px 20px rgba(0,0,0,0.8);
@@ -638,9 +650,9 @@
   }
   .brand-card:hover .brand-name { color: var(--gold); }
   .brand-tagline {
-    font-size: 11px;
+    font-size: 9px;
     color: var(--gray-400);
-    letter-spacing: 3px;
+    letter-spacing: 1.8px;
     text-transform: uppercase;
     margin-top: 8px;
     transition: color 0.3s;
@@ -649,14 +661,14 @@
 
   .brand-card-tag {
     position: absolute;
-    top: 16px; right: 16px;
+    top: 10px; right: 10px;
     background: var(--gold);
     color: var(--black);
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    padding: 4px 10px;
+    padding: 3px 7px;
     border-radius: 2px;
   }
 
@@ -1628,14 +1640,14 @@
       </div>
       <div class="brand-card-tag">Premium</div>
     </div>
-    <div class="brand-card" onclick="filterBrand('Aeropostale')">
+    <div class="brand-card is-logo" onclick="filterBrand('Aeropostale')">
       <div class="brand-card-bg" style="background-image: url('marca-aeropostale.webp')"></div>
       <div class="brand-card-content">
         <div class="brand-name">Aero<br>postale</div>
         <div class="brand-tagline">Casual Wear</div>
       </div>
     </div>
-    <div class="brand-card" onclick="filterBrand('Nike')">
+    <div class="brand-card is-logo" onclick="filterBrand('Nike')">
       <div class="brand-card-bg" style="background-image: url('marca-nike.jpg')"></div>
       <div class="brand-card-content">
         <div class="brand-name">Nike</div>
