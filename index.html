@@ -586,90 +586,81 @@
   }
   .brands-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 2px;
+    grid-template-columns: 1fr;
+    border-top: 1px solid rgba(255,255,255,0.08);
   }
   .brand-card {
-    background: var(--gray-800);
-    aspect-ratio: 1/1.08;
+    min-height: 82px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: transparent;
+    color: var(--white);
     display: flex;
-    flex-direction: column;
+    gap: 22px;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.4s ease;
+    padding: 18px 0;
+    transition: border-color 0.25s, background 0.25s;
   }
   .brand-card::before {
     content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(200,169,110,0.0), rgba(200,169,110,0.12));
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(200,169,110,0.08), transparent 62%);
     opacity: 0;
-    transition: opacity 0.4s;
+    transition: opacity 0.25s;
   }
-  .brand-card:hover { transform: scale(1.02); z-index: 2; }
+  .brand-card:hover { border-color: rgba(200,169,110,0.4); background: rgba(255,255,255,0.015); }
   .brand-card:hover::before { opacity: 1; }
-
-  .brand-card-bg {
-    position: absolute; inset: 0;
-    background-size: cover;
-    background-position: center;
-    filter: grayscale(60%) brightness(0.4);
-    transition: all 0.4s;
-  }
-  .brand-card.is-logo .brand-card-bg {
-    background-size: 72%;
-    background-repeat: no-repeat;
-    background-color: #f5f5f5;
-    filter: grayscale(20%) brightness(0.76);
-  }
-  .brand-card:hover .brand-card-bg {
-    filter: grayscale(0%) brightness(0.5);
-    transform: scale(1.05);
-  }
-  .brand-card.is-logo:hover .brand-card-bg {
-    filter: grayscale(0%) brightness(0.82);
-    transform: scale(1.02);
-  }
 
   .brand-card-content {
     position: relative;
     z-index: 2;
-    text-align: center;
-    padding: 16px 10px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 18px;
+    width: 100%;
   }
   .brand-name {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
+    font-size: clamp(32px, 5vw, 58px);
     letter-spacing: 3px;
     color: var(--white);
     line-height: 1;
-    text-shadow: 0 2px 20px rgba(0,0,0,0.8);
     transition: color 0.3s;
+    white-space: nowrap;
   }
   .brand-card:hover .brand-name { color: var(--gold); }
   .brand-tagline {
-    font-size: 9px;
+    font-size: 12px;
     color: var(--gray-400);
-    letter-spacing: 1.8px;
+    letter-spacing: 2px;
     text-transform: uppercase;
-    margin-top: 8px;
     transition: color 0.3s;
+    text-align: right;
   }
   .brand-card:hover .brand-tagline { color: var(--gold-light); }
 
   .brand-card-tag {
-    position: absolute;
-    top: 10px; right: 10px;
-    background: var(--gold);
-    color: var(--black);
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 2px;
+    position: relative;
+    z-index: 2;
+    flex: 0 0 auto;
+    min-width: 74px;
+    color: var(--gold);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    padding: 3px 7px;
-    border-radius: 2px;
+    text-align: center;
+  }
+  .brand-card.reverse .brand-card-content {
+    flex-direction: row-reverse;
+  }
+  .brand-card.reverse .brand-tagline {
+    text-align: left;
   }
 
   /* ── ABOUT ── */
@@ -1305,26 +1296,21 @@
     .hero-title { font-size: 64px; }
     .hero-desc { font-size: 14px; }
     .brands-grid {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-snap-type: x proximity;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(200,169,110,0.45) transparent;
-      padding: 4px 2px 12px;
+      display: grid;
+      gap: 0;
+      overflow: visible;
+      padding: 0;
     }
     .brand-card {
-      flex: 0 0 220px;
-      justify-content: flex-end;
-      scroll-snap-align: start;
+      min-height: 76px;
       border-radius: 3px;
+      padding: 16px 0;
     }
-    .brand-name { font-size: 26px; letter-spacing: 4px; }
+    .brand-name { font-size: 34px; letter-spacing: 3px; }
     .brand-card-content {
       width: 100%;
-      padding: 40px 16px 14px;
-      background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
+      padding: 0;
+      background: transparent;
     }
     .highlights-grid {
       display: flex;
@@ -1392,9 +1378,10 @@
     .experience-strip,
     .footer-grid { grid-template-columns: 1fr; }
     .brands-grid { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
-    .brand-card { flex-basis: 200px; }
-    .brand-name { font-size: 22px; letter-spacing: 3px; }
-    .brand-tagline { font-size: 9px; letter-spacing: 2px; }
+    .brand-card { min-height: 70px; gap: 12px; }
+    .brand-card-tag { min-width: 54px; font-size: 18px; }
+    .brand-name { font-size: 28px; letter-spacing: 2px; }
+    .brand-tagline { font-size: 9px; letter-spacing: 1.4px; }
     .highlights-header { margin-bottom: 36px; }
     .highlight-card { flex-basis: 188px; }
     .highlight-img { height: 132px; }
@@ -1633,48 +1620,45 @@
   </div>
   <div class="brands-grid reveal">
     <div class="brand-card" onclick="filterBrand('Acostamento')">
-      <div class="brand-card-bg" style="background-image: url('marca-acostamento.jpg')"></div>
+      <div class="brand-card-tag">Lobo</div>
       <div class="brand-card-content">
-        <div class="brand-name">Acosta<br>mento</div>
-        <div class="brand-tagline">Estilo Urbano</div>
-      </div>
-      <div class="brand-card-tag">Premium</div>
-    </div>
-    <div class="brand-card is-logo" onclick="filterBrand('Aeropostale')">
-      <div class="brand-card-bg" style="background-image: url('marca-aeropostale.webp')"></div>
-      <div class="brand-card-content">
-        <div class="brand-name">Aero<br>postale</div>
-        <div class="brand-tagline">Casual Wear</div>
+        <div class="brand-name">Acostamento</div>
+        <div class="brand-tagline">Lobo na frente</div>
       </div>
     </div>
-    <div class="brand-card is-logo" onclick="filterBrand('Nike')">
-      <div class="brand-card-bg" style="background-image: url('marca-nike.jpg')"></div>
+    <div class="brand-card reverse" onclick="filterBrand('Freeway')">
+      <div class="brand-card-tag">F</div>
+      <div class="brand-card-content">
+        <div class="brand-name">Freeway</div>
+        <div class="brand-tagline">F da Freeway</div>
+      </div>
+    </div>
+    <div class="brand-card" onclick="filterBrand('Nike')">
+      <div class="brand-card-tag">Nike</div>
       <div class="brand-card-content">
         <div class="brand-name">Nike</div>
         <div class="brand-tagline">Sport Lifestyle</div>
       </div>
-      <div class="brand-card-tag">Novo</div>
     </div>
     <div class="brand-card" onclick="filterBrand('TXC')">
-      <div class="brand-card-bg" style="background-image: url('marca-txc.jpg')"></div>
+      <div class="brand-card-tag">TXC</div>
       <div class="brand-card-content">
         <div class="brand-name">TXC</div>
         <div class="brand-tagline">Country & Lifestyle</div>
       </div>
-      <div class="brand-card-tag">Destaque</div>
     </div>
-    <div class="brand-card" onclick="filterBrand('Ogochi')">
-      <div class="brand-card-bg" style="background-image: url('marca-ogochi.jpg')"></div>
+    <div class="brand-card reverse" onclick="filterBrand('Ogochi')">
+      <div class="brand-card-tag">O</div>
       <div class="brand-card-content">
         <div class="brand-name">Ogochi</div>
         <div class="brand-tagline">Tradição e Qualidade</div>
       </div>
     </div>
-    <div class="brand-card" onclick="filterBrand('Freeway')">
-      <div class="brand-card-bg" style="background-image: url('marca-freeway.jpg')"></div>
+    <div class="brand-card" onclick="filterBrand('Aeropostale')">
+      <div class="brand-card-tag">Aéro</div>
       <div class="brand-card-content">
-        <div class="brand-name">Free<br>way</div>
-        <div class="brand-tagline">Street Fashion</div>
+        <div class="brand-name">Aeropostale</div>
+        <div class="brand-tagline">Casual Wear</div>
       </div>
     </div>
   </div>
