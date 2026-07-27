@@ -2113,9 +2113,7 @@ function setBrandFromMenu(brand, el) {
   syncBrandFilterButtons(currentBrand);
   if (el) el.classList.add('active');
   currentPage = 1;
-  closeCatalogMenu();
   applyFilters();
-  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function setCategoryFilter(cat, el) {
@@ -2225,8 +2223,6 @@ function setCategoryFromMenu(cat, el) {
   currentPage = 1;
   syncCatalogMenuCategory(cat);
   applyFilters();
-  closeCatalogMenu();
-  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 function setCollectionCategoryFromMenu(mode, cat = 'todos', el) {
@@ -2238,9 +2234,7 @@ function setCollectionCategoryFromMenu(mode, cat = 'todos', el) {
   document.querySelectorAll('#catalogMenuFeaturedCategories .catalog-mobile-menu-chip, #catalogMenuSaleCategories .catalog-mobile-menu-chip').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
   syncCatalogMenuCategory(currentCategory);
-  closeCatalogMenu();
   applyFilters();
-  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 function setCampaignCategoryFromMenu(themeId, cat = 'todos', el) {
@@ -2254,12 +2248,10 @@ function setCampaignCategoryFromMenu(themeId, cat = 'todos', el) {
   currentPage = 1;
   applyCatalogThemeBanner(theme, true);
   syncCatalogMenuCategory(currentCategory);
-  closeCatalogMenu();
   const baseUrl = theme.slug ? `catalogo.html?campanha=${encodeURIComponent(theme.slug)}` : 'catalogo.html';
   const url = baseUrl + (currentCategory !== 'todos' ? `&categoria=${encodeURIComponent(currentCategory)}` : '');
   if (window.history?.replaceState) window.history.replaceState(null, '', url);
   applyFilters();
-  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
 }
 
 function setMobileCatalogMode(mode = 'all') {
@@ -2763,7 +2755,10 @@ function renderPage() {
 function renderCard(p) {
   const colorGroups = getCatalogColorGroups(p.id);
   const state = catalogMediaState[p.id] || {};
-  const initialGroup = colorGroups.find(group => sameCatalogText(group.cor, state.color)) || colorGroups[0] || null;
+  const filteredGroup = currentColor !== 'todos'
+    ? colorGroups.find(group => sameCatalogText(group.cor, currentColor))
+    : null;
+  const initialGroup = filteredGroup || colorGroups.find(group => sameCatalogText(group.cor, state.color)) || colorGroups[0] || null;
   const initialColor = initialGroup?.cor || '';
   const initialMediaList = getCatalogGroupMedia(initialGroup, p);
   const initialIndex = clampCatalogMediaIndex(state.mediaIndex, initialMediaList);
