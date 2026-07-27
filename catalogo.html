@@ -1065,18 +1065,16 @@
     position: sticky;
     top: 120px;
     z-index: 89;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
   }
   .mobile-filters-panel.open { display: block; }
-  .mobile-filters-inner { padding: 16px 20px 18px; display:grid; gap:14px; }
+  .mobile-filters-inner { padding: 16px 20px; }
   .mobile-filters-title {
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--gold);
     font-weight: 700;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
   .mobile-filter-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -1259,6 +1257,15 @@
       <button type="button" class="catalog-mobile-menu-link" data-menu-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
       <button type="button" class="catalog-mobile-menu-link" data-menu-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
       <a class="catalog-mobile-menu-link" href="carrinho.html">Carrinho</a>
+    </div>
+
+    <div class="catalog-mobile-menu-title">Filtros</div>
+    <div class="catalog-mobile-menu-links is-simple">
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('categorias')">Categorias</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('marcas')">Marcas</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('cores')">Cores</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('tamanhos')">Tamanhos</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('ordenar')">Preço e ordem</button>
     </div>
 
     <div id="catalogMenuCampaignSections"></div>
@@ -1499,9 +1506,17 @@
 <div class="mobile-filters-panel" id="mobileFiltersPanel">
   <div class="mobile-filters-inner">
 
+    <!-- ABAS -->
+    <div class="mobile-filter-tabs">
+      <button class="mobile-tab active" data-tab="marcas" onclick="showMobileTab('marcas', this)">Marcas</button>
+      <button class="mobile-tab" data-tab="categorias" onclick="showMobileTab('categorias', this)">Categorias</button>
+      <button class="mobile-tab" data-tab="cores" onclick="showMobileTab('cores', this)">Cores</button>
+      <button class="mobile-tab" data-tab="tamanhos" onclick="showMobileTab('tamanhos', this)">Tamanhos</button>
+      <button class="mobile-tab" data-tab="ordenar" onclick="showMobileTab('ordenar', this)">Ordenar</button>
+    </div>
+
     <!-- ABA MARCAS -->
     <div class="mobile-tab-content" id="mtab-marcas">
-      <div class="mobile-filters-title">Marca</div>
       <div class="mobile-filter-row" id="mobileBrandFilters">
         <button class="filter-btn active" onclick="setBrandFilterMobile('todos', this)">Todos</button>
         <button class="filter-btn" onclick="setBrandFilterMobile('Acostamento', this)">Acostamento</button>
@@ -1514,8 +1529,7 @@
     </div>
 
     <!-- ABA CATEGORIAS -->
-    <div class="mobile-tab-content" id="mtab-categorias">
-      <div class="mobile-filters-title">Categoria</div>
+    <div class="mobile-tab-content" id="mtab-categorias" style="display:none">
       <div class="mobile-filter-row" id="mobileCatFilters">
         <button class="filter-btn active" onclick="setCategoryFilterMobile('todos', this)">Todos</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Camisa', this)">Camisas</button>
@@ -1527,29 +1541,25 @@
         <button class="filter-btn" onclick="setCategoryFilterMobile('Chinelo', this)">Chinelos</button>
         <button class="filter-btn" onclick="setCategoryFilterMobile('Acessorio', this)">Acessórios</button>
       </div>
-    </div>
-
-    <div class="mobile-tab-content" id="mtab-disponibilidade">
-      <div class="mobile-filters-title">Disponibilidade</div>
-      <div class="mobile-filter-row" id="mobileStockFilters">
-        <button class="filter-btn active" onclick="setStockFilterMobile('todos', this)">Todos</button>
-        <button class="filter-btn" onclick="setStockFilterMobile('estoque', this)">Em estoque</button>
+      <div style="margin-top:12px">
+        <div class="mobile-filters-title">Disponibilidade</div>
+        <div class="mobile-filter-row" id="mobileStockFilters">
+          <button class="filter-btn active" onclick="setStockFilterMobile('todos', this)">Todos</button>
+          <button class="filter-btn" onclick="setStockFilterMobile('estoque', this)">Em estoque</button>
+        </div>
       </div>
     </div>
 
-    <div class="mobile-tab-content" id="mtab-cores">
-      <div class="mobile-filters-title">Cor</div>
+    <div class="mobile-tab-content" id="mtab-cores" style="display:none">
       <div class="mobile-filter-row" id="mobileColorFilters"></div>
     </div>
 
-    <div class="mobile-tab-content" id="mtab-tamanhos">
-      <div class="mobile-filters-title">Tamanho</div>
+    <div class="mobile-tab-content" id="mtab-tamanhos" style="display:none">
       <div class="mobile-filter-row" id="mobileSizeFilters"></div>
     </div>
 
     <!-- ABA ORDENAR -->
-    <div class="mobile-tab-content" id="mtab-ordenar">
-      <div class="mobile-filters-title">Preço e ordem</div>
+    <div class="mobile-tab-content" id="mtab-ordenar" style="display:none">
       <div class="mobile-filter-row" id="mobileOrderFilters">
         <button class="filter-btn active" onclick="setOrderMobile('default', this)">Padrão</button>
         <button class="filter-btn" onclick="setOrderMobile('preco_asc', this)">Menor Preço</button>
