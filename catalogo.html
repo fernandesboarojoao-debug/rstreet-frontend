@@ -162,6 +162,15 @@
     border-color:rgba(200,169,110,0.28);
     color:var(--gold-light);
   }
+  .catalog-mobile-menu-links.is-compact {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .catalog-mobile-menu-links.is-compact .catalog-mobile-menu-link {
+    min-height:46px;
+    justify-content:center;
+    text-align:center;
+    padding:10px 8px;
+  }
   .catalog-mobile-menu-title {
     display:flex;
     align-items:center;
@@ -1243,22 +1252,17 @@
       <div class="catalog-mobile-menu-logo">R<span>.</span>Street</div>
       <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
     </div>
+    <div class="catalog-mobile-menu-title">Comprar</div>
+    <div class="catalog-mobile-menu-links is-compact">
+      <button type="button" class="catalog-mobile-menu-link" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Todos</button>
+      <button type="button" class="catalog-mobile-menu-link" data-menu-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
+      <button type="button" class="catalog-mobile-menu-link" data-menu-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
+      <a class="catalog-mobile-menu-link" href="carrinho.html">Carrinho</a>
+    </div>
+
+    <div class="catalog-mobile-menu-title">Filtrar</div>
     <details class="catalog-menu-section" open>
-      <summary class="catalog-menu-summary">Novos</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuFeaturedCategories">
-        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('featured','todos', this)">Todos</button>
-      </div>
-    </details>
-
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Ofertas</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuSaleCategories">
-        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('sale','todos', this)">Todos</button>
-      </div>
-    </details>
-
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Todas as categorias</summary>
+      <summary class="catalog-menu-summary">Categorias</summary>
       <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuCategories">
         <button class="catalog-mobile-menu-chip active" onclick="setCategoryFromMenu('todos', this)">Todos</button>
         <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camisa', this)">Camisas</button>
@@ -1272,8 +1276,23 @@
       </div>
     </details>
 
+    <details class="catalog-menu-section">
+      <summary class="catalog-menu-summary">Novos por categoria</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuFeaturedCategories">
+        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('featured','todos', this)">Todos</button>
+      </div>
+    </details>
+
+    <details class="catalog-menu-section">
+      <summary class="catalog-menu-summary">Ofertas por categoria</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuSaleCategories">
+        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('sale','todos', this)">Todos</button>
+      </div>
+    </details>
+
     <div id="catalogMenuCampaignSections"></div>
 
+    <div class="catalog-mobile-menu-title">Ajuda</div>
     <div class="catalog-mobile-menu-links">
       <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
       <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
@@ -2296,6 +2315,10 @@ function updateMobileCatalogHub() {
   if (desktopTitle) desktopTitle.textContent = activeLabel[0].replace(/^Campanha:\s*/i, '');
   document.querySelectorAll('.catalog-collection-btn').forEach(btn => {
     const mode = btn.dataset.collectionMode || 'all';
+    btn.classList.toggle('active', !currentCampaignTheme && mode === currentMobileCatalogMode);
+  });
+  document.querySelectorAll('[data-menu-mode]').forEach(btn => {
+    const mode = btn.dataset.menuMode || 'all';
     btn.classList.toggle('active', !currentCampaignTheme && mode === currentMobileCatalogMode);
   });
 }
