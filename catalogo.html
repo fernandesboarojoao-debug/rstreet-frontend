@@ -372,6 +372,69 @@
     font-size:10px;
     white-space:nowrap;
   }
+  .catalog-active-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+  .catalog-filter-toggle {
+    color:var(--white);
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(200,169,110,.3);
+    min-height:34px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 12px;
+    border-radius:2px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    font-size:10px;
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+  }
+  .catalog-filter-toggle:hover,
+  .catalog-filter-toggle.active { background:var(--gold); color:var(--black); border-color:var(--gold); }
+  .catalog-smart-filters {
+    display:none;
+    margin:10px 60px 0;
+    border:1px solid rgba(255,255,255,.08);
+    background:rgba(255,255,255,.025);
+    border-radius:4px;
+    padding:14px;
+    gap:14px;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .catalog-smart-filters.is-visible { display:grid; }
+  .catalog-smart-filter { min-width:0; }
+  .catalog-smart-title { color:var(--gold); font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:900; margin-bottom:9px; }
+  .catalog-smart-options { display:flex; flex-wrap:wrap; gap:8px; }
+  .catalog-smart-empty { color:var(--gray-400); font-size:12px; }
+  .catalog-smart-swatch {
+    min-height:34px;
+    border:1px solid rgba(255,255,255,.11);
+    background:var(--gray-800);
+    color:var(--gray-200);
+    border-radius:2px;
+    padding:0 10px;
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.9px;
+  }
+  .catalog-smart-swatch.active { background:var(--gold); border-color:var(--gold); color:var(--black); }
+  .catalog-smart-swatch-dot {
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.7);
+    overflow:hidden;
+    background:var(--gray-700);
+    flex:0 0 auto;
+  }
+  .catalog-smart-swatch-dot img { width:100%; height:100%; object-fit:cover; display:block; }
   .brand-orbit {
     margin:14px 60px 0;
     overflow:hidden;
@@ -1049,6 +1112,9 @@
     .catalog-active-area { margin:10px 12px 0; font-size:12px; flex-direction:column; }
     .catalog-active-area a { width:100%; min-height:32px; }
     .catalog-active-copy { width:100%; }
+    .catalog-active-actions { width:100%; display:grid; grid-template-columns:1fr 1fr; }
+    .catalog-filter-toggle { min-height:32px; width:100%; }
+    .catalog-smart-filters { margin:8px 12px 0; grid-template-columns:1fr; padding:12px; }
     .brand-orbit-logo { width:54px; height:54px; }
     .brand-orbit-item { width:66px; }
     .catalog-rail-title { font-size:28px; }
@@ -1118,16 +1184,15 @@
       <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
     </div>
     <details class="catalog-menu-section" open>
-      <summary class="catalog-menu-summary">Comprar</summary>
+      <summary class="catalog-menu-summary">Vitrines</summary>
       <div class="catalog-menu-section-body catalog-mobile-menu-links">
-        <button type="button" class="catalog-mobile-menu-link is-primary" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
-        <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('featured')">Escolhas da R Street</button>
-        <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('sale')">Produtos com desconto</button>
+        <button type="button" class="catalog-mobile-menu-link is-primary" onclick="setMobileCatalogMode('featured')">Novos</button>
+        <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('sale')">Ofertas</button>
       </div>
     </details>
 
     <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Categorias</summary>
+      <summary class="catalog-menu-summary">Todas as categorias</summary>
       <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuCategories">
         <button class="catalog-mobile-menu-chip active" onclick="setCategoryFromMenu('todos', this)">Todos</button>
         <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camisa', this)">Camisas</button>
@@ -1159,13 +1224,13 @@
       </div>
     </details>
 
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Loja</summary>
+    <details class="catalog-menu-section" open>
+      <summary class="catalog-menu-summary">Atendimento</summary>
       <div class="catalog-menu-section-body catalog-mobile-menu-links">
-        <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
         <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
         <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
         <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+        <a class="catalog-mobile-menu-link" href="index.html">Voltar para a página inicial</a>
       </div>
     </details>
   </div>
@@ -1221,8 +1286,8 @@
   </div>
   <div class="catalog-collection-actions">
     <button type="button" class="catalog-collection-btn active" data-collection-mode="all" onclick="setMobileCatalogMode('all')">Todos</button>
-    <button type="button" class="catalog-collection-btn" data-collection-mode="featured" onclick="setMobileCatalogMode('featured')">Escolhas</button>
-    <button type="button" class="catalog-collection-btn" data-collection-mode="sale" onclick="setMobileCatalogMode('sale')">Descontos</button>
+    <button type="button" class="catalog-collection-btn" data-collection-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
+    <button type="button" class="catalog-collection-btn" data-collection-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
   </div>
 </section>
 
@@ -1236,14 +1301,14 @@
   </div>
   <div class="mobile-hub-grid">
     <button type="button" class="mobile-hub-card" id="mobileHubFeatured" onclick="setMobileCatalogMode('featured')">
-      <span class="mobile-hub-label">Destaques</span>
-      <span class="mobile-hub-name">Escolhas</span>
-      <span class="mobile-hub-sub">Produtos selecionados pela loja.</span>
+      <span class="mobile-hub-label">Novidades</span>
+      <span class="mobile-hub-name">Novos</span>
+      <span class="mobile-hub-sub">Produtos novos e selecionados pela loja.</span>
     </button>
     <button type="button" class="mobile-hub-card" id="mobileHubSale" onclick="setMobileCatalogMode('sale')">
       <span class="mobile-hub-label">Ofertas</span>
-      <span class="mobile-hub-name">Promoções</span>
-      <span class="mobile-hub-sub">Peças com desconto ativo.</span>
+      <span class="mobile-hub-name">Ofertas</span>
+      <span class="mobile-hub-sub">Peças com condição especial.</span>
     </button>
     <button type="button" class="mobile-hub-card mobile-hub-card-wide" id="mobileHubAll" onclick="setMobileCatalogMode('all')">
       <span class="mobile-hub-label">Todos os produtos</span>
@@ -1293,7 +1358,21 @@
       <div class="catalog-active-sub" id="catalogActiveAreaSub">Mostrando todos os produtos disponíveis.</div>
     </div>
   </div>
-  <a href="catalogo.html" id="catalogActiveAreaClear">Ver tudo</a>
+  <div class="catalog-active-actions">
+    <button type="button" class="catalog-filter-toggle" id="catalogSmartFilterBtn" onclick="toggleCatalogSmartFilters()">Filtros</button>
+    <a href="catalogo.html" id="catalogActiveAreaClear">Ver tudo</a>
+  </div>
+</div>
+
+<div class="catalog-smart-filters" id="catalogSmartFilters">
+  <div class="catalog-smart-filter">
+    <div class="catalog-smart-title">Cores disponíveis</div>
+    <div class="catalog-smart-options" id="smartColorFilters"></div>
+  </div>
+  <div class="catalog-smart-filter">
+    <div class="catalog-smart-title">Tamanhos disponíveis</div>
+    <div class="catalog-smart-options" id="smartSizeFilters"></div>
+  </div>
 </div>
 
 <section class="brand-orbit" aria-label="Comprar por marca">
@@ -1387,6 +1466,8 @@
     <div class="mobile-filter-tabs">
       <button class="mobile-tab active" onclick="showMobileTab('marcas', this)">Marcas</button>
       <button class="mobile-tab" onclick="showMobileTab('categorias', this)">Categorias</button>
+      <button class="mobile-tab" onclick="showMobileTab('cores', this)">Cores</button>
+      <button class="mobile-tab" onclick="showMobileTab('tamanhos', this)">Tamanhos</button>
       <button class="mobile-tab" onclick="showMobileTab('ordenar', this)">Ordenar</button>
     </div>
 
@@ -1423,6 +1504,14 @@
           <button class="filter-btn" onclick="setStockFilterMobile('estoque', this)">Em estoque</button>
         </div>
       </div>
+    </div>
+
+    <div class="mobile-tab-content" id="mtab-cores" style="display:none">
+      <div class="mobile-filter-row" id="mobileColorFilters"></div>
+    </div>
+
+    <div class="mobile-tab-content" id="mtab-tamanhos" style="display:none">
+      <div class="mobile-filter-row" id="mobileSizeFilters"></div>
     </div>
 
     <!-- ABA ORDENAR -->
@@ -1559,6 +1648,8 @@ let catalogThemeTimer = null;
 let currentBrand = 'todos';
 let currentCategory = 'todos';
 let currentStock = 'todos';
+let currentColor = 'todos';
+let currentSize = 'todos';
 let currentMaxPrice = 1000;
 let currentMobileCatalogMode = 'all';
 let currentPage = 1;
@@ -1912,6 +2003,27 @@ function setStockFilter(val, el) {
   applyFilters();
 }
 
+function setColorFilter(color = 'todos') {
+  currentColor = color || 'todos';
+  currentPage = 1;
+  applyFilters();
+}
+
+function setSizeFilter(size = 'todos') {
+  currentSize = size || 'todos';
+  currentPage = 1;
+  applyFilters();
+}
+
+function toggleCatalogSmartFilters(force) {
+  const panel = document.getElementById('catalogSmartFilters');
+  const btn = document.getElementById('catalogSmartFilterBtn');
+  if (!panel) return;
+  const next = typeof force === 'boolean' ? force : !panel.classList.contains('is-visible');
+  panel.classList.toggle('is-visible', next);
+  btn?.classList.toggle('active', next);
+}
+
 function updatePrice(val) {
   currentMaxPrice = parseInt(val);
   const priceLabel = document.getElementById('priceLabel');
@@ -2034,8 +2146,8 @@ function updateMobileCatalogHub() {
   const sub = document.getElementById('mobileCurrentSub');
   const labels = {
     all: ['Catálogo completo', 'Mostrando todos os produtos disponíveis.'],
-    featured: ['Escolhas da R Street', 'Uma vitrine com produtos selecionados pela loja.'],
-    sale: ['Produtos com desconto', 'Peças com promoção ativa no catálogo.']
+    featured: ['Novos', 'Produtos novos e selecionados pela loja.'],
+    sale: ['Ofertas', 'Peças com condição especial no catálogo.']
   };
   const activeLabel = currentCampaignTheme
     ? [`Campanha: ${currentCampaignTheme.titulo || currentCampaignTheme.nome || 'R Street'}`, 'Mostrando somente os produtos selecionados para esta campanha.']
@@ -2071,18 +2183,22 @@ function updateCatalogActiveArea() {
     label = currentBrand;
     type = 'marca';
   } else if (currentMobileCatalogMode === 'featured') {
-    label = 'Escolhas da R Street';
+    label = 'Novos';
     type = 'vitrine';
   } else if (currentMobileCatalogMode === 'sale') {
-    label = 'Produtos com desconto';
+    label = 'Ofertas';
     type = 'vitrine';
   }
 
-  const hasArea = Boolean(label);
+  const extraFilters = [
+    currentColor !== 'todos' ? `cor ${currentColor}` : '',
+    currentSize !== 'todos' ? `tamanho ${currentSize}` : ''
+  ].filter(Boolean);
+  const hasArea = Boolean(label) || extraFilters.length > 0;
   area.classList.toggle('is-visible', hasArea);
-  title.textContent = hasArea ? label : 'Catálogo completo';
+  title.textContent = label || 'Filtros aplicados';
   sub.textContent = hasArea
-    ? `Você está vendo a área de ${type}. ${filtered.length} produto(s) encontrado(s).`
+    ? `Você está na área ${label || 'filtrada'}${extraFilters.length ? ` com ${extraFilters.join(' e ')}` : ''}. ${filtered.length} produto(s) encontrado(s).`
     : 'Mostrando todos os produtos disponíveis.';
   if (clear) clear.style.display = hasArea ? 'inline-flex' : 'none';
   updateBrandOrbitActive();
@@ -2095,33 +2211,19 @@ function updateBrandOrbitActive() {
 }
 
 function applyFilters() {
-  const search = normalizeSearchText(document.getElementById('searchInput').value);
   const sort = document.getElementById('sortSelect').value;
-  const campaignProductIds = currentCampaignTheme?.produto_ids?.length
-    ? new Set(currentCampaignTheme.produto_ids.map(Number))
-    : null;
-
-  filtered = allProducts.filter(p => {
-    if (!p.ativo) return false;
-    if (campaignProductIds && !campaignProductIds.has(Number(p.id))) return false;
-    if (currentBrand !== 'todos' && p.marca !== currentBrand) return false;
-    if (currentCategory !== 'todos' && !categoryMatches(p.categoria, currentCategory)) return false;
-    if (currentStock === 'estoque' && getCatalogProductStock(p) <= 0) return false;
-    if (!campaignProductIds && currentMobileCatalogMode === 'featured' && p.destaque_catalogo !== true) return false;
-    if (!campaignProductIds && currentMobileCatalogMode === 'sale' && getProductDiscountValue(p) <= 0) return false;
-    if (p.preco > currentMaxPrice) return false;
-    if (search && !matchesProductSearch(p, search)) return false;
-    return true;
-  });
+  filtered = getCatalogBaseProducts().filter(productMatchesColorAndSize);
 
   if (sort === 'preco_asc') filtered.sort((a,b) => a.preco - b.preco);
   else if (sort === 'preco_desc') filtered.sort((a,b) => b.preco - a.preco);
   else if (sort === 'nome') filtered.sort((a,b) => a.nome.localeCompare(b.nome));
   else if (sort === 'novos') filtered.sort((a,b) => b.id - a.id);
 
+  updateDynamicCategoryFilters();
   document.getElementById('resultCount').textContent = filtered.length;
   updateMobileCatalogHub();
   updateCatalogActiveArea();
+  updateSmartFilterOptions();
   updateCampaignFilterBar();
   updateCatalogShowcases();
   renderPage();
@@ -2184,6 +2286,152 @@ function categoryMatches(productCategory, selectedCategory) {
 
 function getCategoryLabel(category) {
   return CATEGORY_LABELS[normalizeSearchText(category)] || category;
+}
+
+function getAvailableCategories() {
+  const products = getCatalogBaseProducts({ includeCategory: false });
+  const map = new Map();
+  products.forEach(product => {
+    const raw = String(product?.categoria || '').trim();
+    if (!raw) return;
+    const key = normalizeSearchText(raw);
+    if (!map.has(key)) map.set(key, { value: raw, label: getCategoryLabel(raw), count: 0 });
+    map.get(key).count += 1;
+  });
+  return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+}
+
+function renderCategoryButton(category, target = 'sidebar') {
+  const value = category?.value || 'todos';
+  const label = category?.label || 'Todos';
+  const count = category?.count ?? allProducts.filter(p => p.ativo !== false).length;
+  const active = currentCategory === 'todos'
+    ? value === 'todos'
+    : (value !== 'todos' && categoryMatches(value, currentCategory));
+  if (target === 'menu') {
+    return `<button class="catalog-mobile-menu-chip ${active ? 'active' : ''}" onclick="setCategoryFromMenu('${escapeAttr(value)}', this)">${escapeHtml(label)}</button>`;
+  }
+  if (target === 'mobile') {
+    return `<button class="filter-btn ${active ? 'active' : ''}" onclick="setCategoryFilterMobile('${escapeAttr(value)}', this)">${escapeHtml(label)}</button>`;
+  }
+  return `<div class="sidebar-option ${active ? 'active' : ''}" onclick="setCategoryFilter('${escapeAttr(value)}', this)">
+    <span class="sidebar-option-label">${escapeHtml(label)}</span>
+    <span class="sidebar-option-count">${count}</span>
+  </div>`;
+}
+
+function updateDynamicCategoryFilters() {
+  const categories = getAvailableCategories();
+  const total = getCatalogBaseProducts({ includeCategory: false }).length;
+  const allOption = { value: 'todos', label: 'Todos', count: total };
+  const visibleCategories = [allOption, ...categories];
+
+  const sidebarSection = document.querySelector('.sidebar .sidebar-section');
+  if (sidebarSection) {
+    sidebarSection.innerHTML = `<div class="sidebar-title">Categoria</div>${visibleCategories.map(item => renderCategoryButton(item, 'sidebar')).join('')}`;
+  }
+
+  const menu = document.getElementById('catalogMenuCategories');
+  if (menu) menu.innerHTML = visibleCategories.map(item => renderCategoryButton(item, 'menu')).join('');
+
+  const mobile = document.getElementById('mobileCatFilters');
+  if (mobile) mobile.innerHTML = visibleCategories.map(item => renderCategoryButton(item, 'mobile')).join('');
+}
+
+function getCatalogBaseProducts({ includeCategory = true, includeSearch = true, includeBrand = true, includePrice = true, includeStock = true } = {}) {
+  const searchInput = document.getElementById('searchInput');
+  const search = includeSearch ? normalizeSearchText(searchInput?.value || '') : '';
+  const campaignProductIds = currentCampaignTheme?.produto_ids?.length
+    ? new Set(currentCampaignTheme.produto_ids.map(Number))
+    : null;
+
+  return allProducts.filter(p => {
+    if (!p.ativo) return false;
+    if (campaignProductIds && !campaignProductIds.has(Number(p.id))) return false;
+    if (includeBrand && currentBrand !== 'todos' && p.marca !== currentBrand) return false;
+    if (includeCategory && currentCategory !== 'todos' && !categoryMatches(p.categoria, currentCategory)) return false;
+    if (includeStock && currentStock === 'estoque' && getCatalogProductStock(p) <= 0) return false;
+    if (!campaignProductIds && currentMobileCatalogMode === 'featured' && p.destaque_catalogo !== true) return false;
+    if (!campaignProductIds && currentMobileCatalogMode === 'sale' && getProductDiscountValue(p) <= 0) return false;
+    if (includePrice && p.preco > currentMaxPrice) return false;
+    if (search && !matchesProductSearch(p, search)) return false;
+    return true;
+  });
+}
+
+function getProductActiveVariants(productId) {
+  return allProductVariants.filter(v => Number(v.produto_id) === Number(productId) && v.ativo !== false && Math.max(0, Number(v.estoque) || 0) > 0);
+}
+
+function productMatchesColorAndSize(product) {
+  if (currentColor === 'todos' && currentSize === 'todos') return true;
+  const variants = getProductActiveVariants(product?.id);
+  if (!variants.length) {
+    const sizes = Array.isArray(product?.tamanhos) ? product.tamanhos.map(item => normalizeSearchText(item)) : [];
+    return currentColor === 'todos' && (currentSize === 'todos' || sizes.includes(normalizeSearchText(currentSize)));
+  }
+  return variants.some(v => {
+    const colorOk = currentColor === 'todos' || sameCatalogText(v.cor, currentColor);
+    const sizeOk = currentSize === 'todos' || sameCatalogText(v.tamanho, currentSize);
+    return colorOk && sizeOk;
+  });
+}
+
+function updateSmartFilterOptions() {
+  const colorWrap = document.getElementById('smartColorFilters');
+  const sizeWrap = document.getElementById('smartSizeFilters');
+  const mobileColorWrap = document.getElementById('mobileColorFilters');
+  const mobileSizeWrap = document.getElementById('mobileSizeFilters');
+  if (!colorWrap || !sizeWrap) return;
+
+  const baseProducts = getCatalogBaseProducts();
+  const colors = new Map();
+  const sizes = new Set();
+
+  baseProducts.forEach(product => {
+    const variants = getProductActiveVariants(product.id);
+    variants.forEach(v => {
+      const color = String(v.cor || '').trim();
+      const size = String(v.tamanho || '').trim();
+      if (color && (currentSize === 'todos' || sameCatalogText(size, currentSize))) {
+        if (!colors.has(normalizeSearchText(color))) {
+          colors.set(normalizeSearchText(color), {
+            label: color,
+            hex: v.cor_hex || getColorValue(color),
+            image: getCatalogStoredMediaUrl(v.imagem_url) || (Array.isArray(v.imagens) ? v.imagens.map(getCatalogStoredMediaUrl).find(Boolean) : '')
+          });
+        }
+      }
+      if (size && (currentColor === 'todos' || sameCatalogText(color, currentColor))) sizes.add(size);
+    });
+    if (!variants.length && currentColor === 'todos' && Array.isArray(product.tamanhos)) {
+      product.tamanhos.forEach(size => {
+        if (String(size || '').trim()) sizes.add(String(size).trim());
+      });
+    }
+  });
+
+  const colorItems = [...colors.values()];
+  const colorHtml = [
+    `<button type="button" class="catalog-smart-swatch ${currentColor === 'todos' ? 'active' : ''}" onclick="setColorFilter('todos')">Todas</button>`,
+    ...colorItems.map(item => {
+      const active = sameCatalogText(item.label, currentColor);
+      const dot = item.image
+        ? `<span class="catalog-smart-swatch-dot"><img src="${escapeAttr(item.image)}" alt="${escapeAttr(item.label)}" loading="lazy"></span>`
+        : `<span class="catalog-smart-swatch-dot" style="background:${escapeAttr(item.hex)}"></span>`;
+      return `<button type="button" class="catalog-smart-swatch ${active ? 'active' : ''}" onclick="setColorFilter('${escapeAttr(item.label)}')">${dot}${escapeHtml(item.label)}</button>`;
+    })
+  ].join('') || '<span class="catalog-smart-empty">Nenhuma cor disponivel.</span>';
+  colorWrap.innerHTML = colorHtml;
+  if (mobileColorWrap) mobileColorWrap.innerHTML = colorHtml;
+
+  const sizeItems = sortCatalogSizes([...sizes]);
+  const sizeHtml = [
+    `<button type="button" class="catalog-smart-swatch ${currentSize === 'todos' ? 'active' : ''}" onclick="setSizeFilter('todos')">Todos</button>`,
+    ...sizeItems.map(size => `<button type="button" class="catalog-smart-swatch ${sameCatalogText(size, currentSize) ? 'active' : ''}" onclick="setSizeFilter('${escapeAttr(size)}')">${escapeHtml(size)}</button>`)
+  ].join('') || '<span class="catalog-smart-empty">Nenhum tamanho disponivel.</span>';
+  sizeWrap.innerHTML = sizeHtml;
+  if (mobileSizeWrap) mobileSizeWrap.innerHTML = sizeHtml;
 }
 
 function matchesProductSearch(product, search) {
@@ -2523,16 +2771,16 @@ function updateCatalogShowcases() {
     }),
     renderCatalogRail('featuredProductsSection', {
       products: featuredProducts,
-      kicker: 'Destaques',
-      title: 'Escolhas da R Street',
-      sub: 'Produtos em evidencia no catalogo.',
-      badge: 'Destaque'
+      kicker: 'Novidades',
+      title: 'Novos',
+      sub: 'Produtos novos e selecionados pela loja.',
+      badge: 'Novo'
     }),
     renderCatalogRail('saleProductsSection', {
       products: saleProducts,
       kicker: 'Ofertas',
-      title: 'Produtos com desconto',
-      sub: 'Itens com preco promocional ativo.',
+      title: 'Ofertas',
+      sub: 'Itens com condicao especial.',
       badge: 'Oferta',
       preferSale: true
     })
@@ -3020,9 +3268,9 @@ function checkURLParams() {
     }
     applyFilters();
   }
-  if (tipo === 'destaques') {
+  if (tipo === 'destaques' || tipo === 'novos') {
     setMobileCatalogMode('featured');
-  } else if (tipo === 'promocoes' || tipo === 'promoções') {
+  } else if (tipo === 'promocoes' || tipo === 'promoções' || tipo === 'ofertas') {
     setMobileCatalogMode('sale');
   }
 }
