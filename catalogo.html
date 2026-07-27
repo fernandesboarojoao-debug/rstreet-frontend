@@ -355,6 +355,40 @@
   .catalog-active-kicker { color:var(--gold); font-size:9px; letter-spacing:2px; text-transform:uppercase; font-weight:900; margin-bottom:2px; }
   .catalog-active-title { color:var(--white); font-size:15px; font-weight:900; line-height:1.25; }
   .catalog-active-sub { color:var(--gray-400); font-size:11px; line-height:1.35; margin-top:2px; }
+  .catalog-active-trail { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+  .catalog-active-chip {
+    min-height:28px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border:1px solid rgba(200,169,110,.28);
+    background:rgba(200,169,110,.08);
+    color:var(--gray-100);
+    border-radius:999px;
+    padding:0 8px 0 10px;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+    max-width:100%;
+  }
+  .catalog-active-chip span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .catalog-active-chip button {
+    width:18px;
+    height:18px;
+    border:0;
+    border-radius:50%;
+    background:rgba(255,255,255,.1);
+    color:var(--white);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+    padding:0;
+  }
+  .catalog-active-chip button:hover { background:var(--gold); color:var(--black); }
   .catalog-active-area a {
     color:var(--black);
     background:var(--gold);
@@ -1369,11 +1403,12 @@
       <div class="catalog-active-kicker">Navegação atual</div>
       <div class="catalog-active-title" id="catalogActiveAreaTitle">Catálogo completo</div>
       <div class="catalog-active-sub" id="catalogActiveAreaSub">Mostrando todos os produtos disponíveis.</div>
+      <div class="catalog-active-trail" id="catalogActiveTrail"></div>
     </div>
   </div>
   <div class="catalog-active-actions">
     <button type="button" class="catalog-filter-toggle" id="catalogSmartFilterBtn" onclick="toggleCatalogSmartFilters()">Filtros</button>
-    <a href="catalogo.html" id="catalogActiveAreaClear">Ver tudo</a>
+    <a href="catalogo.html" id="catalogActiveAreaClear">Limpar tudo</a>
   </div>
 </div>
 
@@ -2034,10 +2069,19 @@ function getDemoProducts() {
 // ─────────────────────────────────────────────
 function setBrandFilter(brand, el) {
   currentBrand = brand;
-  document.querySelectorAll('#brandFilters .filter-btn').forEach(b => b.classList.remove('active'));
+  syncBrandFilterButtons(brand);
   if (el) el.classList.add('active');
   currentPage = 1;
   applyFilters();
+}
+
+function syncBrandFilterButtons(activeBrand = currentBrand) {
+  document.querySelectorAll('#brandFilters .filter-btn, #mobileBrandFilters .filter-btn').forEach(btn => {
+    const text = btn.textContent.trim();
+    const isAll = activeBrand === 'todos' && text === 'Todos';
+    btn.classList.toggle('active', isAll || text === activeBrand);
+  });
+  updateBrandOrbitActive();
 }
 
 function setBrandFromCarousel(brand) {
@@ -2261,39 +2305,86 @@ function updateCatalogActiveArea() {
   const title = document.getElementById('catalogActiveAreaTitle');
   const sub = document.getElementById('catalogActiveAreaSub');
   const clear = document.getElementById('catalogActiveAreaClear');
+  const trail = document.getElementById('catalogActiveTrail');
   if (!area || !title || !sub) return;
 
-  let label = '';
-  let type = 'catálogo';
+  let label = 'Catálogo completo';
+  let subText = 'Mostrando todos os produtos disponíveis.';
   if (currentCampaignTheme) {
-    label = currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Campanha';
-    type = 'campanha';
+    const campaign = currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Campanha';
+    label = currentCategory !== 'todos' ? `${campaign}: ${getCategoryLabel(currentCategory)}` : campaign;
+    subText = 'Você está vendo os produtos selecionados para esta campanha.';
   } else if (currentCategory !== 'todos') {
-    label = getCategoryLabel(currentCategory);
-    type = 'categoria';
+    const category = getCategoryLabel(currentCategory);
+    if (currentMobileCatalogMode === 'featured') label = `Novos em ${category}`;
+    else if (currentMobileCatalogMode === 'sale') label = `Ofertas em ${category}`;
+    else if (currentBrand !== 'todos') label = `${category} ${currentBrand}`;
+    else label = category;
+    subText = 'Filtro de categoria aplicado.';
   } else if (currentBrand !== 'todos') {
-    label = currentBrand;
-    type = 'marca';
+    label = `Produtos ${currentBrand}`;
+    subText = 'Filtro de marca aplicado.';
   } else if (currentMobileCatalogMode === 'featured') {
     label = 'Novos';
-    type = 'vitrine';
+    subText = 'Produtos marcados como novidade pela loja.';
   } else if (currentMobileCatalogMode === 'sale') {
     label = 'Ofertas';
-    type = 'vitrine';
+    subText = 'Produtos com condição especial no catálogo.';
   }
 
-  const extraFilters = [
-    currentColor !== 'todos' ? `cor ${currentColor}` : '',
-    currentSize !== 'todos' ? `tamanho ${currentSize}` : ''
-  ].filter(Boolean);
-  const hasArea = Boolean(label) || extraFilters.length > 0;
+  const chips = getCatalogActiveChips();
+  const hasArea = chips.length > 0;
   area.classList.toggle('is-visible', hasArea);
-  title.textContent = label || 'Filtros aplicados';
-  sub.textContent = hasArea
-    ? `Você está na área ${label || 'filtrada'}${extraFilters.length ? ` com ${extraFilters.join(' e ')}` : ''}. ${filtered.length} produto(s) encontrado(s).`
-    : 'Mostrando todos os produtos disponíveis.';
+  title.textContent = hasArea ? label : 'Catálogo completo';
+  sub.textContent = hasArea ? `${subText} ${filtered.length} produto(s) encontrado(s).` : 'Mostrando todos os produtos disponíveis.';
+  if (trail) {
+    trail.innerHTML = chips.map(chip => `
+      <span class="catalog-active-chip" title="${escapeAttr(chip.title || chip.label)}">
+        <span>${escapeHtml(chip.label)}</span>
+        <button type="button" onclick="clearCatalogFilter('${chip.type}')" aria-label="Remover ${escapeAttr(chip.label)}">×</button>
+      </span>
+    `).join('');
+  }
   if (clear) clear.style.display = hasArea ? 'inline-flex' : 'none';
   updateBrandOrbitActive();
+}
+
+function getCatalogActiveChips() {
+  const chips = [];
+  if (currentCampaignTheme) chips.push({ type:'campaign', label: currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Campanha' });
+  if (!currentCampaignTheme && currentMobileCatalogMode === 'featured') chips.push({ type:'mode', label:'Novos' });
+  if (!currentCampaignTheme && currentMobileCatalogMode === 'sale') chips.push({ type:'mode', label:'Ofertas' });
+  if (currentBrand !== 'todos') chips.push({ type:'brand', label:`Marca: ${currentBrand}` });
+  if (currentCategory !== 'todos') chips.push({ type:'category', label:`Categoria: ${getCategoryLabel(currentCategory)}` });
+  if (currentColor !== 'todos') chips.push({ type:'color', label:`Cor: ${currentColor}` });
+  if (currentSize !== 'todos') chips.push({ type:'size', label:`Tamanho: ${currentSize}` });
+  if (currentStock !== 'todos') chips.push({ type:'stock', label: currentStock === 'disponivel' ? 'Disponíveis' : 'Esgotados' });
+  return chips;
+}
+
+function clearCatalogFilter(type) {
+  if (type === 'campaign') {
+    currentCampaignTheme = null;
+    currentMobileCatalogMode = 'all';
+    currentCategory = 'todos';
+    if (window.history?.replaceState) window.history.replaceState(null, '', 'catalogo.html');
+  } else if (type === 'mode') {
+    currentMobileCatalogMode = 'all';
+  } else if (type === 'brand') {
+    currentBrand = 'todos';
+    syncBrandFilterButtons('todos');
+  } else if (type === 'category') {
+    currentCategory = 'todos';
+    syncCatalogMenuCategory('todos');
+  } else if (type === 'color') {
+    currentColor = 'todos';
+  } else if (type === 'size') {
+    currentSize = 'todos';
+  } else if (type === 'stock') {
+    currentStock = 'todos';
+  }
+  currentPage = 1;
+  applyFilters();
 }
 
 function updateBrandOrbitActive() {
@@ -3440,9 +3531,9 @@ function showMobileTab(tab, el) {
 }
 
 function setBrandFilterMobile(brand, el) {
-  document.querySelectorAll('#mobileBrandFilters .filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
   currentBrand = brand;
+  syncBrandFilterButtons(brand);
+  if (el) el.classList.add('active');
   currentPage = 1;
   applyFilters();
 }
