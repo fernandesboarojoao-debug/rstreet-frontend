@@ -234,32 +234,19 @@
   }
   .catalog-menu-summary::-webkit-details-marker { display:none; }
   .catalog-menu-summary::after {
-    content:'⌄';
+    content:'+';
     width:22px;
     height:22px;
+    border:1px solid rgba(200,169,110,0.32);
+    border-radius:50%;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:16px;
+    font-size:14px;
     line-height:1;
-    color:var(--gold);
-    transition:transform .2s ease;
   }
-  .catalog-menu-section[open] .catalog-menu-summary::after { transform:rotate(180deg); }
+  .catalog-menu-section[open] .catalog-menu-summary::after { content:'-'; }
   .catalog-menu-section-body { padding:0 12px 12px; }
-  .catalog-menu-section-body.is-list,
-  .catalog-menu-section-body.is-list.catalog-mobile-menu-grid {
-    grid-template-columns:1fr;
-    gap:5px;
-  }
-  .catalog-menu-section-body.is-list .catalog-mobile-menu-chip,
-  .catalog-menu-section-body.is-list .catalog-mobile-menu-link {
-    min-height:32px;
-    padding:7px 10px;
-    font-size:10px;
-    letter-spacing:.8px;
-    justify-content:flex-start;
-  }
 
   /* HEADER BANNER */
   .catalog-header {
@@ -1263,47 +1250,32 @@
       <div class="catalog-mobile-menu-logo">R<span>.</span>Street</div>
       <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
     </div>
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Comprar</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list">
-        <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
-        <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
-        <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
-        <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
-        <a class="catalog-mobile-menu-link" href="carrinho.html">Carrinho</a>
-      </div>
-    </details>
+    <div class="catalog-mobile-menu-title">Comprar</div>
+    <div class="catalog-mobile-menu-links is-simple">
+      <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
+      <button type="button" class="catalog-mobile-menu-link" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
+      <button type="button" class="catalog-mobile-menu-link" data-menu-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
+      <button type="button" class="catalog-mobile-menu-link" data-menu-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
+      <a class="catalog-mobile-menu-link" href="carrinho.html">Carrinho</a>
+    </div>
 
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Categorias</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list" id="catalogMenuCategories">
-        <button class="catalog-mobile-menu-chip active" onclick="setCategoryFromMenu('todos', this)">Todos</button>
-      </div>
-    </details>
-
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Marcas</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list" id="catalogMenuBrands">
-        <button class="catalog-mobile-menu-chip active" onclick="setBrandFromMenu('todos', this)">Todos</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Acostamento', this)">Acostamento</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Aeropostale', this)">Aeropostale</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Nike', this)">Nike</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('TXC', this)">TXC</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Ogochi', this)">Ogochi</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Freeway', this)">Freeway</button>
-      </div>
-    </details>
+    <div class="catalog-mobile-menu-title">Filtros</div>
+    <div class="catalog-mobile-menu-links is-simple">
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('categorias')">Categorias</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('marcas')">Marcas</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('cores')">Cores</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('tamanhos')">Tamanhos</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('ordenar')">Preço e ordem</button>
+    </div>
 
     <div id="catalogMenuCampaignSections"></div>
 
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Ajuda</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list">
-        <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
-        <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
-        <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
-      </div>
-    </details>
+    <div class="catalog-mobile-menu-title">Ajuda</div>
+    <div class="catalog-mobile-menu-links is-simple">
+      <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
+      <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
+      <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+    </div>
   </div>
 </div>
 
@@ -1915,16 +1887,14 @@ function renderCatalogMenuCampaigns() {
   }
 
   if (mobileWrap) {
-    mobileWrap.innerHTML = `<details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Campanhas</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list">
+    mobileWrap.innerHTML = `<div class="catalog-mobile-menu-title">Campanhas</div>
+      <div class="catalog-mobile-menu-links is-simple">
         ${themes.map(theme => {
           const titleText = theme.titulo || theme.nome || 'Campanha';
           const isThemeActive = currentCampaignTheme && String(currentCampaignTheme.id) === String(theme.id);
           return `<a class="catalog-mobile-menu-link ${isThemeActive ? 'active' : ''}" href="${escapeAttr(safeCatalogThemeLink(theme))}">${escapeHtml(titleText)}</a>`;
         }).join('')}
-      </div>
-    </details>`;
+      </div>`;
   }
 
   if (desktopWrap) {
