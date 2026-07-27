@@ -671,6 +671,32 @@
     background: rgba(200,169,110,0.2);
     color: var(--gold);
   }
+  .sidebar-campaign {
+    border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.025);
+    border-radius:4px;
+    margin-bottom:10px;
+    overflow:hidden;
+  }
+  .sidebar-campaign summary {
+    min-height:42px;
+    padding:0 12px;
+    color:var(--white);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:1.4px;
+    list-style:none;
+  }
+  .sidebar-campaign summary::-webkit-details-marker { display:none; }
+  .sidebar-campaign summary::after { content:'+'; color:var(--gold); font-size:16px; line-height:1; }
+  .sidebar-campaign[open] summary::after { content:'-'; }
+  .sidebar-campaign-body { padding:0 10px 10px; }
   .price-range-wrap { padding: 8px 0; }
   .price-range-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-400); margin-bottom: 10px; }
   .price-range-labels span { color: var(--gold); font-weight: 600; }
@@ -1184,10 +1210,16 @@
       <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
     </div>
     <details class="catalog-menu-section" open>
-      <summary class="catalog-menu-summary">Vitrines</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-links">
-        <button type="button" class="catalog-mobile-menu-link is-primary" onclick="setMobileCatalogMode('featured')">Novos</button>
-        <button type="button" class="catalog-mobile-menu-link is-soft" onclick="setMobileCatalogMode('sale')">Ofertas</button>
+      <summary class="catalog-menu-summary">Novos</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuFeaturedCategories">
+        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('featured','todos', this)">Todos</button>
+      </div>
+    </details>
+
+    <details class="catalog-menu-section">
+      <summary class="catalog-menu-summary">Ofertas</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuSaleCategories">
+        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('sale','todos', this)">Todos</button>
       </div>
     </details>
 
@@ -1206,33 +1238,14 @@
       </div>
     </details>
 
-    <details class="catalog-menu-section" id="catalogMenuCampaignSection" style="display:none">
-      <summary class="catalog-menu-summary">Campanhas</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-links" id="catalogMenuCampaigns"></div>
-    </details>
+    <div id="catalogMenuCampaignSections"></div>
 
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Preço</summary>
-      <div class="catalog-menu-section-body">
-        <div class="catalog-mobile-price">
-          <div class="catalog-mobile-price-row">
-            <strong>Preço máximo</strong>
-            <span id="mobileMenuPriceLabel">R$ 1000</span>
-          </div>
-          <input type="range" id="mobileMenuPriceRange" min="0" max="1000" value="1000" step="10" oninput="updatePrice(this.value)">
-        </div>
-      </div>
-    </details>
-
-    <details class="catalog-menu-section" open>
-      <summary class="catalog-menu-summary">Atendimento</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-links">
-        <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
-        <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
-        <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
-        <a class="catalog-mobile-menu-link" href="index.html">Voltar para a página inicial</a>
-      </div>
-    </details>
+    <div class="catalog-mobile-menu-links">
+      <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
+      <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
+      <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+      <a class="catalog-mobile-menu-link" href="index.html">Voltar para a página inicial</a>
+    </div>
   </div>
 </div>
 
@@ -1572,6 +1585,7 @@
         <span class="sidebar-option-count" id="cat-Acessorio">0</span>
       </div>
     </div>
+    <div class="sidebar-section" id="desktopCampaignSections" style="display:none"></div>
     <div class="sidebar-section">
       <div class="sidebar-title">Disponibilidade</div>
       <div class="sidebar-option active" onclick="setStockFilter('todos', this)">
@@ -1829,17 +1843,62 @@ function handleCatalogThemeBannerKey(event) {
 }
 
 function renderCatalogMenuCampaigns() {
-  const section = document.getElementById('catalogMenuCampaignSection');
-  const list = document.getElementById('catalogMenuCampaigns');
-  if (!section || !list) return;
+  const mobileWrap = document.getElementById('catalogMenuCampaignSections');
+  const desktopWrap = document.getElementById('desktopCampaignSections');
   const themes = allCatalogThemes.filter(theme => theme?.slug || theme?.botao_link);
   if (!themes.length) {
-    section.style.display = 'none';
-    list.innerHTML = '';
+    if (mobileWrap) mobileWrap.innerHTML = '';
+    if (desktopWrap) {
+      desktopWrap.style.display = 'none';
+      desktopWrap.innerHTML = '';
+    }
     return;
   }
-  section.style.display = '';
-  list.innerHTML = themes.map(theme => {
+
+  if (mobileWrap) {
+    mobileWrap.innerHTML = themes.map(theme => {
+      const titleText = theme.titulo || theme.nome || 'Campanha';
+      const categories = getAvailableCategoriesForTheme(theme);
+      const total = getThemeProducts(theme).length;
+      const themeId = escapeAttr(theme.id);
+      const isThemeActive = currentCampaignTheme && String(currentCampaignTheme.id) === String(theme.id);
+      const allActive = isThemeActive && currentCategory === 'todos';
+      const allButton = `<button class="catalog-mobile-menu-chip ${allActive ? 'active' : ''}" onclick="setCampaignCategoryFromMenu('${themeId}', 'todos', this)">Todos${total ? ` (${total})` : ''}</button>`;
+      const items = categories.map(category => {
+        const active = isThemeActive && currentCategory !== 'todos' && categoryMatches(category.value, currentCategory);
+        return `<button class="catalog-mobile-menu-chip ${active ? 'active' : ''}" onclick="setCampaignCategoryFromMenu('${themeId}', '${escapeAttr(category.value)}', this)">${escapeHtml(category.label)}${category.count ? ` (${category.count})` : ''}</button>`;
+      }).join('');
+      return `<details class="catalog-menu-section" ${isThemeActive ? 'open' : ''}>
+        <summary class="catalog-menu-summary">${escapeHtml(titleText)}</summary>
+        <div class="catalog-menu-section-body catalog-mobile-menu-grid">${categories.length ? allButton + items : '<span class="catalog-smart-empty">Nenhuma categoria disponivel.</span>'}</div>
+      </details>`;
+    }).join('');
+  }
+
+  if (desktopWrap) {
+    desktopWrap.style.display = '';
+    desktopWrap.innerHTML = themes.map(theme => {
+      const titleText = theme.titulo || theme.nome || 'Campanha';
+      const categories = getAvailableCategoriesForTheme(theme);
+      const total = getThemeProducts(theme).length;
+      const themeId = escapeAttr(theme.id);
+      const isThemeActive = currentCampaignTheme && String(currentCampaignTheme.id) === String(theme.id);
+      const allButton = `<div class="sidebar-option ${isThemeActive && currentCategory === 'todos' ? 'active' : ''}" onclick="setCampaignCategoryFromMenu('${themeId}', 'todos', this)">
+        <span class="sidebar-option-label">Todos</span><span class="sidebar-option-count">${total}</span>
+      </div>`;
+      const items = categories.map(category => `<div class="sidebar-option ${isThemeActive && currentCategory !== 'todos' && categoryMatches(category.value, currentCategory) ? 'active' : ''}" onclick="setCampaignCategoryFromMenu('${themeId}', '${escapeAttr(category.value)}', this)">
+        <span class="sidebar-option-label">${escapeHtml(category.label)}</span><span class="sidebar-option-count">${category.count}</span>
+      </div>`).join('');
+      return `<details class="sidebar-campaign" ${isThemeActive ? 'open' : ''}>
+        <summary>${escapeHtml(titleText)}</summary>
+        <div class="sidebar-campaign-body">${categories.length ? allButton + items : '<span class="catalog-smart-empty">Nenhuma categoria disponivel.</span>'}</div>
+      </details>`;
+    }).join('');
+  }
+}
+
+function renderCatalogMenuCampaignLinks() {
+  return allCatalogThemes.map(theme => {
     const titleText = theme.titulo || theme.nome || 'Campanha';
     const isActive = currentCampaignTheme && Number(currentCampaignTheme.id) === Number(theme.id);
     return `<a class="catalog-mobile-menu-link${isActive ? ' active' : ''}" href="${escapeAttr(safeCatalogThemeLink(theme))}">${escapeHtml(titleText)}</a>`;
@@ -2097,6 +2156,39 @@ function setCategoryFromMenu(cat, el) {
   document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
 }
 
+function setCollectionCategoryFromMenu(mode, cat = 'todos', el) {
+  currentMobileCatalogMode = mode || 'all';
+  currentCategory = cat || 'todos';
+  currentColor = 'todos';
+  currentSize = 'todos';
+  currentPage = 1;
+  document.querySelectorAll('#catalogMenuFeaturedCategories .catalog-mobile-menu-chip, #catalogMenuSaleCategories .catalog-mobile-menu-chip').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  syncCatalogMenuCategory(currentCategory);
+  closeCatalogMenu();
+  applyFilters();
+  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function setCampaignCategoryFromMenu(themeId, cat = 'todos', el) {
+  const theme = allCatalogThemes.find(item => String(item.id) === String(themeId));
+  if (!theme) return;
+  currentCampaignTheme = theme;
+  currentMobileCatalogMode = 'all';
+  currentCategory = cat || 'todos';
+  currentColor = 'todos';
+  currentSize = 'todos';
+  currentPage = 1;
+  applyCatalogThemeBanner(theme, true);
+  syncCatalogMenuCategory(currentCategory);
+  closeCatalogMenu();
+  const baseUrl = theme.slug ? `catalogo.html?campanha=${encodeURIComponent(theme.slug)}` : 'catalogo.html';
+  const url = baseUrl + (currentCategory !== 'todos' ? `&categoria=${encodeURIComponent(currentCategory)}` : '');
+  if (window.history?.replaceState) window.history.replaceState(null, '', url);
+  applyFilters();
+  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
+}
+
 function setMobileCatalogMode(mode = 'all') {
   if (mode === 'all' && currentCampaignTheme) {
     window.location.href = 'catalogo.html';
@@ -2301,6 +2393,43 @@ function getAvailableCategories() {
   return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
 }
 
+function getAvailableCategoriesForMode(mode) {
+  const map = new Map();
+  allProducts
+    .filter(product => {
+      if (product?.ativo === false) return false;
+      if (mode === 'featured') return product.destaque_catalogo === true;
+      if (mode === 'sale') return getProductDiscountValue(product) > 0;
+      return true;
+    })
+    .forEach(product => {
+      const raw = String(product?.categoria || '').trim();
+      if (!raw) return;
+      const key = normalizeSearchText(raw);
+      if (!map.has(key)) map.set(key, { value: raw, label: getCategoryLabel(raw), count: 0 });
+      map.get(key).count += 1;
+    });
+  return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+}
+
+function getThemeProducts(theme) {
+  if (!theme?.produto_ids?.length) return [];
+  const ids = new Set(theme.produto_ids.map(Number));
+  return allProducts.filter(product => product?.ativo !== false && ids.has(Number(product.id)));
+}
+
+function getAvailableCategoriesForTheme(theme) {
+  const map = new Map();
+  getThemeProducts(theme).forEach(product => {
+    const raw = String(product?.categoria || '').trim();
+    if (!raw) return;
+    const key = normalizeSearchText(raw);
+    if (!map.has(key)) map.set(key, { value: raw, label: getCategoryLabel(raw), count: 0 });
+    map.get(key).count += 1;
+  });
+  return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' }));
+}
+
 function renderCategoryButton(category, target = 'sidebar') {
   const value = category?.value || 'todos';
   const label = category?.label || 'Todos';
@@ -2336,6 +2465,26 @@ function updateDynamicCategoryFilters() {
 
   const mobile = document.getElementById('mobileCatFilters');
   if (mobile) mobile.innerHTML = visibleCategories.map(item => renderCategoryButton(item, 'mobile')).join('');
+
+  renderCollectionCategoryMenu('featured', 'catalogMenuFeaturedCategories');
+  renderCollectionCategoryMenu('sale', 'catalogMenuSaleCategories');
+  renderCatalogMenuCampaigns();
+}
+
+function renderCollectionCategoryMenu(mode, targetId) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  const categories = getAvailableCategoriesForMode(mode);
+  const total = categories.reduce((sum, item) => sum + Number(item.count || 0), 0);
+  const allActive = currentMobileCatalogMode === mode && currentCategory === 'todos';
+  const allButton = `<button class="catalog-mobile-menu-chip ${allActive ? 'active' : ''}" onclick="setCollectionCategoryFromMenu('${mode}','todos', this)">Todos${total ? ` (${total})` : ''}</button>`;
+  const items = categories.map(category => {
+    const active = currentMobileCatalogMode === mode && currentCategory !== 'todos' && categoryMatches(category.value, currentCategory);
+    return `<button class="catalog-mobile-menu-chip ${active ? 'active' : ''}" onclick="setCollectionCategoryFromMenu('${mode}','${escapeAttr(category.value)}', this)">${escapeHtml(category.label)}${category.count ? ` (${category.count})` : ''}</button>`;
+  }).join('');
+  target.innerHTML = categories.length
+    ? allButton + items
+    : '<span class="catalog-smart-empty">Nenhuma categoria disponivel.</span>';
 }
 
 function getCatalogBaseProducts({ includeCategory = true, includeSearch = true, includeBrand = true, includePrice = true, includeStock = true } = {}) {
