@@ -1261,6 +1261,19 @@
     </div>
 
     <div class="catalog-mobile-menu-title">Filtrar</div>
+    <details class="catalog-menu-section">
+      <summary class="catalog-menu-summary">Marcas</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuBrands">
+        <button class="catalog-mobile-menu-chip active" onclick="setBrandFromMenu('todos', this)">Todos</button>
+        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Acostamento', this)">Acostamento</button>
+        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Aeropostale', this)">Aeropostale</button>
+        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Nike', this)">Nike</button>
+        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('TXC', this)">TXC</button>
+        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Ogochi', this)">Ogochi</button>
+        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Freeway', this)">Freeway</button>
+      </div>
+    </details>
+
     <details class="catalog-menu-section" open>
       <summary class="catalog-menu-summary">Categorias</summary>
       <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuCategories">
@@ -2095,7 +2108,7 @@ function setBrandFilter(brand, el) {
 }
 
 function syncBrandFilterButtons(activeBrand = currentBrand) {
-  document.querySelectorAll('#brandFilters .filter-btn, #mobileBrandFilters .filter-btn').forEach(btn => {
+  document.querySelectorAll('#brandFilters .filter-btn, #mobileBrandFilters .filter-btn, #catalogMenuBrands .catalog-mobile-menu-chip').forEach(btn => {
     const text = btn.textContent.trim();
     const isAll = activeBrand === 'todos' && text === 'Todos';
     btn.classList.toggle('active', isAll || text === activeBrand);
@@ -2107,6 +2120,16 @@ function setBrandFromCarousel(brand) {
   const btn = Array.from(document.querySelectorAll('#brandFilters .filter-btn'))
     .find(item => item.textContent.trim() === brand);
   setBrandFilter(brand, btn);
+  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function setBrandFromMenu(brand, el) {
+  currentBrand = brand || 'todos';
+  syncBrandFilterButtons(currentBrand);
+  if (el) el.classList.add('active');
+  currentPage = 1;
+  closeCatalogMenu();
+  applyFilters();
   document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
