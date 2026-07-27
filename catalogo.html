@@ -162,14 +162,12 @@
     border-color:rgba(200,169,110,0.28);
     color:var(--gold-light);
   }
-  .catalog-mobile-menu-links.is-compact {
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-  .catalog-mobile-menu-links.is-compact .catalog-mobile-menu-link {
-    min-height:46px;
-    justify-content:center;
-    text-align:center;
-    padding:10px 8px;
+  .catalog-mobile-menu-links.is-simple { gap:6px; }
+  .catalog-mobile-menu-links.is-simple .catalog-mobile-menu-link {
+    min-height:36px;
+    padding:8px 10px;
+    font-size:11px;
+    letter-spacing:1px;
   }
   .catalog-mobile-menu-title {
     display:flex;
@@ -1253,64 +1251,30 @@
       <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
     </div>
     <div class="catalog-mobile-menu-title">Comprar</div>
-    <div class="catalog-mobile-menu-links is-compact">
-      <button type="button" class="catalog-mobile-menu-link" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Todos</button>
+    <div class="catalog-mobile-menu-links is-simple">
+      <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
+      <button type="button" class="catalog-mobile-menu-link" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
       <button type="button" class="catalog-mobile-menu-link" data-menu-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
       <button type="button" class="catalog-mobile-menu-link" data-menu-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
       <a class="catalog-mobile-menu-link" href="carrinho.html">Carrinho</a>
     </div>
 
-    <div class="catalog-mobile-menu-title">Filtrar</div>
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Marcas</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuBrands">
-        <button class="catalog-mobile-menu-chip active" onclick="setBrandFromMenu('todos', this)">Todos</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Acostamento', this)">Acostamento</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Aeropostale', this)">Aeropostale</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Nike', this)">Nike</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('TXC', this)">TXC</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Ogochi', this)">Ogochi</button>
-        <button class="catalog-mobile-menu-chip" onclick="setBrandFromMenu('Freeway', this)">Freeway</button>
-      </div>
-    </details>
-
-    <details class="catalog-menu-section" open>
-      <summary class="catalog-menu-summary">Categorias</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuCategories">
-        <button class="catalog-mobile-menu-chip active" onclick="setCategoryFromMenu('todos', this)">Todos</button>
-        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camisa', this)">Camisas</button>
-        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Camiseta', this)">Camisetas</button>
-        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Regata', this)">Regatas</button>
-        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Calca', this)">Calças</button>
-        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Bermuda', this)">Bermudas</button>
-        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Tenis', this)">Tênis</button>
-        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Chinelo', this)">Chinelos</button>
-        <button class="catalog-mobile-menu-chip" onclick="setCategoryFromMenu('Acessorio', this)">Acessórios</button>
-      </div>
-    </details>
-
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Novos por categoria</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuFeaturedCategories">
-        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('featured','todos', this)">Todos</button>
-      </div>
-    </details>
-
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Ofertas por categoria</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid" id="catalogMenuSaleCategories">
-        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('sale','todos', this)">Todos</button>
-      </div>
-    </details>
+    <div class="catalog-mobile-menu-title">Filtros</div>
+    <div class="catalog-mobile-menu-links is-simple">
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('categorias')">Categorias</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('marcas')">Marcas</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('cores')">Cores</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('tamanhos')">Tamanhos</button>
+      <button type="button" class="catalog-mobile-menu-link" onclick="openMobileFilterTab('ordenar')">Preço e ordem</button>
+    </div>
 
     <div id="catalogMenuCampaignSections"></div>
 
     <div class="catalog-mobile-menu-title">Ajuda</div>
-    <div class="catalog-mobile-menu-links">
+    <div class="catalog-mobile-menu-links is-simple">
       <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
       <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
       <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
-      <a class="catalog-mobile-menu-link" href="index.html">Voltar para a página inicial</a>
     </div>
   </div>
 </div>
@@ -1544,11 +1508,11 @@
 
     <!-- ABAS -->
     <div class="mobile-filter-tabs">
-      <button class="mobile-tab active" onclick="showMobileTab('marcas', this)">Marcas</button>
-      <button class="mobile-tab" onclick="showMobileTab('categorias', this)">Categorias</button>
-      <button class="mobile-tab" onclick="showMobileTab('cores', this)">Cores</button>
-      <button class="mobile-tab" onclick="showMobileTab('tamanhos', this)">Tamanhos</button>
-      <button class="mobile-tab" onclick="showMobileTab('ordenar', this)">Ordenar</button>
+      <button class="mobile-tab active" data-tab="marcas" onclick="showMobileTab('marcas', this)">Marcas</button>
+      <button class="mobile-tab" data-tab="categorias" onclick="showMobileTab('categorias', this)">Categorias</button>
+      <button class="mobile-tab" data-tab="cores" onclick="showMobileTab('cores', this)">Cores</button>
+      <button class="mobile-tab" data-tab="tamanhos" onclick="showMobileTab('tamanhos', this)">Tamanhos</button>
+      <button class="mobile-tab" data-tab="ordenar" onclick="showMobileTab('ordenar', this)">Ordenar</button>
     </div>
 
     <!-- ABA MARCAS -->
@@ -1923,23 +1887,14 @@ function renderCatalogMenuCampaigns() {
   }
 
   if (mobileWrap) {
-    mobileWrap.innerHTML = themes.map(theme => {
-      const titleText = theme.titulo || theme.nome || 'Campanha';
-      const categories = getAvailableCategoriesForTheme(theme);
-      const total = getThemeProducts(theme).length;
-      const themeId = escapeAttr(theme.id);
-      const isThemeActive = currentCampaignTheme && String(currentCampaignTheme.id) === String(theme.id);
-      const allActive = isThemeActive && currentCategory === 'todos';
-      const allButton = `<button class="catalog-mobile-menu-chip ${allActive ? 'active' : ''}" onclick="setCampaignCategoryFromMenu('${themeId}', 'todos', this)">Todos${total ? ` (${total})` : ''}</button>`;
-      const items = categories.map(category => {
-        const active = isThemeActive && currentCategory !== 'todos' && categoryMatches(category.value, currentCategory);
-        return `<button class="catalog-mobile-menu-chip ${active ? 'active' : ''}" onclick="setCampaignCategoryFromMenu('${themeId}', '${escapeAttr(category.value)}', this)">${escapeHtml(category.label)}${category.count ? ` (${category.count})` : ''}</button>`;
-      }).join('');
-      return `<details class="catalog-menu-section" ${isThemeActive ? 'open' : ''}>
-        <summary class="catalog-menu-summary">${escapeHtml(titleText)}</summary>
-        <div class="catalog-menu-section-body catalog-mobile-menu-grid">${categories.length ? allButton + items : '<span class="catalog-smart-empty">Nenhuma categoria disponivel.</span>'}</div>
-      </details>`;
-    }).join('');
+    mobileWrap.innerHTML = `<div class="catalog-mobile-menu-title">Campanhas</div>
+      <div class="catalog-mobile-menu-links is-simple">
+        ${themes.map(theme => {
+          const titleText = theme.titulo || theme.nome || 'Campanha';
+          const isThemeActive = currentCampaignTheme && String(currentCampaignTheme.id) === String(theme.id);
+          return `<a class="catalog-mobile-menu-link ${isThemeActive ? 'active' : ''}" href="${escapeAttr(safeCatalogThemeLink(theme))}">${escapeHtml(titleText)}</a>`;
+        }).join('')}
+      </div>`;
   }
 
   if (desktopWrap) {
@@ -2135,6 +2090,7 @@ function setBrandFromMenu(brand, el) {
 
 function setCategoryFilter(cat, el) {
   currentCategory = cat;
+  currentSize = 'todos';
   document.querySelectorAll('.sidebar-option').forEach(o => o.classList.remove('active'));
   if (el) el.classList.add('active');
   currentPage = 1;
@@ -2235,6 +2191,7 @@ function setCategoryFromMenu(cat, el) {
   document.querySelectorAll('#catalogMenuCategories .catalog-mobile-menu-chip').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
   currentCategory = cat;
+  currentSize = 'todos';
   currentPage = 1;
   syncCatalogMenuCategory(cat);
   applyFilters();
@@ -2711,11 +2668,13 @@ function updateSmartFilterOptions() {
   colorWrap.innerHTML = colorHtml;
   if (mobileColorWrap) mobileColorWrap.innerHTML = colorHtml;
 
-  const sizeItems = sortCatalogSizes([...sizes]);
-  const sizeHtml = [
-    `<button type="button" class="catalog-smart-swatch ${currentSize === 'todos' ? 'active' : ''}" onclick="setSizeFilter('todos')">Todos</button>`,
-    ...sizeItems.map(size => `<button type="button" class="catalog-smart-swatch ${sameCatalogText(size, currentSize) ? 'active' : ''}" onclick="setSizeFilter('${escapeAttr(size)}')">${escapeHtml(size)}</button>`)
-  ].join('') || '<span class="catalog-smart-empty">Nenhum tamanho disponivel.</span>';
+  const sizeItems = currentCategory === 'todos' ? [] : sortCatalogSizes([...sizes]);
+  const sizeHtml = currentCategory === 'todos'
+    ? '<span class="catalog-smart-empty">Escolha uma categoria para ver os tamanhos certos.</span>'
+    : ([
+      `<button type="button" class="catalog-smart-swatch ${currentSize === 'todos' ? 'active' : ''}" onclick="setSizeFilter('todos')">Todos</button>`,
+      ...sizeItems.map(size => `<button type="button" class="catalog-smart-swatch ${sameCatalogText(size, currentSize) ? 'active' : ''}" onclick="setSizeFilter('${escapeAttr(size)}')">${escapeHtml(size)}</button>`)
+    ].join('') || '<span class="catalog-smart-empty">Nenhum tamanho disponivel.</span>');
   sizeWrap.innerHTML = sizeHtml;
   if (mobileSizeWrap) mobileSizeWrap.innerHTML = sizeHtml;
 }
@@ -3572,8 +3531,19 @@ function toggleMobileFilters() {
 function showMobileTab(tab, el) {
   document.querySelectorAll('.mobile-tab-content').forEach(t => t.style.display = 'none');
   document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('mtab-' + tab).style.display = 'block';
-  el.classList.add('active');
+  const target = document.getElementById('mtab-' + tab);
+  if (target) target.style.display = 'block';
+  const activeTab = el || document.querySelector(`.mobile-tab[data-tab="${tab}"]`);
+  if (activeTab) activeTab.classList.add('active');
+}
+
+function openMobileFilterTab(tab) {
+  closeCatalogMenu();
+  const panel = document.getElementById('mobileFiltersPanel');
+  const btn = document.getElementById('filterMobileBtn');
+  if (panel) panel.classList.add('open');
+  if (btn) btn.textContent = '✕ Fechar';
+  showMobileTab(tab);
 }
 
 function setBrandFilterMobile(brand, el) {
@@ -3588,6 +3558,7 @@ function setCategoryFilterMobile(cat, el) {
   document.querySelectorAll('#mobileCatFilters .filter-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   currentCategory = cat;
+  currentSize = 'todos';
   currentPage = 1;
   syncCatalogMenuCategory(cat);
   applyFilters();
