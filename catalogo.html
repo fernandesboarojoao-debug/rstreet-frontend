@@ -234,19 +234,18 @@
   }
   .catalog-menu-summary::-webkit-details-marker { display:none; }
   .catalog-menu-summary::after {
-    content:'';
+    content:'⌄';
     width:22px;
     height:22px;
     display:flex;
     align-items:center;
     justify-content:center;
-    border-right:2px solid var(--gold);
-    border-bottom:2px solid var(--gold);
-    transform:rotate(45deg) scale(.42);
-    transform-origin:center;
+    font-size:16px;
+    line-height:1;
+    color:var(--gold);
     transition:transform .2s ease;
   }
-  .catalog-menu-section[open] .catalog-menu-summary::after { transform:rotate(225deg) scale(.42); }
+  .catalog-menu-section[open] .catalog-menu-summary::after { transform:rotate(180deg); }
   .catalog-menu-section-body { padding:0 12px 12px; }
   .catalog-menu-section-body.is-list,
   .catalog-menu-section-body.is-list.catalog-mobile-menu-grid {
@@ -260,13 +259,6 @@
     font-size:10px;
     letter-spacing:.8px;
     justify-content:flex-start;
-  }
-  .catalog-mobile-menu-actions {
-    display:grid;
-    gap:8px;
-    margin-top:14px;
-    padding-top:14px;
-    border-top:1px solid rgba(255,255,255,0.08);
   }
 
   /* HEADER BANNER */
@@ -1339,16 +1331,13 @@
       <button type="button" class="catalog-mobile-menu-close" onclick="closeCatalogMenu()" aria-label="Fechar menu">×</button>
     </div>
     <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Novos</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list" id="catalogMenuFeaturedCategories">
-        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('featured','todos', this)">Todos</button>
-      </div>
-    </details>
-
-    <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Ofertas</summary>
-      <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list" id="catalogMenuSaleCategories">
-        <button class="catalog-mobile-menu-chip" onclick="setCollectionCategoryFromMenu('sale','todos', this)">Todos</button>
+      <summary class="catalog-menu-summary">Comprar</summary>
+      <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list">
+        <a class="catalog-mobile-menu-link" href="sobre.html">Sobre a R Street</a>
+        <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
+        <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
+        <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
+        <a class="catalog-mobile-menu-link" href="carrinho.html">Carrinho</a>
       </div>
     </details>
 
@@ -1375,19 +1364,13 @@
     <div id="catalogMenuCampaignSections"></div>
 
     <details class="catalog-menu-section">
-      <summary class="catalog-menu-summary">Conhecer a loja</summary>
+      <summary class="catalog-menu-summary">Ajuda</summary>
       <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list">
-        <a class="catalog-mobile-menu-link" href="sobre.html">Sobre a R Street</a>
+        <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
         <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
         <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
       </div>
     </details>
-
-    <div class="catalog-mobile-menu-actions">
-      <button type="button" class="catalog-mobile-menu-link is-primary" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
-      <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
-      <a class="catalog-mobile-menu-link" href="carrinho.html">Carrinho</a>
-    </div>
   </div>
 </div>
 
@@ -1431,33 +1414,6 @@
     <span class="catalog-quick-name">Catálogo</span>
   </button>
 </section>
-
-<!-- TOOLBAR -->
-<div class="toolbar">
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="applyFilters()">
-  </div>
-  <div class="filter-group" id="brandFilters">
-    <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
-    <button class="filter-btn" onclick="setBrandFilter('Acostamento', this)">Acostamento</button>
-    <button class="filter-btn" onclick="setBrandFilter('Aeropostale', this)">Aeropostale</button>
-    <button class="filter-btn" onclick="setBrandFilter('Nike', this)">Nike</button>
-    <button class="filter-btn" onclick="setBrandFilter('TXC', this)">TXC</button>
-    <button class="filter-btn" onclick="setBrandFilter('Ogochi', this)">Ogochi</button>
-    <button class="filter-btn" onclick="setBrandFilter('Freeway', this)">Freeway</button>
-  </div>
-  <select class="sort-select" id="sortSelect" onchange="applyFilters()">
-    <option value="default">Ordenar por</option>
-    <option value="preco_asc">Menor Preço</option>
-    <option value="preco_desc">Maior Preço</option>
-    <option value="nome">Nome A-Z</option>
-    <option value="novos">Mais Novos</option>
-  </select>
-  <div class="result-count">Mostrando <span id="resultCount">0</span> produtos</div>
-  <!-- Botão filtrar só aparece no celular -->
-  <button class="filter-mobile-btn" id="filterMobileBtn" onclick="toggleMobileFilters()">⚙️ Filtrar</button>
-</div>
 
 <div class="catalog-theme-banner" id="catalogThemeBanner" onclick="openCatalogThemeBanner(event)" onkeydown="handleCatalogThemeBannerKey(event)">
   <div class="catalog-theme-content">
@@ -1537,6 +1493,33 @@
     <span id="mobileCurrentSub">Mostrando todos os produtos disponíveis.</span>
   </div>
 </section>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="applyFilters()">
+  </div>
+  <div class="filter-group" id="brandFilters">
+    <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
+    <button class="filter-btn" onclick="setBrandFilter('Acostamento', this)">Acostamento</button>
+    <button class="filter-btn" onclick="setBrandFilter('Aeropostale', this)">Aeropostale</button>
+    <button class="filter-btn" onclick="setBrandFilter('Nike', this)">Nike</button>
+    <button class="filter-btn" onclick="setBrandFilter('TXC', this)">TXC</button>
+    <button class="filter-btn" onclick="setBrandFilter('Ogochi', this)">Ogochi</button>
+    <button class="filter-btn" onclick="setBrandFilter('Freeway', this)">Freeway</button>
+  </div>
+  <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+    <option value="default">Ordenar por</option>
+    <option value="preco_asc">Menor Preço</option>
+    <option value="preco_desc">Maior Preço</option>
+    <option value="nome">Nome A-Z</option>
+    <option value="novos">Mais Novos</option>
+  </select>
+  <div class="result-count">Mostrando <span id="resultCount">0</span> produtos</div>
+  <!-- Botão filtrar só aparece no celular -->
+  <button class="filter-mobile-btn" id="filterMobileBtn" onclick="toggleMobileFilters()">⚙️ Filtrar</button>
+</div>
 
 <div class="catalog-active-area" id="catalogActiveArea">
   <div class="catalog-active-copy">
