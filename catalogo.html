@@ -52,10 +52,10 @@
   }
   .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 5px; color: var(--white); text-decoration: none; }
   .nav-logo span { color: var(--gold); }
-  .nav-links { display: flex; gap: 28px; list-style: none; align-items: center; }
-  .nav-links a { color: var(--gray-200); text-decoration: none; font-size: 13px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; transition: color 0.3s; }
+  .nav-links { display: flex; gap: 20px; list-style: none; align-items: center; }
+  .nav-links a { color: var(--gray-200); text-decoration: none; font-size: 12px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; transition: color 0.3s, border-color 0.3s; padding:6px 0; border-bottom:1px solid transparent; }
   .nav-links a:hover { color: var(--gold); }
-  .nav-links a.active { color: var(--gold); }
+  .nav-links a.active { color: var(--gold); border-bottom-color:rgba(200,169,110,.65); }
   .nav-back { background: transparent; border: 1px solid rgba(200,169,110,0.4); color: var(--gold); padding: 8px 20px; font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; text-decoration: none; border-radius: 2px; transition: all 0.3s; }
   .nav-back:hover { background: var(--gold); color: var(--black); }
   .nav-action { color: var(--gold); text-decoration: none; font-size: 12px; border: 1px solid rgba(200,169,110,0.3); padding: 8px 18px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: all 0.3s; white-space: nowrap; }
@@ -264,10 +264,10 @@
   /* HEADER BANNER */
   .catalog-header {
     background:
-      linear-gradient(90deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.66) 42%, rgba(10,10,10,0.22) 100%),
+      linear-gradient(90deg, rgba(10,10,10,0.94) 0%, rgba(10,10,10,0.7) 43%, rgba(10,10,10,0.18) 100%),
       url('hero-primavera.png') center 42% / cover no-repeat;
-    min-height: 430px;
-    padding: 96px 60px 58px;
+    min-height: 460px;
+    padding: 104px 60px 60px;
     position: relative;
     overflow: hidden;
     border-bottom: 1px solid rgba(200,169,110,0.1);
@@ -310,8 +310,27 @@
   }
   .catalog-hero-btn.is-primary { background:var(--gold); color:var(--black); border-color:var(--gold); }
   .catalog-hero-btn:hover { transform:translateY(-1px); border-color:var(--gold); }
+  .catalog-entry-nav {
+    width:calc(100% - 120px);
+    max-width:1320px;
+    margin:22px auto 0;
+    border:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+    padding:16px;
+    border-radius:4px;
+  }
+  .catalog-entry-head {
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:12px;
+  }
+  .catalog-entry-kicker { color:var(--gold); font-size:9px; letter-spacing:2px; text-transform:uppercase; font-weight:900; }
+  .catalog-entry-title { color:var(--white); font-size:15px; font-weight:900; margin-top:3px; }
+  .catalog-entry-note { color:var(--gray-400); font-size:11px; text-align:right; max-width:360px; line-height:1.4; }
   .catalog-quick-nav {
-    margin:16px 60px 0;
+    margin:0;
     display:grid;
     grid-template-columns:repeat(6,minmax(0,1fr));
     gap:10px;
@@ -335,6 +354,10 @@
   .catalog-quick-name { font-size:13px; font-weight:900; line-height:1.2; }
   .catalog-quick-link:hover,
   .catalog-quick-link.active { border-color:rgba(200,169,110,.72); background:rgba(200,169,110,.12); }
+  .catalog-quick-link.is-feature {
+    background:linear-gradient(135deg, rgba(200,169,110,.16), rgba(255,255,255,.025));
+    border-color:rgba(200,169,110,.26);
+  }
   .catalog-theme-banner { display:none; margin:24px 60px 0; border:1px solid rgba(200,169,110,.25); background:var(--gray-800); min-height:220px; position:relative; overflow:hidden; border-radius:4px; }
   .catalog-theme-banner.is-visible { display:flex; align-items:flex-end; }
   .catalog-theme-banner.is-linkable { cursor:pointer; }
@@ -1142,6 +1165,14 @@
   }
   .mobile-filter-row { display: flex; flex-wrap: wrap; gap: 8px; }
 
+  @media (max-width: 1180px) and (min-width: 901px) {
+    nav { padding:16px 28px; gap:18px; }
+    .nav-links { gap:12px; }
+    .nav-links a { font-size:11px; letter-spacing:1px; }
+    .nav-action { display:none; }
+    .nav-back { padding:8px 14px; font-size:11px; letter-spacing:1.3px; }
+  }
+
   @media (max-width: 900px) {
     nav {
       padding: 12px 16px;
@@ -1178,7 +1209,10 @@
     .catalog-header-sub { font-size: 14px; line-height: 1.55; max-width: 360px; }
     .catalog-hero-actions { margin-top:16px; gap:8px; }
     .catalog-hero-btn { min-height:38px; padding:0 13px; font-size:10px; }
-    .catalog-quick-nav { margin:12px 16px 0; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .catalog-entry-nav { width:calc(100% - 32px); margin-top:14px; padding:12px; }
+    .catalog-entry-head { align-items:flex-start; flex-direction:column; gap:4px; margin-bottom:10px; }
+    .catalog-entry-note { text-align:left; max-width:none; }
+    .catalog-quick-nav { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
     .catalog-quick-link { min-height:58px; padding:9px; }
     .catalog-quick-kicker { font-size:8px; letter-spacing:1.2px; }
     .catalog-quick-name { font-size:11px; }
@@ -1243,7 +1277,8 @@
     .catalog-header-sub { font-size: 14px; line-height: 1.55; width: min(100%, 320px); overflow-wrap: break-word; }
     .catalog-hero-actions { display:grid; grid-template-columns:1fr 1fr; }
     .catalog-hero-actions .catalog-hero-btn:last-child { grid-column:span 2; }
-    .catalog-quick-nav { margin:10px 12px 0; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+    .catalog-entry-nav { width:calc(100% - 24px); margin-top:12px; padding:10px; }
+    .catalog-quick-nav { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
     .catalog-quick-link { min-height:54px; padding:8px; }
     .catalog-theme-banner { margin:16px 12px 0; min-height:176px; }
     .catalog-theme-banner.is-campaign-page { margin:0; min-height:232px; }
@@ -1315,8 +1350,11 @@
   <button type="button" class="mobile-menu-toggle" onclick="toggleCatalogMenu()" aria-label="Abrir menu" aria-expanded="false">☰</button>
   <a href="catalogo.html" class="nav-logo">R<span>.</span>Street</a>
   <ul class="nav-links">
-    <li><a href="sobre.html">Sobre</a></li>
     <li><a href="catalogo.html" class="active">Catálogo</a></li>
+    <li><a href="catalogo.html?tipo=novos">Novos</a></li>
+    <li><a href="catalogo.html?tipo=ofertas">Ofertas</a></li>
+    <li><a href="#marcas-catalogo">Marcas</a></li>
+    <li><a href="sobre.html">Sobre</a></li>
     <li><a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a></li>
   </ul>
   <a href="acompanhar.html" class="nav-action">Acompanhar Pedido</a>
@@ -1333,7 +1371,6 @@
     <details class="catalog-menu-section">
       <summary class="catalog-menu-summary">Comprar</summary>
       <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list">
-        <a class="catalog-mobile-menu-link" href="sobre.html">Sobre a R Street</a>
         <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
         <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
         <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
@@ -1369,6 +1406,7 @@
         <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
         <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
         <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+        <a class="catalog-mobile-menu-link" href="sobre.html">Sobre a R Street</a>
       </div>
     </details>
   </div>
@@ -1378,41 +1416,50 @@
 <div class="catalog-header">
   <div class="catalog-header-content">
     <div class="catalog-header-label">R Street Moda Masculina</div>
-    <h1 class="catalog-header-title">Escolha seu estilo<br><span>sem procurar demais</span></h1>
-    <p class="catalog-header-sub">Novidades, ofertas, marcas e categorias organizadas em uma vitrine mais direta para comprar com calma e achar a peça certa.</p>
+    <h1 class="catalog-header-title">Moda masculina<br><span>selecionada</span></h1>
+    <p class="catalog-header-sub">Uma vitrine direta para comprar por novidades, ofertas, marcas e categorias, com a curadoria da R Street.</p>
     <div class="catalog-hero-actions">
-      <button type="button" class="catalog-hero-btn is-primary" onclick="setMobileCatalogMode('featured')">Ver novos</button>
+      <button type="button" class="catalog-hero-btn is-primary" onclick="setMobileCatalogMode('featured')">Ver novidades</button>
       <button type="button" class="catalog-hero-btn" onclick="setMobileCatalogMode('sale')">Ver ofertas</button>
       <a class="catalog-hero-btn" href="sobre.html">Conhecer a loja</a>
     </div>
   </div>
 </div>
 
-<section class="catalog-quick-nav" aria-label="Atalhos do catalogo">
-  <button type="button" class="catalog-quick-link" data-quick-mode="featured" onclick="setMobileCatalogMode('featured')">
-    <span class="catalog-quick-kicker">Vitrine</span>
-    <span class="catalog-quick-name">Novos</span>
-  </button>
-  <button type="button" class="catalog-quick-link" data-quick-mode="sale" onclick="setMobileCatalogMode('sale')">
-    <span class="catalog-quick-kicker">Condição</span>
-    <span class="catalog-quick-name">Ofertas</span>
-  </button>
-  <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Camiseta')">
-    <span class="catalog-quick-kicker">Categoria</span>
-    <span class="catalog-quick-name">Camisetas</span>
-  </button>
-  <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Tenis')">
-    <span class="catalog-quick-kicker">Categoria</span>
-    <span class="catalog-quick-name">Tênis</span>
-  </button>
-  <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Calca')">
-    <span class="catalog-quick-kicker">Categoria</span>
-    <span class="catalog-quick-name">Calças</span>
-  </button>
-  <button type="button" class="catalog-quick-link" onclick="setMobileCatalogMode('all')">
-    <span class="catalog-quick-kicker">Tudo</span>
-    <span class="catalog-quick-name">Catálogo</span>
-  </button>
+<section class="catalog-entry-nav" aria-label="Atalhos do catalogo">
+  <div class="catalog-entry-head">
+    <div>
+      <div class="catalog-entry-kicker">Comprar por vitrine</div>
+      <div class="catalog-entry-title">Escolha uma seção para começar</div>
+    </div>
+    <div class="catalog-entry-note">Depois refine por marca, cor ou tamanho se precisar.</div>
+  </div>
+  <div class="catalog-quick-nav">
+    <button type="button" class="catalog-quick-link is-feature" data-quick-mode="featured" onclick="setMobileCatalogMode('featured')">
+      <span class="catalog-quick-kicker">Vitrine</span>
+      <span class="catalog-quick-name">Novos</span>
+    </button>
+    <button type="button" class="catalog-quick-link is-feature" data-quick-mode="sale" onclick="setMobileCatalogMode('sale')">
+      <span class="catalog-quick-kicker">Condição</span>
+      <span class="catalog-quick-name">Ofertas</span>
+    </button>
+    <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Camiseta')">
+      <span class="catalog-quick-kicker">Categoria</span>
+      <span class="catalog-quick-name">Camisetas</span>
+    </button>
+    <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Tenis')">
+      <span class="catalog-quick-kicker">Categoria</span>
+      <span class="catalog-quick-name">Tênis</span>
+    </button>
+    <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Calca')">
+      <span class="catalog-quick-kicker">Categoria</span>
+      <span class="catalog-quick-name">Calças</span>
+    </button>
+    <button type="button" class="catalog-quick-link" onclick="setMobileCatalogMode('all')">
+      <span class="catalog-quick-kicker">Tudo</span>
+      <span class="catalog-quick-name">Catálogo</span>
+    </button>
+  </div>
 </section>
 
 <div class="catalog-theme-banner" id="catalogThemeBanner" onclick="openCatalogThemeBanner(event)" onkeydown="handleCatalogThemeBannerKey(event)">
@@ -1525,7 +1572,7 @@
   <div class="catalog-active-copy">
     <div class="catalog-active-icon">✓</div>
     <div>
-      <div class="catalog-active-kicker">Navegação atual</div>
+      <div class="catalog-active-kicker">Você está em</div>
       <div class="catalog-active-title" id="catalogActiveAreaTitle">Catálogo completo</div>
       <div class="catalog-active-sub" id="catalogActiveAreaSub">Mostrando todos os produtos disponíveis.</div>
       <div class="catalog-active-trail" id="catalogActiveTrail"></div>
@@ -1548,7 +1595,7 @@
   </div>
 </div>
 
-<section class="brand-orbit" aria-label="Comprar por marca">
+<section class="brand-orbit" id="marcas-catalogo" aria-label="Comprar por marca">
   <div class="brand-orbit-track" id="brandOrbitTrack">
     <div class="brand-orbit-group">
       <button type="button" class="brand-orbit-item" data-brand="Acostamento" onclick="setBrandFromCarousel('Acostamento')">
