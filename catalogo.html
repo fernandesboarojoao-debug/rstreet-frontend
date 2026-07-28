@@ -263,27 +263,78 @@
 
   /* HEADER BANNER */
   .catalog-header {
-    background: var(--gray-900);
-    padding: 80px 60px 60px;
+    background:
+      linear-gradient(90deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.66) 42%, rgba(10,10,10,0.22) 100%),
+      url('hero-primavera.png') center 42% / cover no-repeat;
+    min-height: 430px;
+    padding: 96px 60px 58px;
     position: relative;
     overflow: hidden;
     border-bottom: 1px solid rgba(200,169,110,0.1);
+    display:flex;
+    align-items:flex-end;
   }
   .catalog-header::before {
-    content: 'CATÁLOGO';
+    content: 'R STREET';
     position: absolute;
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 200px;
-    color: rgba(255,255,255,0.02);
-    right: -20px; top: 50%;
-    transform: translateY(-50%);
+    font-size: 180px;
+    color: rgba(255,255,255,0.035);
+    right: -8px; bottom: 14px;
     letter-spacing: 20px;
     pointer-events: none;
   }
-  .catalog-header-label { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
-  .catalog-header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 7vw, 90px); line-height: 1; margin-bottom: 16px; }
+  .catalog-header-content { position:relative; z-index:1; width:min(680px, 100%); }
+  .catalog-header-label { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; font-weight:800; }
+  .catalog-header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(54px, 7.4vw, 96px); line-height: .92; margin-bottom: 16px; max-width:620px; }
   .catalog-header-title span { color: var(--gold); }
-  .catalog-header-sub { font-size: 15px; color: var(--gray-400); font-weight: 300; max-width: 500px; }
+  .catalog-header-sub { font-size: 15px; color: var(--gray-200); font-weight: 300; max-width: 520px; line-height:1.65; }
+  .catalog-hero-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:22px; }
+  .catalog-hero-btn {
+    min-height:42px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 18px;
+    border:1px solid rgba(200,169,110,.45);
+    color:var(--gold);
+    text-decoration:none;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    font-size:11px;
+    font-weight:900;
+    border-radius:2px;
+    background:rgba(10,10,10,.42);
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+  }
+  .catalog-hero-btn.is-primary { background:var(--gold); color:var(--black); border-color:var(--gold); }
+  .catalog-hero-btn:hover { transform:translateY(-1px); border-color:var(--gold); }
+  .catalog-quick-nav {
+    margin:16px 60px 0;
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    gap:10px;
+  }
+  .catalog-quick-link {
+    min-height:68px;
+    border:1px solid rgba(255,255,255,.09);
+    background:linear-gradient(135deg, rgba(255,255,255,.055), rgba(255,255,255,.018));
+    color:var(--white);
+    text-decoration:none;
+    border-radius:4px;
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    cursor:pointer;
+    font-family:'Inter', sans-serif;
+    text-align:left;
+  }
+  .catalog-quick-kicker { color:var(--gold); font-size:9px; letter-spacing:1.7px; text-transform:uppercase; font-weight:900; }
+  .catalog-quick-name { font-size:13px; font-weight:900; line-height:1.2; }
+  .catalog-quick-link:hover,
+  .catalog-quick-link.active { border-color:rgba(200,169,110,.72); background:rgba(200,169,110,.12); }
   .catalog-theme-banner { display:none; margin:24px 60px 0; border:1px solid rgba(200,169,110,.25); background:var(--gray-800); min-height:220px; position:relative; overflow:hidden; border-radius:4px; }
   .catalog-theme-banner.is-visible { display:flex; align-items:flex-end; }
   .catalog-theme-banner.is-linkable { cursor:pointer; }
@@ -1117,8 +1168,20 @@
     nav .nav-links { display: none; }
     nav .nav-back { display: none; }
     nav .nav-action { display:none; }
-    .catalog-header { padding: 40px 20px 28px; }
-    .catalog-header-title { font-size: 48px; }
+    .catalog-header {
+      min-height: 340px;
+      padding: 92px 20px 28px;
+      background-position:center top;
+    }
+    .catalog-header::before { font-size: 110px; right: -50px; bottom: 18px; letter-spacing: 10px; }
+    .catalog-header-title { font-size: 48px; max-width: 380px; }
+    .catalog-header-sub { font-size: 14px; line-height: 1.55; max-width: 360px; }
+    .catalog-hero-actions { margin-top:16px; gap:8px; }
+    .catalog-hero-btn { min-height:38px; padding:0 13px; font-size:10px; }
+    .catalog-quick-nav { margin:12px 16px 0; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+    .catalog-quick-link { min-height:58px; padding:9px; }
+    .catalog-quick-kicker { font-size:8px; letter-spacing:1.2px; }
+    .catalog-quick-name { font-size:11px; }
     .catalog-theme-banner { margin:18px 20px 0; min-height:180px; }
     .catalog-theme-banner.is-campaign-page { margin:0; min-height:238px; }
     .catalog-theme-content { padding:22px; }
@@ -1173,11 +1236,15 @@
     .nav-logo { font-size: 24px; letter-spacing: 4px; }
     .mobile-menu-toggle { width:38px; height:38px; font-size:21px; }
     #navCartBtn { right:14px; top:12px; min-height: 38px; padding: 8px 12px !important; }
-    .catalog-header { padding: 36px 20px 26px; }
-    .catalog-header::before { font-size: 120px; right: -60px; letter-spacing: 12px; }
+    .catalog-header { min-height: 318px; padding: 88px 20px 24px; }
+    .catalog-header::before { font-size: 92px; right: -54px; bottom: 18px; letter-spacing: 9px; }
     .catalog-header-label { letter-spacing: 3px; line-height: 1.6; }
-    .catalog-header-title { font-size: 46px; }
+    .catalog-header-title { font-size: 42px; }
     .catalog-header-sub { font-size: 14px; line-height: 1.55; width: min(100%, 320px); overflow-wrap: break-word; }
+    .catalog-hero-actions { display:grid; grid-template-columns:1fr 1fr; }
+    .catalog-hero-actions .catalog-hero-btn:last-child { grid-column:span 2; }
+    .catalog-quick-nav { margin:10px 12px 0; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+    .catalog-quick-link { min-height:54px; padding:8px; }
     .catalog-theme-banner { margin:16px 12px 0; min-height:176px; }
     .catalog-theme-banner.is-campaign-page { margin:0; min-height:232px; }
     .catalog-theme-content { padding:18px; }
@@ -1246,14 +1313,14 @@
 <!-- NAV -->
 <nav>
   <button type="button" class="mobile-menu-toggle" onclick="toggleCatalogMenu()" aria-label="Abrir menu" aria-expanded="false">☰</button>
-  <a href="index.html" class="nav-logo">R<span>.</span>Street</a>
+  <a href="catalogo.html" class="nav-logo">R<span>.</span>Street</a>
   <ul class="nav-links">
-    <li><a href="index.html">Início</a></li>
+    <li><a href="sobre.html">Sobre</a></li>
     <li><a href="catalogo.html" class="active">Catálogo</a></li>
     <li><a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a></li>
   </ul>
   <a href="acompanhar.html" class="nav-action">Acompanhar Pedido</a>
-  <a href="index.html" class="nav-back">← Voltar ao Site</a>
+  <a href="sobre.html" class="nav-back">Sobre a Loja</a>
   <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn">🛒 <span id="navCartCount">0</span></a>
 </nav>
 
@@ -1266,7 +1333,7 @@
     <details class="catalog-menu-section">
       <summary class="catalog-menu-summary">Comprar</summary>
       <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list">
-        <a class="catalog-mobile-menu-link" href="index.html">Página inicial</a>
+        <a class="catalog-mobile-menu-link" href="sobre.html">Sobre a R Street</a>
         <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
         <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="featured" onclick="setMobileCatalogMode('featured')">Novos</button>
         <button type="button" class="catalog-mobile-menu-chip" data-menu-mode="sale" onclick="setMobileCatalogMode('sale')">Ofertas</button>
@@ -1309,10 +1376,44 @@
 
 <!-- HEADER -->
 <div class="catalog-header">
-  <div class="catalog-header-label">R Street Moda Masculina</div>
-  <h1 class="catalog-header-title">Nosso<br><span>Catálogo</span></h1>
-  <p class="catalog-header-sub">Explore nossa coleção completa. Produtos atualizados em tempo real.</p>
+  <div class="catalog-header-content">
+    <div class="catalog-header-label">R Street Moda Masculina</div>
+    <h1 class="catalog-header-title">Escolha seu estilo<br><span>sem procurar demais</span></h1>
+    <p class="catalog-header-sub">Novidades, ofertas, marcas e categorias organizadas em uma vitrine mais direta para comprar com calma e achar a peça certa.</p>
+    <div class="catalog-hero-actions">
+      <button type="button" class="catalog-hero-btn is-primary" onclick="setMobileCatalogMode('featured')">Ver novos</button>
+      <button type="button" class="catalog-hero-btn" onclick="setMobileCatalogMode('sale')">Ver ofertas</button>
+      <a class="catalog-hero-btn" href="sobre.html">Conhecer a loja</a>
+    </div>
+  </div>
 </div>
+
+<section class="catalog-quick-nav" aria-label="Atalhos do catalogo">
+  <button type="button" class="catalog-quick-link" data-quick-mode="featured" onclick="setMobileCatalogMode('featured')">
+    <span class="catalog-quick-kicker">Vitrine</span>
+    <span class="catalog-quick-name">Novos</span>
+  </button>
+  <button type="button" class="catalog-quick-link" data-quick-mode="sale" onclick="setMobileCatalogMode('sale')">
+    <span class="catalog-quick-kicker">Condição</span>
+    <span class="catalog-quick-name">Ofertas</span>
+  </button>
+  <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Camiseta')">
+    <span class="catalog-quick-kicker">Categoria</span>
+    <span class="catalog-quick-name">Camisetas</span>
+  </button>
+  <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Tenis')">
+    <span class="catalog-quick-kicker">Categoria</span>
+    <span class="catalog-quick-name">Tênis</span>
+  </button>
+  <button type="button" class="catalog-quick-link" onclick="setCategoryFromQuick('Calca')">
+    <span class="catalog-quick-kicker">Categoria</span>
+    <span class="catalog-quick-name">Calças</span>
+  </button>
+  <button type="button" class="catalog-quick-link" onclick="setMobileCatalogMode('all')">
+    <span class="catalog-quick-kicker">Tudo</span>
+    <span class="catalog-quick-name">Catálogo</span>
+  </button>
+</section>
 
 <div class="catalog-theme-banner" id="catalogThemeBanner" onclick="openCatalogThemeBanner(event)" onkeydown="handleCatalogThemeBannerKey(event)">
   <div class="catalog-theme-content">
@@ -1684,7 +1785,7 @@
   <div class="footer-logo-sm">R<span>.</span>Street</div>
   <div class="footer-copy">© 2024 R Street Moda Masculina · São José do Rio Pardo - SP</div>
   <div class="footer-links-sm">
-    <a href="index.html">Site</a>
+    <a href="sobre.html">Sobre</a>
     <a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
     <a href="admin.html">Admin</a>
   </div>
@@ -2259,11 +2360,41 @@ function setMobileCatalogMode(mode = 'all') {
     window.location.href = 'catalogo.html';
     return;
   }
+  if (currentCampaignTheme && mode !== 'all') {
+    currentCampaignTheme = null;
+    if (window.history?.replaceState) window.history.replaceState(null, '', 'catalogo.html');
+  }
   currentMobileCatalogMode = mode;
+  currentBrand = 'todos';
+  currentCategory = 'todos';
+  currentColor = 'todos';
+  currentSize = 'todos';
+  syncBrandFilterButtons('todos');
+  syncCatalogMenuCategory('todos');
   currentPage = 1;
   closeCatalogMenu();
   applyFilters();
   document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function setCategoryFromQuick(category) {
+  currentCampaignTheme = null;
+  currentCategory = category;
+  currentPage = 1;
+  syncCatalogMenuCategory(category);
+  applyFilters();
+  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function updateCatalogQuickNav() {
+  document.querySelectorAll('.catalog-quick-link').forEach(btn => {
+    const mode = btn.dataset.quickMode || '';
+    const onclick = btn.getAttribute('onclick') || '';
+    const isMode = mode && !currentCampaignTheme && currentCategory === 'todos' && currentMobileCatalogMode === mode;
+    const isCategory = currentCategory !== 'todos' && normalizeSearchText(onclick).includes(normalizeSearchText(currentCategory));
+    const isAll = !mode && onclick.includes("setMobileCatalogMode('all')") && !currentCampaignTheme && currentBrand === 'todos' && currentCategory === 'todos' && currentMobileCatalogMode === 'all';
+    btn.classList.toggle('active', Boolean(isMode || isCategory || isAll));
+  });
 }
 
 function openMobileCampaignHub() {
@@ -2434,6 +2565,7 @@ function applyFilters() {
   updateSmartFilterOptions();
   updateCampaignFilterBar();
   updateCatalogShowcases();
+  updateCatalogQuickNav();
   renderPage();
   renderPagination();
 }
