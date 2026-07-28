@@ -1391,6 +1391,33 @@
   </div>
 </div>
 
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="applyFilters()">
+  </div>
+  <div class="filter-group" id="brandFilters">
+    <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
+    <button class="filter-btn" onclick="setBrandFilter('Acostamento', this)">Acostamento</button>
+    <button class="filter-btn" onclick="setBrandFilter('Aeropostale', this)">Aeropostale</button>
+    <button class="filter-btn" onclick="setBrandFilter('Nike', this)">Nike</button>
+    <button class="filter-btn" onclick="setBrandFilter('TXC', this)">TXC</button>
+    <button class="filter-btn" onclick="setBrandFilter('Ogochi', this)">Ogochi</button>
+    <button class="filter-btn" onclick="setBrandFilter('Freeway', this)">Freeway</button>
+  </div>
+  <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+    <option value="default">Ordenar por</option>
+    <option value="preco_asc">Menor Preço</option>
+    <option value="preco_desc">Maior Preço</option>
+    <option value="nome">Nome A-Z</option>
+    <option value="novos">Mais Novos</option>
+  </select>
+  <div class="result-count">Mostrando <span id="resultCount">0</span> produtos</div>
+  <!-- Botão filtrar só aparece no celular -->
+  <button class="filter-mobile-btn" id="filterMobileBtn" onclick="toggleMobileFilters()">⚙️ Filtrar</button>
+</div>
+
 <!-- HEADER -->
 <div class="catalog-header">
   <div class="catalog-header-content">
@@ -1431,33 +1458,6 @@
     <span class="catalog-quick-name">Catálogo</span>
   </button>
 </section>
-
-<!-- TOOLBAR -->
-<div class="toolbar">
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="applyFilters()">
-  </div>
-  <div class="filter-group" id="brandFilters">
-    <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
-    <button class="filter-btn" onclick="setBrandFilter('Acostamento', this)">Acostamento</button>
-    <button class="filter-btn" onclick="setBrandFilter('Aeropostale', this)">Aeropostale</button>
-    <button class="filter-btn" onclick="setBrandFilter('Nike', this)">Nike</button>
-    <button class="filter-btn" onclick="setBrandFilter('TXC', this)">TXC</button>
-    <button class="filter-btn" onclick="setBrandFilter('Ogochi', this)">Ogochi</button>
-    <button class="filter-btn" onclick="setBrandFilter('Freeway', this)">Freeway</button>
-  </div>
-  <select class="sort-select" id="sortSelect" onchange="applyFilters()">
-    <option value="default">Ordenar por</option>
-    <option value="preco_asc">Menor Preço</option>
-    <option value="preco_desc">Maior Preço</option>
-    <option value="nome">Nome A-Z</option>
-    <option value="novos">Mais Novos</option>
-  </select>
-  <div class="result-count">Mostrando <span id="resultCount">0</span> produtos</div>
-  <!-- Botão filtrar só aparece no celular -->
-  <button class="filter-mobile-btn" id="filterMobileBtn" onclick="toggleMobileFilters()">⚙️ Filtrar</button>
-</div>
 
 <div class="catalog-theme-banner" id="catalogThemeBanner" onclick="openCatalogThemeBanner(event)" onkeydown="handleCatalogThemeBannerKey(event)">
   <div class="catalog-theme-content">
