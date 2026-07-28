@@ -586,90 +586,40 @@
   }
   .brands-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 2px;
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
   .brand-card {
-    background: var(--gray-800);
-    aspect-ratio: 1/1.08;
+    background: #f7f7f7;
+    min-height: 92px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.4s ease;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 3px;
+    padding: 10px 18px;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   }
-  .brand-card::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(200,169,110,0.0), rgba(200,169,110,0.12));
-    opacity: 0;
-    transition: opacity 0.4s;
-  }
-  .brand-card:hover { transform: scale(1.02); z-index: 2; }
-  .brand-card:hover::before { opacity: 1; }
-
+  .brand-card:hover { transform: translateY(-2px); border-color: rgba(200,169,110,0.45); box-shadow: 0 12px 34px rgba(0,0,0,0.22); }
   .brand-card-bg {
-    position: absolute; inset: 0;
-    background-size: cover;
-    background-position: center;
-    filter: grayscale(60%) brightness(0.4);
-    transition: all 0.4s;
-  }
-  .brand-card.is-logo .brand-card-bg {
-    background-size: 72%;
-    background-repeat: no-repeat;
-    background-color: #f5f5f5;
-    filter: grayscale(20%) brightness(0.76);
-  }
-  .brand-card:hover .brand-card-bg {
-    filter: grayscale(0%) brightness(0.5);
-    transform: scale(1.05);
-  }
-  .brand-card.is-logo:hover .brand-card-bg {
-    filter: grayscale(0%) brightness(0.82);
-    transform: scale(1.02);
-  }
-
-  .brand-card-content {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    padding: 16px 10px;
-  }
-  .brand-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 26px;
-    letter-spacing: 3px;
-    color: var(--white);
-    line-height: 1;
-    text-shadow: 0 2px 20px rgba(0,0,0,0.8);
-    transition: color 0.3s;
-  }
-  .brand-card:hover .brand-name { color: var(--gold); }
-  .brand-tagline {
-    font-size: 9px;
-    color: var(--gray-400);
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    margin-top: 8px;
-    transition: color 0.3s;
-  }
-  .brand-card:hover .brand-tagline { color: var(--gold-light); }
-
-  .brand-card-tag {
     position: absolute;
-    top: 10px; right: 10px;
-    background: var(--gold);
-    color: var(--black);
-    font-size: 8px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 3px 7px;
-    border-radius: 2px;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
+  .brand-card:nth-child(1) .brand-card-bg { background-image: url('marca-faixa-acostamento.png') !important; }
+  .brand-card:nth-child(2) .brand-card-bg { background-image: url('marca-faixa-aeropostale.png') !important; }
+  .brand-card:nth-child(3) .brand-card-bg { background-image: url('marca-faixa-nike.png') !important; }
+  .brand-card:nth-child(4) .brand-card-bg { background-image: url('marca-faixa-txc.png') !important; }
+  .brand-card:nth-child(5) .brand-card-bg { background-image: url('marca-faixa-ogochi.png') !important; }
+  .brand-card:nth-child(6) .brand-card-bg { background-image: url('marca-faixa-freeway.png') !important; }
+  .brand-card-content,
+  .brand-card-tag {
+    display: none;
   }
 
   /* ── ABOUT ── */
@@ -1305,26 +1255,15 @@
     .hero-title { font-size: 64px; }
     .hero-desc { font-size: 14px; }
     .brands-grid {
-      display: flex;
-      gap: 12px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-snap-type: x proximity;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(200,169,110,0.45) transparent;
-      padding: 4px 2px 12px;
+      display: grid;
+      gap: 10px;
+      overflow: visible;
+      padding: 0;
     }
     .brand-card {
-      flex: 0 0 220px;
-      justify-content: flex-end;
-      scroll-snap-align: start;
+      min-height: 76px;
+      padding: 8px 12px;
       border-radius: 3px;
-    }
-    .brand-name { font-size: 26px; letter-spacing: 4px; }
-    .brand-card-content {
-      width: 100%;
-      padding: 40px 16px 14px;
-      background: linear-gradient(to top, rgba(0,0,0,0.82), rgba(0,0,0,0));
     }
     .highlights-grid {
       display: flex;
@@ -1392,9 +1331,7 @@
     .experience-strip,
     .footer-grid { grid-template-columns: 1fr; }
     .brands-grid { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
-    .brand-card { flex-basis: 200px; }
-    .brand-name { font-size: 22px; letter-spacing: 3px; }
-    .brand-tagline { font-size: 9px; letter-spacing: 2px; }
+    .brand-card { min-height: 62px; padding: 7px 10px; }
     .highlights-header { margin-bottom: 36px; }
     .highlight-card { flex-basis: 188px; }
     .highlight-img { height: 132px; }
