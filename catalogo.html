@@ -2030,6 +2030,12 @@ function safeCatalogThemeLink(theme) {
   return 'catalogo.html';
 }
 
+function getCatalogThemeBannerUrl(theme) {
+  const desktop = String(theme?.banner_desktop_url || theme?.banner_url || '').trim();
+  const mobile = String(theme?.banner_mobile_url || '').trim();
+  return window.matchMedia?.('(max-width: 700px)').matches ? (mobile || desktop) : (desktop || mobile);
+}
+
 function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   const banner = document.getElementById('catalogThemeBanner');
   if (!banner || !theme) return;
@@ -2045,9 +2051,10 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   banner.style.borderColor = color;
   const oldImg = banner.querySelector('img');
   if (oldImg) oldImg.remove();
-  if (theme.banner_url) {
+  const bannerUrl = getCatalogThemeBannerUrl(theme);
+  if (bannerUrl) {
     const img = document.createElement('img');
-    img.src = theme.banner_url;
+    img.src = bannerUrl;
     img.alt = theme.nome || 'Campanha';
     banner.prepend(img);
   }

@@ -780,12 +780,21 @@
               <input type="text" id="tema-botao-link" placeholder="catalogo.html?campanha=dia-dos-pais">
             </div>
             <div class="form-group full">
-              <label>Banner principal</label>
+              <label>Banner para computador</label>
               <input type="url" id="tema-banner" placeholder="URL da imagem" oninput="updateTemaSitePreview()">
-              <input type="file" id="tema-banner-file" accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif" onchange="handleTemaBannerFile(event)">
+              <input type="file" id="tema-banner-file" accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif" onchange="handleTemaBannerFile(event, 'tema-banner')">
               <div class="home-highlight-actions" style="margin-top:8px">
-                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('tema-banner-file').click()">Enviar banner</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('tema-banner-file').click()">Enviar banner PC</button>
               </div>
+            </div>
+            <div class="form-group full">
+              <label>Banner para celular</label>
+              <input type="url" id="tema-banner-mobile" placeholder="URL da imagem para celular" oninput="updateTemaSitePreview()">
+              <input type="file" id="tema-banner-mobile-file" accept="image/jpeg,image/png,image/webp,image/avif,.jpg,.jpeg,.png,.webp,.avif" onchange="handleTemaBannerFile(event, 'tema-banner-mobile')">
+              <div class="home-highlight-actions" style="margin-top:8px">
+                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('tema-banner-mobile-file').click()">Enviar banner celular</button>
+              </div>
+              <div class="form-hint">Se deixar vazio, o celular usa o banner do computador.</div>
             </div>
             <div class="form-group full">
               <label>Produtos da campanha</label>
@@ -2907,7 +2916,9 @@ function updateTemaSitePreview() {
   const name = document.getElementById('tema-nome')?.value || 'Tema';
   const title = document.getElementById('tema-titulo')?.value || 'Titulo da campanha';
   const text = document.getElementById('tema-texto')?.value || 'O banner aparece aqui antes de salvar.';
-  const banner = document.getElementById('tema-banner')?.value.trim();
+  const desktopBanner = document.getElementById('tema-banner')?.value.trim();
+  const mobileBanner = document.getElementById('tema-banner-mobile')?.value.trim();
+  const banner = window.matchMedia?.('(max-width: 700px)').matches ? (mobileBanner || desktopBanner) : (desktopBanner || mobileBanner);
   const color = document.getElementById('tema-cor')?.value || '#c8a96e';
   const oldImg = box.querySelector('img');
   if (oldImg) oldImg.remove();
@@ -2932,7 +2943,7 @@ function updateTemaSitePreview() {
 function resetTemaSiteForm() {
   editingThemeId = null;
   selectedThemeProductIds = [];
-  ['tema-id','tema-nome','tema-titulo','tema-texto','tema-botao-link','tema-banner','tema-inicio','tema-fim'].forEach(id => {
+  ['tema-id','tema-nome','tema-titulo','tema-texto','tema-botao-link','tema-banner','tema-banner-mobile','tema-inicio','tema-fim'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -2957,7 +2968,8 @@ function setTemaSiteForm(theme = {}) {
   document.getElementById('tema-texto').value = theme.texto || '';
   document.getElementById('tema-botao-texto').value = theme.botao_texto || 'Ver campanha';
   document.getElementById('tema-botao-link').value = theme.botao_link || '';
-  document.getElementById('tema-banner').value = theme.banner_url || '';
+  document.getElementById('tema-banner').value = theme.banner_desktop_url || theme.banner_url || '';
+  document.getElementById('tema-banner-mobile').value = theme.banner_mobile_url || '';
   selectedThemeProductIds = Array.isArray(theme.produto_ids) ? theme.produto_ids.map(Number).filter(Boolean) : [];
   renderTemaProducts();
   updateTemaSitePreview();
@@ -2982,7 +2994,9 @@ function getTemaSitePayload() {
     texto: document.getElementById('tema-texto').value.trim(),
     botao_texto: document.getElementById('tema-botao-texto').value.trim() || 'Ver campanha',
     botao_link: document.getElementById('tema-botao-link').value.trim(),
-    banner_url: document.getElementById('tema-banner').value.trim(),
+    banner_url: document.getElementById('tema-banner').value.trim() || document.getElementById('tema-banner-mobile').value.trim(),
+    banner_desktop_url: document.getElementById('tema-banner').value.trim(),
+    banner_mobile_url: document.getElementById('tema-banner-mobile').value.trim(),
     produto_ids: selectedThemeProductIds,
   };
 }
@@ -2996,8 +3010,9 @@ function renderTemasSiteList() {
   }
   list.innerHTML = siteThemesState.map(theme => {
     const period = `${theme.inicio ? new Date(theme.inicio).toLocaleString('pt-BR') : 'sem início'} até ${theme.fim ? new Date(theme.fim).toLocaleString('pt-BR') : 'sem fim'}`;
-    const img = theme.banner_url
-      ? `<img class="theme-card-img" src="${escapeAttr(theme.banner_url)}" alt="${escapeAttr(theme.nome)}">`
+    const banner = theme.banner_desktop_url || theme.banner_url || theme.banner_mobile_url;
+    const img = banner
+      ? `<img class="theme-card-img" src="${escapeAttr(banner)}" alt="${escapeAttr(theme.nome)}">`
       : '<div class="theme-card-img"></div>';
     return `
       <div class="theme-card">
@@ -3059,7 +3074,7 @@ async function deleteTemaSite(id) {
   }
 }
 
-async function handleTemaBannerFile(event) {
+async function handleTemaBannerFile(event, targetId = 'tema-banner') {
   const file = event.target.files?.[0];
   if (!file) return;
   try {
@@ -3073,7 +3088,7 @@ async function handleTemaBannerFile(event) {
     });
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    document.getElementById('tema-banner').value = data.url;
+    document.getElementById(targetId).value = data.url;
     updateTemaSitePreview();
     toast('Banner enviado.', 'success');
   } catch (err) {

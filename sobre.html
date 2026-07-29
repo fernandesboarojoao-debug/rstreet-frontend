@@ -1962,9 +1962,12 @@
     const eyebrow = document.getElementById('heroEyebrowText');
     const button = document.getElementById('heroPrimaryBtn');
     const color = /^#[0-9a-f]{6}$/i.test(theme.cor_destaque || '') ? theme.cor_destaque : '#c8a96e';
+    const desktopBanner = String(theme.banner_desktop_url || theme.banner_url || '').trim();
+    const mobileBanner = String(theme.banner_mobile_url || '').trim();
+    const bannerUrl = window.matchMedia?.('(max-width: 700px)').matches ? (mobileBanner || desktopBanner) : (desktopBanner || mobileBanner);
 
-    if (heroBg && theme.banner_url) {
-      heroBg.style.background = `linear-gradient(135deg, rgba(10,10,10,0.62), rgba(10,10,10,0.34)), url('${String(theme.banner_url).replace(/'/g, '%27')}') center/cover no-repeat`;
+    if (heroBg && bannerUrl) {
+      heroBg.style.background = `linear-gradient(135deg, rgba(10,10,10,0.62), rgba(10,10,10,0.34)), url('${String(bannerUrl).replace(/'/g, '%27')}') center/cover no-repeat`;
     }
     if (title && theme.titulo) {
       title.innerHTML = buildThemeHeroTitle(theme.titulo);
