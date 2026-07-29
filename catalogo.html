@@ -2648,7 +2648,8 @@ function matchesSearchText(haystack, search) {
 function updateCatalogSearchMode() {
   const input = document.getElementById('searchInput');
   const hasSearch = normalizeSearchText(input?.value || '').length > 0;
-  document.body.classList.toggle('catalog-search-active', hasSearch);
+  const hasDirectFilter = currentBrand !== 'todos' || currentCategory !== 'todos';
+  document.body.classList.toggle('catalog-search-active', hasSearch || hasDirectFilter);
 }
 
 const CATEGORY_LABELS = {
