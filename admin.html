@@ -1317,11 +1317,16 @@ async function sbFetch(path, opts = {}) {
 }
 
 function notifyCatalogChanged() {
-  const payload = String(Date.now());
-  localStorage.setItem('rstreet_products_changed', payload);
-  try {
-    new BroadcastChannel('rstreet_products').postMessage({ type: 'products_changed', at: payload });
-  } catch {}
+  const emit = () => {
+    const payload = String(Date.now());
+    localStorage.setItem('rstreet_products_changed', payload);
+    try {
+      new BroadcastChannel('rstreet_products').postMessage({ type: 'products_changed', at: payload });
+    } catch {}
+  };
+  emit();
+  setTimeout(emit, 1200);
+  setTimeout(emit, 3500);
 }
 
 const PEDIDOS_VISTOS_KEY = 'rstreet_pedidos_vistos';

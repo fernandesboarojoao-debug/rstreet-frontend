@@ -1878,6 +1878,7 @@ let catalogMediaState = {};
 let showcaseMediaState = {};
 let refreshTimer = null;
 let isRefreshingProducts = false;
+let pendingProductsRefresh = false;
 let lastProductsRefreshAt = 0;
 let catalogDataSignature = '';
 let catalogVideoObserver = null;
@@ -1930,7 +1931,10 @@ function getCatalogDataSignature(products = allProducts, variants = allProductVa
 }
 
 async function loadProducts(silent = false) {
-  if (isRefreshingProducts) return;
+  if (isRefreshingProducts) {
+    pendingProductsRefresh = true;
+    return;
+  }
   isRefreshingProducts = true;
   let unchanged = false;
   // Se não tem credenciais salvas, cai nos dados de exemplo
@@ -1947,10 +1951,12 @@ async function loadProducts(silent = false) {
 
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&order=criado_em.desc`, {
+      cache: 'no-store',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
       }
     });
     if (!res.ok) throw new Error('Erro ' + res.status);
@@ -1969,11 +1975,21 @@ async function loadProducts(silent = false) {
     isRefreshingProducts = false;
   }
 
-  if (unchanged) return;
+  if (unchanged) {
+    if (pendingProductsRefresh) {
+      pendingProductsRefresh = false;
+      scheduleProductsRefresh(100);
+    }
+    return;
+  }
   updateMaxPrice(silent);
   updateCategoryCounts();
   applyFilters();
   if (!silent) checkURLParams();
+  if (pendingProductsRefresh) {
+    pendingProductsRefresh = false;
+    scheduleProductsRefresh(100);
+  }
 }
 
 async function refreshProducts() {
@@ -1988,10 +2004,12 @@ function scheduleProductsRefresh(delay = 250) {
 async function loadProductVariants() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&ativo=eq.true&order=ordem.asc,cor.asc,tamanho.asc`, {
+      cache: 'no-store',
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
       }
     });
     allProductVariants = res.ok ? await res.json() : [];
@@ -3848,7 +3866,7 @@ document.addEventListener('visibilitychange', () => {
 });
 setInterval(() => {
   if (!document.hidden) refreshProducts();
-}, 5000);
+}, 3000);
 </script>
 </body>
 </html>
