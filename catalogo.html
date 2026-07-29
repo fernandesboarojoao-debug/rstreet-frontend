@@ -2872,8 +2872,7 @@ function updateSmartFilterOptions() {
         if (!colors.has(normalizeSearchText(color))) {
           colors.set(normalizeSearchText(color), {
             label: color,
-            hex: v.cor_hex || getColorValue(color),
-            image: getCatalogStoredMediaUrl(v.imagem_url) || (Array.isArray(v.imagens) ? v.imagens.map(getCatalogStoredMediaUrl).find(Boolean) : '')
+            hex: v.cor_hex || getColorValue(color)
           });
         }
       }
@@ -2891,9 +2890,7 @@ function updateSmartFilterOptions() {
     `<button type="button" class="catalog-smart-swatch ${currentColor === 'todos' ? 'active' : ''}" onclick="setColorFilter('todos')">Todas</button>`,
     ...colorItems.map(item => {
       const active = sameCatalogText(item.label, currentColor);
-      const dot = item.image
-        ? `<span class="catalog-smart-swatch-dot"><img src="${escapeAttr(item.image)}" alt="${escapeAttr(item.label)}" loading="lazy"></span>`
-        : `<span class="catalog-smart-swatch-dot" style="background:${escapeAttr(item.hex)}"></span>`;
+      const dot = `<span class="catalog-smart-swatch-dot" style="background:${escapeAttr(item.hex)}"></span>`;
       return `<button type="button" class="catalog-smart-swatch ${active ? 'active' : ''}" onclick="setColorFilter('${escapeAttr(item.label)}')">${dot}${escapeHtml(item.label)}</button>`;
     })
   ].join('') || '<span class="catalog-smart-empty">Nenhuma cor disponivel.</span>';
