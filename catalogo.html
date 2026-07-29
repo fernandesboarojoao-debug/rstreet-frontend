@@ -665,6 +665,22 @@
   .showcase-card-installment { color:var(--gray-400); font-size:9px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; margin-top:3px; }
   .showcase-card-pix { color:var(--green); font-size:10px; font-weight:800; line-height:1.25; margin-top:2px; }
 
+  body.catalog-search-active .catalog-header,
+  body.catalog-search-active .catalog-quick-nav,
+  body.catalog-search-active .catalog-theme-banner,
+  body.catalog-search-active .campaign-filter-bar,
+  body.catalog-search-active .campaign-products-heading,
+  body.catalog-search-active .catalog-showcase,
+  body.catalog-search-active .catalog-collection-bar,
+  body.catalog-search-active .mobile-catalog-hub,
+  body.catalog-search-active .catalog-active-area,
+  body.catalog-search-active .catalog-smart-filters,
+  body.catalog-search-active .brand-orbit {
+    display: none !important;
+  }
+  body.catalog-search-active .catalog-layout { min-height: auto; }
+  body.catalog-search-active .catalog-main { padding-top: 24px; }
+
   /* TOOLBAR */
   .toolbar {
     background: var(--gray-900);
@@ -2567,6 +2583,7 @@ function updateBrandOrbitActive() {
 }
 
 function applyFilters() {
+  updateCatalogSearchMode();
   const sort = document.getElementById('sortSelect').value;
   filtered = getCatalogBaseProducts().filter(productMatchesColorAndSize);
 
@@ -2622,6 +2639,12 @@ function normalizeSearchText(value) {
 function matchesSearchText(haystack, search) {
   const text = normalizeSearchText(haystack);
   return search.split(/\s+/).filter(Boolean).every(term => text.includes(term));
+}
+
+function updateCatalogSearchMode() {
+  const input = document.getElementById('searchInput');
+  const hasSearch = normalizeSearchText(input?.value || '').length > 0;
+  document.body.classList.toggle('catalog-search-active', hasSearch);
 }
 
 const CATEGORY_LABELS = {
