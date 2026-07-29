@@ -1214,6 +1214,13 @@ function dedupeUploadedPhotos() {
   });
 }
 
+function syncImageUrlFieldWithPreview() {
+  const imageEl = document.getElementById('f-imagem');
+  if (!imageEl) return;
+  const firstStoredUrl = getStoredMediaUrl(uploadedPhotos[0]?.dataUrl || uploadedPhotos[0]?.url);
+  imageEl.value = firstStoredUrl || '';
+}
+
 async function prepareMediaForUpload(file, kind) {
   if (kind === 'image' && isAvifFile(file)) return convertAvifToJpegDataUrl(file);
   const dataUrl = await readFileAsDataUrl(file);
@@ -1226,8 +1233,10 @@ async function prepareMediaForUpload(file, kind) {
 
 async function handlePhotoSelect(e) {
   const files = Array.from(e.target.files);
-  const hasOnlySavedMedia = uploadedPhotos.length && uploadedPhotos.every(photo => !isDataMediaUrl(photo.dataUrl || photo.url));
-  if (hasOnlySavedMedia && files.length) uploadedPhotos = [];
+  if (files.length) {
+    uploadedPhotos = [];
+    syncImageUrlFieldWithPreview();
+  }
 
   const remaining = 5 - uploadedPhotos.length;
   if (remaining <= 0) return toast('Limite de 5 midias atingido.', 'error');
@@ -1262,11 +1271,13 @@ function renderPhotoPreview() {
 
 function removePhoto(idx) {
   uploadedPhotos.splice(idx, 1);
+  syncImageUrlFieldWithPreview();
   renderPhotoPreview();
 }
 
 function loadPhotosIntoPreview(imagens) {
   uploadedPhotos = uniqueMediaList(imagens || []).map((url, i) => ({ dataUrl: url, url, name: 'midia' + (i+1), type: String(url || '').match(/\.(mp4|webm|mov)(\?|$)/i) ? 'video/mp4' : 'image/*' }));
+  syncImageUrlFieldWithPreview();
   renderPhotoPreview();
 }
 
@@ -1355,7 +1366,9 @@ async function uploadProductPhotos() {
     const data = await res.json();
     urls.push(data.url);
   }
-  return uniqueMediaList(urls);
+  const storedUrls = uniqueMediaList(urls);
+  loadPhotosIntoPreview(storedUrls);
+  return storedUrls;
 }
 
 async function uploadMediaDataUrl(dataUrl, name = 'produto.jpg') {
