@@ -676,10 +676,6 @@
   body.catalog-search-active .brand-orbit {
     display: none !important;
   }
-  body.catalog-search-active .catalog-active-area,
-  body.catalog-search-active .catalog-smart-filters {
-    display: none !important;
-  }
   body.catalog-search-active .catalog-layout { min-height: auto; }
   body.catalog-search-active .catalog-main { padding-top: 24px; }
   body.catalog-campaign-active .catalog-quick-nav,
@@ -2526,6 +2522,7 @@ function updateCatalogActiveArea() {
   const clear = document.getElementById('catalogActiveAreaClear');
   const trail = document.getElementById('catalogActiveTrail');
   if (!area || !title || !sub) return;
+  const searchText = String(document.getElementById('searchInput')?.value || '').trim();
 
   let label = 'Catálogo completo';
   let subText = 'Mostrando todos os produtos disponíveis.';
@@ -2549,6 +2546,9 @@ function updateCatalogActiveArea() {
   } else if (currentMobileCatalogMode === 'sale') {
     label = 'Ofertas';
     subText = 'Produtos com condição especial no catálogo.';
+  } else if (searchText) {
+    label = `Busca por "${searchText}"`;
+    subText = 'Resultado da pesquisa no catálogo.';
   }
 
   const chips = getCatalogActiveChips();
@@ -2570,6 +2570,9 @@ function updateCatalogActiveArea() {
 
 function getCatalogActiveChips() {
   const chips = [];
+  const searchInput = document.getElementById('searchInput');
+  const searchText = String(searchInput?.value || '').trim();
+  if (searchText) chips.push({ type:'search', label:`Busca: ${searchText}`, title:'Termo pesquisado' });
   if (currentCampaignTheme) chips.push({ type:'campaign', label: currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Campanha' });
   if (!currentCampaignTheme && currentMobileCatalogMode === 'featured') chips.push({ type:'mode', label:'Novos' });
   if (!currentCampaignTheme && currentMobileCatalogMode === 'sale') chips.push({ type:'mode', label:'Ofertas' });
@@ -2601,6 +2604,9 @@ function clearCatalogFilter(type) {
     currentSize = 'todos';
   } else if (type === 'stock') {
     currentStock = 'todos';
+  } else if (type === 'search') {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
   }
   currentPage = 1;
   applyFilters();
