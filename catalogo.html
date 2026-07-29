@@ -673,9 +673,11 @@
   body.catalog-search-active .catalog-showcase,
   body.catalog-search-active .catalog-collection-bar,
   body.catalog-search-active .mobile-catalog-hub,
-  body.catalog-search-active .catalog-active-area,
-  body.catalog-search-active .catalog-smart-filters,
   body.catalog-search-active .brand-orbit {
+    display: none !important;
+  }
+  body.catalog-search-active .catalog-active-area,
+  body.catalog-search-active .catalog-smart-filters {
     display: none !important;
   }
   body.catalog-search-active .catalog-layout { min-height: auto; }
@@ -1216,6 +1218,8 @@
     .mobile-catalog-hub { display:none !important; }
     .catalog-showcase { margin:16px 20px 0; gap:16px; }
     .catalog-showcase { display:none !important; }
+    body.catalog-search-active .catalog-active-area.is-visible { display:flex !important; }
+    body.catalog-search-active .catalog-smart-filters.is-visible { display:grid !important; }
     .catalog-active-area { margin:12px 16px 0; padding:11px; align-items:flex-start; }
     .catalog-active-icon { width:34px; height:34px; }
     .catalog-active-title { font-size:14px; }
