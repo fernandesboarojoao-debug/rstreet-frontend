@@ -1177,8 +1177,41 @@ function getStoredMediaUrl(url) {
   return clean && !clean.toLowerCase().startsWith('data:') ? clean : '';
 }
 
+function isDataMediaUrl(url) {
+  return String(url || '').trim().toLowerCase().startsWith('data:');
+}
+
+function uniqueMediaList(list) {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : [])
+    .map(item => String(item || '').trim())
+    .filter(Boolean)
+    .filter(item => {
+      const key = item.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 function cleanStoredMediaList(list) {
-  return (Array.isArray(list) ? list : []).map(getStoredMediaUrl).filter(Boolean);
+  return uniqueMediaList((Array.isArray(list) ? list : []).map(getStoredMediaUrl).filter(Boolean));
+}
+
+function isVideoMediaValue(value, media = {}) {
+  return String(media.type || '').startsWith('video/') || String(value || '').match(/^data:video\/|\.(mp4|webm|mov)(\?|$)/i);
+}
+
+function dedupeUploadedPhotos() {
+  const seen = new Set();
+  uploadedPhotos = uploadedPhotos.filter(photo => {
+    const value = String(photo.dataUrl || photo.url || '').trim();
+    if (!value) return false;
+    const key = value.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function prepareMediaForUpload(file, kind) {
@@ -1193,6 +1226,9 @@ async function prepareMediaForUpload(file, kind) {
 
 async function handlePhotoSelect(e) {
   const files = Array.from(e.target.files);
+  const hasOnlySavedMedia = uploadedPhotos.length && uploadedPhotos.every(photo => !isDataMediaUrl(photo.dataUrl || photo.url));
+  if (hasOnlySavedMedia && files.length) uploadedPhotos = [];
+
   const remaining = 5 - uploadedPhotos.length;
   if (remaining <= 0) return toast('Limite de 5 midias atingido.', 'error');
 
@@ -1203,6 +1239,7 @@ async function handlePhotoSelect(e) {
       kind = validateMediaFile(file);
       const media = await prepareMediaForUpload(file, kind);
       uploadedPhotos.push(media);
+      dedupeUploadedPhotos();
       renderPhotoPreview();
       if (isAvifFile(file)) toast(`"${file.name}" convertido para JPG.`, 'info');
     } catch (err) {
@@ -1229,7 +1266,7 @@ function removePhoto(idx) {
 }
 
 function loadPhotosIntoPreview(imagens) {
-  uploadedPhotos = (imagens || []).map((url, i) => ({ dataUrl: url, name: 'midia' + (i+1), type: String(url || '').match(/\.(mp4|webm|mov)(\?|$)/i) ? 'video/mp4' : 'image/*' }));
+  uploadedPhotos = uniqueMediaList(imagens || []).map((url, i) => ({ dataUrl: url, url, name: 'midia' + (i+1), type: String(url || '').match(/\.(mp4|webm|mov)(\?|$)/i) ? 'video/mp4' : 'image/*' }));
   renderPhotoPreview();
 }
 
@@ -1318,7 +1355,48 @@ async function uploadProductPhotos() {
     const data = await res.json();
     urls.push(data.url);
   }
-  return urls;
+  return uniqueMediaList(urls);
+}
+
+async function uploadMediaDataUrl(dataUrl, name = 'produto.jpg') {
+  const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ dataUrl, name })
+  });
+  if (!res.ok) throw new Error(await res.text());
+  const data = await res.json();
+  return data.url;
+}
+
+async function uploadPendingVariantMedia() {
+  const uploadedCache = new Map();
+
+  async function resolveMediaList(list, prefix) {
+    const resolved = [];
+    for (const item of uniqueMediaList(list)) {
+      if (!isDataMediaUrl(item)) {
+        resolved.push(item);
+        continue;
+      }
+      if (!uploadedCache.has(item)) {
+        const ext = item.startsWith('data:video/') ? 'mp4' : 'jpg';
+        uploadedCache.set(item, await uploadMediaDataUrl(item, `${prefix}-${uploadedCache.size + 1}.${ext}`));
+      }
+      resolved.push(uploadedCache.get(item));
+    }
+    return uniqueMediaList(resolved);
+  }
+
+  for (const variant of currentVariants) {
+    variant.imagens = await resolveMediaList(variant.imagens, 'produto-cor');
+    variant.videos = await resolveMediaList(variant.videos, 'produto-video');
+    variant.imagem_url = getStoredMediaUrl(variant.imagem_url) || getStoredMediaUrl(variant.imagens?.[0]) || null;
+  }
+}
+
+function getProductImagesFromVariants(variants) {
+  return cleanStoredMediaList(variants.flatMap(variant => variant.imagens || []));
 }
 
 async function supabaseProductRequest(path, opts = {}) {
@@ -1392,9 +1470,9 @@ function normalizeVariant(item) {
     estoque: Math.max(0, parseInt(item.estoque, 10) || 0),
     preco: item.preco === null || item.preco === undefined || item.preco === '' ? null : Number(item.preco),
     preco_antigo: item.preco_antigo === null || item.preco_antigo === undefined || item.preco_antigo === '' ? null : Number(item.preco_antigo),
-    imagem_url: String(item.imagem_url || '').trim() || null,
-    imagens: Array.isArray(item.imagens) ? item.imagens.filter(Boolean) : [],
-    videos: Array.isArray(item.videos) ? item.videos.filter(Boolean) : [],
+    imagem_url: getStoredMediaUrl(item.imagem_url) || null,
+    imagens: uniqueMediaList(item.imagens),
+    videos: uniqueMediaList(item.videos),
     cor_hex: String(item.cor_hex || '').trim() || null,
     ordem: parseInt(item.ordem, 10) || 0,
     ativo: item.ativo !== false
@@ -1548,7 +1626,7 @@ function updateVariantEditorLabels(group) {
 function updateVariantEditorFromSelected(group) {
   if (!group) return;
   updateVariantEditorLabels(group);
-  const storedImages = cleanStoredMediaList(group.imagens);
+  const storedImages = uniqueMediaList(group.imagens);
   const storedImageUrl = getStoredMediaUrl(group.imagem_url);
   const priceEl = document.getElementById('f-preco');
   const oldPriceEl = document.getElementById('f-preco-antigo');
@@ -1557,7 +1635,7 @@ function updateVariantEditorFromSelected(group) {
   if (priceEl) priceEl.value = group.preco ?? '';
   if (oldPriceEl) oldPriceEl.value = group.preco_antigo ?? '';
   if (stockEl) stockEl.value = group.sizes.reduce((sum, v) => sum + (parseInt(v.estoque, 10) || 0), 0);
-  if (imageEl) imageEl.value = storedImages[0] || storedImageUrl || '';
+  if (imageEl) imageEl.value = getStoredMediaUrl(storedImages[0]) || storedImageUrl || '';
   currentSizes = group.sizes.map(v => v.tamanho).filter(isValidVariantSize);
   renderSizeTags();
   loadPhotosIntoPreview([...storedImages, ...(group.videos || [])]);
@@ -1571,13 +1649,13 @@ function syncActiveVariantEditorToState(imageUrls = null) {
   const precoValue = document.getElementById('f-preco')?.value ?? '';
   const precoAntigoValue = document.getElementById('f-preco-antigo')?.value ?? '';
   const imagemUrl = getStoredMediaUrl(document.getElementById('f-imagem')?.value) || null;
-  const mediaUrls = imageUrls || uploadedPhotos.map(ph => ph.dataUrl || ph.url).filter(Boolean);
+  const mediaUrls = uniqueMediaList(imageUrls || uploadedPhotos.map(ph => ph.dataUrl || ph.url).filter(Boolean));
   const isVideoMedia = (url, index) => {
     const original = uploadedPhotos[index];
-    return String(original?.type || '').startsWith('video/') || /\.(mp4|webm|mov)(\?|$)/i.test(String(url || ''));
+    return isVideoMediaValue(url, original);
   };
-  const imagens = cleanStoredMediaList(mediaUrls.filter((url, index) => !isVideoMedia(url, index)));
-  const videos = mediaUrls.filter((url, index) => isVideoMedia(url, index));
+  const imagens = uniqueMediaList(mediaUrls.filter((url, index) => !isVideoMedia(url, index)));
+  const videos = uniqueMediaList(mediaUrls.filter((url, index) => isVideoMedia(url, index)));
   const preco = precoValue === '' ? null : Math.max(0, parseFloat(precoValue) || 0);
   const preco_antigo = precoAntigoValue === '' ? null : Math.max(0, parseFloat(precoAntigoValue) || 0);
 
@@ -1585,7 +1663,7 @@ function syncActiveVariantEditorToState(imageUrls = null) {
 
   if (!sizes.length) {
     const existing = currentVariants.find(v => getVariantColorKey(v.cor) === key);
-    if (!existing) currentVariants.push({ cor: group.cor, tamanho: '', estoque: 0, preco, preco_antigo, imagem_url: imagemUrl || imagens[0] || null, imagens, videos, cor_hex: group.cor_hex || null, ordem: group.ordem || 0, ativo: true });
+    if (!existing) currentVariants.push({ cor: group.cor, tamanho: '', estoque: 0, preco, preco_antigo, imagem_url: imagemUrl || getStoredMediaUrl(imagens[0]) || null, imagens, videos, cor_hex: group.cor_hex || null, ordem: group.ordem || 0, ativo: true });
   }
 
   sizes.forEach((size) => {
@@ -1596,7 +1674,7 @@ function syncActiveVariantEditorToState(imageUrls = null) {
     }
     variant.preco = preco;
     variant.preco_antigo = preco_antigo;
-    variant.imagem_url = imagemUrl || imagens[0] || null;
+    variant.imagem_url = imagemUrl || getStoredMediaUrl(imagens[0]) || null;
     variant.imagens = [...imagens];
     variant.videos = [...videos];
     variant.cor_hex = group.cor_hex || variant.cor_hex || null;
@@ -1702,16 +1780,16 @@ function getVariantColorGroups() {
         cor_hex: variant.cor_hex || '',
         preco: variant.preco ?? null,
         preco_antigo: variant.preco_antigo ?? null,
-        imagens: cleanStoredMediaList(variant.imagens),
-        videos: Array.isArray(variant.videos) ? [...variant.videos] : [],
+        imagens: uniqueMediaList(variant.imagens),
+        videos: uniqueMediaList(variant.videos),
         imagem_url: getStoredMediaUrl(variant.imagem_url) || null,
         ordem: parseInt(variant.ordem, 10) || 0,
         sizes: []
       });
     }
     const group = map.get(key);
-    if (!group.imagens.length && Array.isArray(variant.imagens) && variant.imagens.length) group.imagens = cleanStoredMediaList(variant.imagens);
-    if (!group.videos.length && Array.isArray(variant.videos) && variant.videos.length) group.videos = [...variant.videos];
+    if (!group.imagens.length && Array.isArray(variant.imagens) && variant.imagens.length) group.imagens = uniqueMediaList(variant.imagens);
+    if (!group.videos.length && Array.isArray(variant.videos) && variant.videos.length) group.videos = uniqueMediaList(variant.videos);
     if (!group.imagem_url && getStoredMediaUrl(variant.imagem_url)) group.imagem_url = getStoredMediaUrl(variant.imagem_url);
     if (!group.cor_hex && variant.cor_hex) group.cor_hex = variant.cor_hex;
     if (group.preco === null && variant.preco !== null && variant.preco !== undefined) group.preco = variant.preco;
@@ -1765,7 +1843,7 @@ function removeVariantMedia(groupIndex, type, mediaIndex) {
     const list = Array.isArray(variant[type]) ? [...variant[type]] : [];
     list.splice(mediaIndex, 1);
     variant[type] = list;
-    if (type === 'imagens') variant.imagem_url = list[0] || null;
+    if (type === 'imagens') variant.imagem_url = getStoredMediaUrl(list[0]) || null;
   });
   renderVariantGrid();
 }
@@ -1801,9 +1879,9 @@ async function uploadVariantMedia(groupIndex, event) {
       else uploaded.imagens.push(data.url);
     }
     updateColorVariants(groupIndex, (variant) => {
-      variant.imagens = [...(variant.imagens || []), ...uploaded.imagens];
-      variant.videos = [...(variant.videos || []), ...uploaded.videos];
-      variant.imagem_url = variant.imagens[0] || null;
+      variant.imagens = uniqueMediaList([...(variant.imagens || []), ...uploaded.imagens]);
+      variant.videos = uniqueMediaList([...(variant.videos || []), ...uploaded.videos]);
+      variant.imagem_url = getStoredMediaUrl(variant.imagens[0]) || null;
     });
     renderVariantGrid();
     toast('Midia enviada para a cor.', 'success');
@@ -2234,7 +2312,7 @@ async function saveProduct() {
   );
   if (duplicatedReference) {
     toast(`A referência ${payload.referencia} já está cadastrada em "${duplicatedReference.nome}". Use outra referência ou edite esse produto.`, 'error');
-    btn.textContent = 'ðŸ’¾ Salvar Produto'; btn.disabled = false;
+    btn.textContent = '💾 Salvar Produto'; btn.disabled = false;
     return;
   }
 
@@ -2242,13 +2320,14 @@ async function saveProduct() {
     syncActiveVariantEditorToState();
     const imageUrls = await uploadProductPhotos();
     syncActiveVariantEditorToState(imageUrls);
+    await uploadPendingVariantMedia();
     const variantsToSave = getPreparedVariants();
     applyVariantsToProductPayload(payload, variantsToSave);
     const hasVariants = variantsToSave.length > 0;
-    const existingProduct = allProducts.find(p => Number(p.id) === Number(editingId)) || {};
     const firstVariantWithPrice = variantsToSave.find(v => v.preco !== null && v.preco !== undefined);
-    payload.imagem_url = hasVariants ? (imageUrls[0] || existingProduct.imagem_url || null) : (imageUrls[0] || null);
-    payload.imagens = hasVariants ? (imageUrls.length ? imageUrls : (Array.isArray(existingProduct.imagens) ? existingProduct.imagens : [])) : imageUrls;
+    const variantImages = getProductImagesFromVariants(variantsToSave);
+    payload.imagem_url = hasVariants ? (variantImages[0] || null) : (imageUrls[0] || null);
+    payload.imagens = hasVariants ? variantImages : imageUrls;
     if (firstVariantWithPrice) {
       payload.preco = firstVariantWithPrice.preco;
       payload.preco_antigo = null;
