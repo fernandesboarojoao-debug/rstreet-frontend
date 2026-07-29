@@ -533,7 +533,7 @@ function finish() {
 
 function updateProductSeo(p) {
   const url = `https://www.rstreet.com.br/produto.html?id=${encodeURIComponent(p.id)}`;
-  const description = `${p.nome} na R Street. Consulte cores, tamanhos disponiveis e estoque atualizado.`;
+  const description = `${p.nome} na R Street. Consulte cores, tamanhos disponíveis e estoque atualizado.`;
   document.title = `${p.nome} | R Street`;
   const metaDescription = document.querySelector('meta[name="description"]');
   const canonical = document.querySelector('link[rel="canonical"]');
