@@ -682,6 +682,7 @@
   }
   body.catalog-search-active .catalog-layout { min-height: auto; }
   body.catalog-search-active .catalog-main { padding-top: 24px; }
+  body.catalog-campaign-active .catalog-quick-nav { display:none !important; }
 
   /* TOOLBAR */
   .toolbar {
@@ -828,6 +829,38 @@
   .sidebar-campaign summary::after { content:'+'; color:var(--gold); font-size:16px; line-height:1; }
   .sidebar-campaign[open] summary::after { content:'-'; }
   .sidebar-campaign-body { padding:0 10px 10px; }
+  .sidebar-campaign-pills { display:flex; flex-direction:column; gap:8px; }
+  .sidebar-campaign-pill {
+    min-height:34px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 10px;
+    border:1px solid rgba(200,169,110,.28);
+    background:rgba(255,255,255,.025);
+    color:var(--gray-200);
+    text-decoration:none;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    line-height:1.25;
+    text-transform:uppercase;
+    letter-spacing:.9px;
+  }
+  .sidebar-campaign-pill::before {
+    content:'';
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:var(--campaign-color, var(--gold));
+    box-shadow:0 0 0 3px rgba(255,255,255,.06);
+    flex:0 0 auto;
+  }
+  .sidebar-campaign-pill.active {
+    border-color:var(--campaign-color, var(--gold));
+    background:rgba(255,255,255,.06);
+    color:var(--white);
+  }
   .price-range-wrap { padding: 8px 0; }
   .price-range-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-400); margin-bottom: 10px; }
   .price-range-labels span { color: var(--gold); font-weight: 600; }
@@ -2067,23 +2100,14 @@ function renderCatalogMenuCampaigns() {
 
   if (desktopWrap) {
     desktopWrap.style.display = '';
-    desktopWrap.innerHTML = themes.map(theme => {
+    desktopWrap.innerHTML = `<div class="sidebar-title">Campanhas</div>
+      <div class="sidebar-campaign-pills">
+      ${themes.map(theme => {
       const titleText = theme.titulo || theme.nome || 'Campanha';
-      const categories = getAvailableCategoriesForTheme(theme);
-      const total = getThemeProducts(theme).length;
-      const themeId = escapeAttr(theme.id);
       const isThemeActive = currentCampaignTheme && String(currentCampaignTheme.id) === String(theme.id);
-      const allButton = `<div class="sidebar-option ${isThemeActive && currentCategory === 'todos' ? 'active' : ''}" onclick="setCampaignCategoryFromMenu('${themeId}', 'todos', this)">
-        <span class="sidebar-option-label">Todos</span><span class="sidebar-option-count">${total}</span>
-      </div>`;
-      const items = categories.map(category => `<div class="sidebar-option ${isThemeActive && currentCategory !== 'todos' && categoryMatches(category.value, currentCategory) ? 'active' : ''}" onclick="setCampaignCategoryFromMenu('${themeId}', '${escapeAttr(category.value)}', this)">
-        <span class="sidebar-option-label">${escapeHtml(category.label)}</span><span class="sidebar-option-count">${category.count}</span>
-      </div>`).join('');
-      return `<details class="sidebar-campaign" ${isThemeActive ? 'open' : ''}>
-        <summary>${escapeHtml(titleText)}</summary>
-        <div class="sidebar-campaign-body">${categories.length ? allButton + items : '<span class="catalog-smart-empty">Nenhuma categoria disponivel.</span>'}</div>
-      </details>`;
-    }).join('');
+      const color = /^#[0-9a-f]{6}$/i.test(theme.cor_destaque || '') ? theme.cor_destaque : '#c8a96e';
+      return `<a class="sidebar-campaign-pill ${isThemeActive ? 'active' : ''}" style="--campaign-color:${escapeAttr(color)}" href="${escapeAttr(safeCatalogThemeLink(theme))}">${escapeHtml(titleText)}</a>`;
+    }).join('')}</div>`;
   }
 }
 
@@ -2187,6 +2211,7 @@ async function loadActiveCatalogTheme() {
     currentCampaignTheme = campaignSlug
       ? themes.find(item => String(item.slug || '') === campaignSlug) || null
       : null;
+    updateCatalogSearchMode();
     catalogThemeIndex = Math.max(0, themes.findIndex(item => Number(item.id) === Number((currentCampaignTheme || activeCatalogTheme)?.id)));
     const themeToShow = currentCampaignTheme || activeCatalogTheme;
     if (themeToShow) applyCatalogThemeBanner(themeToShow, Boolean(currentCampaignTheme));
@@ -2650,6 +2675,7 @@ function updateCatalogSearchMode() {
   const hasSearch = normalizeSearchText(input?.value || '').length > 0;
   const hasDirectFilter = currentBrand !== 'todos' || currentCategory !== 'todos';
   document.body.classList.toggle('catalog-search-active', hasSearch || hasDirectFilter);
+  document.body.classList.toggle('catalog-campaign-active', Boolean(currentCampaignTheme));
 }
 
 const CATEGORY_LABELS = {
