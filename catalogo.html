@@ -1482,7 +1482,7 @@
   </div>
 </div>
 
-<section class="catalog-quick-nav" aria-label="Atalhos do catalogo">
+<section class="catalog-quick-nav" aria-label="Atalhos do catálogo">
   <button type="button" class="catalog-quick-link" data-quick-mode="featured" onclick="setMobileCatalogMode('featured')">
     <span class="catalog-quick-kicker">Vitrine</span>
     <span class="catalog-quick-name">Novos</span>
@@ -1539,16 +1539,16 @@
   <div class="campaign-products-sub" id="campaignProductsSub">Escolha uma peça da campanha abaixo.</div>
 </section>
 
-<section class="catalog-showcase" id="catalogShowcase" aria-label="Vitrines do catalogo">
+<section class="catalog-showcase" id="catalogShowcase" aria-label="Vitrines do catálogo">
   <div class="catalog-rail-section" id="campaignProductsSection"></div>
   <div class="catalog-rail-section" id="featuredProductsSection"></div>
   <div class="catalog-rail-section" id="saleProductsSection"></div>
 </section>
 
-<section class="catalog-collection-bar" aria-label="Vitrines do catalogo">
+<section class="catalog-collection-bar" aria-label="Vitrines do catálogo">
   <div class="catalog-collection-copy">
     <div class="catalog-collection-kicker">Vitrines</div>
-    <div class="catalog-collection-title" id="desktopCollectionTitle">Catalogo completo</div>
+    <div class="catalog-collection-title" id="desktopCollectionTitle">Catálogo completo</div>
   </div>
   <div class="catalog-collection-actions">
     <button type="button" class="catalog-collection-btn active" data-collection-mode="all" onclick="setMobileCatalogMode('all')">Todos</button>
@@ -1557,7 +1557,7 @@
   </div>
 </section>
 
-<section class="mobile-catalog-hub" aria-label="Explorar catalogo">
+<section class="mobile-catalog-hub" aria-label="Explorar catálogo">
   <div class="mobile-hub-head">
     <div>
       <div class="mobile-hub-kicker">Escolha sua vitrine</div>
@@ -2810,7 +2810,7 @@ function renderCollectionCategoryMenu(mode, targetId) {
   }).join('');
   target.innerHTML = categories.length
     ? allButton + items
-    : '<span class="catalog-smart-empty">Nenhuma categoria disponivel.</span>';
+    : '<span class="catalog-smart-empty">Nenhuma categoria disponível.</span>';
 }
 
 function getCatalogBaseProducts({ includeCategory = true, includeSearch = true, includeBrand = true, includePrice = true, includeStock = true } = {}) {
@@ -2893,7 +2893,7 @@ function updateSmartFilterOptions() {
       const dot = `<span class="catalog-smart-swatch-dot" style="background:${escapeAttr(item.hex)}"></span>`;
       return `<button type="button" class="catalog-smart-swatch ${active ? 'active' : ''}" onclick="setColorFilter('${escapeAttr(item.label)}')">${dot}${escapeHtml(item.label)}</button>`;
     })
-  ].join('') || '<span class="catalog-smart-empty">Nenhuma cor disponivel.</span>';
+  ].join('') || '<span class="catalog-smart-empty">Nenhuma cor disponível.</span>';
   colorWrap.innerHTML = colorHtml;
   if (mobileColorWrap) mobileColorWrap.innerHTML = colorHtml;
 
@@ -2903,7 +2903,7 @@ function updateSmartFilterOptions() {
     : ([
       `<button type="button" class="catalog-smart-swatch ${currentSize === 'todos' ? 'active' : ''}" onclick="setSizeFilter('todos')">Todos</button>`,
       ...sizeItems.map(size => `<button type="button" class="catalog-smart-swatch ${sameCatalogText(size, currentSize) ? 'active' : ''}" onclick="setSizeFilter('${escapeAttr(size)}')">${escapeHtml(size)}</button>`)
-    ].join('') || '<span class="catalog-smart-empty">Nenhum tamanho disponivel.</span>');
+    ].join('') || '<span class="catalog-smart-empty">Nenhum tamanho disponível.</span>');
   sizeWrap.innerHTML = sizeHtml;
   if (mobileSizeWrap) mobileSizeWrap.innerHTML = sizeHtml;
 }
@@ -2943,14 +2943,14 @@ function renderPage() {
   if (page.length === 0) {
     const emptyTitle = currentCampaignTheme ? 'Nenhum produto nesta campanha' : 'Nenhum produto encontrado';
     const emptySub = currentCampaignTheme
-      ? 'Essa campanha ainda nao tem produtos disponiveis. Volte ao catalogo completo para ver outras pecas.'
+      ? 'Essa campanha ainda não tem produtos disponíveis. Volte ao catálogo completo para ver outras peças.'
       : 'Tente ajustar os filtros ou buscar por outro termo.';
     grid.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">🔍</div>
         <div class="empty-state-title">${emptyTitle}</div>
         <div class="empty-state-sub">${emptySub}</div>
-        ${currentCampaignTheme ? '<a class="campaign-filter-clear" style="margin-top:18px" href="catalogo.html">Voltar ao catalogo</a>' : ''}
+        ${currentCampaignTheme ? '<a class="campaign-filter-clear" style="margin-top:18px" href="catalogo.html">Voltar ao catálogo</a>' : ''}
       </div>`;
     return;
   }
@@ -3241,7 +3241,7 @@ function updateCatalogShowcases() {
       products: campaignProducts,
       kicker: 'Campanha ativa',
       title: currentCampaignTheme ? (currentCampaignTheme.titulo || currentCampaignTheme.nome || 'Produtos da campanha') : '',
-      sub: 'Pecas escolhidas especialmente para esta campanha.',
+      sub: 'Peças escolhidas especialmente para esta campanha.',
       badge: 'Campanha',
       link: 'catalogo.html',
       linkText: 'Ver todos'

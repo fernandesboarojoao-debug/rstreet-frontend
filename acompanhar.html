@@ -50,7 +50,7 @@
 <body>
 <nav>
   <a class="logo" href="index.html">R<span>.</span>Street</a>
-  <a href="catalogo.html">Catalogo</a>
+  <a href="catalogo.html">Catálogo</a>
 </nav>
 <main>
   <h1>Acompanhar Pedido</h1>
@@ -71,7 +71,7 @@ const ENVIO_LABEL = {
   aguardando_envio: 'Aguardando envio',
   enviado: 'Enviado',
   entregue: 'Entregue',
-  retirada_disponivel: 'Retirada disponivel',
+  retirada_disponivel: 'Retirada disponível',
   retirado: 'Retirado'
 };
 
@@ -113,7 +113,7 @@ async function consultarPedido() {
       body: JSON.stringify({ id, email })
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.erro || 'Pedido nao encontrado.');
+    if (!res.ok) throw new Error(data.erro || 'Pedido não encontrado.');
 
     const p = data.pedido;
     const itens = data.itens || [];
@@ -130,7 +130,7 @@ async function consultarPedido() {
       </div>`;
     resultado.className = 'result open';
   } catch (err) {
-    showError(err.message || 'Nao foi possivel consultar o pedido.');
+    showError(err.message || 'Não foi possível consultar o pedido.');
   } finally {
     btn.disabled = false;
     btn.textContent = 'Consultar pedido';

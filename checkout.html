@@ -540,7 +540,7 @@ async function validarCarrinhoAtual() {
     const product = products.find(p => Number(p.id) === Number(item.id));
     if (!product || product.ativo === false) {
       changed = true;
-      messages.push(`${item.nome} nao esta mais disponivel e foi removido do carrinho.`);
+      messages.push(`${item.nome} não está mais disponível e foi removido do carrinho.`);
       return null;
     }
 
@@ -555,7 +555,7 @@ async function validarCarrinhoAtual() {
       const variant = variants.find(v => Number(v.id) === Number(item.produto_variante_id));
       if (!variant || variant.ativo === false || Number(variant.estoque) <= 0) {
         changed = true;
-        messages.push(`${item.nome}${item.cor ? ' - '+item.cor : ''}${item.tamanho ? ' / '+item.tamanho : ''} esgotou ou nao esta mais disponivel e foi removido do carrinho.`);
+        messages.push(`${item.nome}${item.cor ? ' - '+item.cor : ''}${item.tamanho ? ' / '+item.tamanho : ''} esgotou ou não está mais disponível e foi removido do carrinho.`);
         return null;
       }
       estoque = Math.max(0, Number(variant.estoque) || 0);

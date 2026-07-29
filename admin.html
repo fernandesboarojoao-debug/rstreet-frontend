@@ -500,7 +500,7 @@
     <button class="nav-item" onclick="showTab('pedidos')"><span class="nav-icon">🧾</span> Pedidos <span id="badge-pedidos" style="margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;display:none">0</span></button>
     <div class="nav-section-title">Loja</div>
     <a class="nav-item" href="catalogo.html" target="_blank"><span class="nav-icon">🛍</span> Ver Catálogo</a>
-    <a class="nav-item" href="catalogo.html" target="_blank"><span class="nav-icon">🌐</span> Ver Site</a>
+    <a class="nav-item" href="sobre.html" target="_blank"><span class="nav-icon">🌐</span> Ver Loja/Sobre</a>
     <div class="nav-section-title">Config</div>
     <button class="nav-item" onclick="showTab('temas')"><span class="nav-icon">★</span> Temas do Site</button>
     <button class="nav-item" onclick="showTab('config')"><span class="nav-icon">⚙️</span> Configurações</button>
@@ -717,7 +717,7 @@
       <div class="section-header">
         <div>
           <div class="section-title">Temas do Site</div>
-          <p style="font-size:13px;color:var(--gray1);margin-top:6px">Cadastre campanhas para home e catalogo. Fora do periodo ativo, o site volta sozinho ao normal.</p>
+          <p style="font-size:13px;color:var(--gray1);margin-top:6px">Cadastre campanhas para home e catálogo. Fora do período ativo, o site volta sozinho ao normal.</p>
         </div>
         <button class="btn btn-outline btn-sm" onclick="resetTemaSiteForm()">Novo tema</button>
       </div>
@@ -727,7 +727,7 @@
           <h3>Campanha / Tema</h3>
           <div class="alert alert-info">
             <span class="alert-icon">i</span>
-            <span>Por seguranca, o tema novo fica inativo ate voce escolher status ativo/programado e definir o periodo.</span>
+            <span>Por segurança, o tema novo fica inativo até você escolher status ativo/programado e definir o período.</span>
           </div>
           <input type="hidden" id="tema-id">
           <div class="form-grid">
@@ -746,9 +746,9 @@
             <div class="form-group">
               <label>Onde aparece</label>
               <select id="tema-local">
-                <option value="ambos">Home e catalogo</option>
+                <option value="ambos">Home e catálogo</option>
                 <option value="home">Somente home</option>
-                <option value="catalogo">Somente catalogo</option>
+                <option value="catalogo">Somente catálogo</option>
               </select>
             </div>
             <div class="form-group">
@@ -769,14 +769,14 @@
             </div>
             <div class="form-group full">
               <label>Texto curto</label>
-              <textarea id="tema-texto" placeholder="Pecas selecionadas para presentear com estilo." oninput="updateTemaSitePreview()"></textarea>
+              <textarea id="tema-texto" placeholder="Peças selecionadas para presentear com estilo." oninput="updateTemaSitePreview()"></textarea>
             </div>
             <div class="form-group">
-              <label>Texto do botao</label>
+              <label>Texto do botão</label>
               <input type="text" id="tema-botao-texto" placeholder="Ver campanha">
             </div>
             <div class="form-group">
-              <label>Link do botao</label>
+              <label>Link do botão</label>
               <input type="text" id="tema-botao-link" placeholder="catalogo.html?campanha=dia-dos-pais">
             </div>
             <div class="form-group full">
@@ -796,7 +796,7 @@
                 </div>
                 <div class="theme-product-list" id="tema-produto-list"></div>
               </div>
-              <div class="form-hint">Se escolher produtos, o link padrao da campanha abre o catalogo ja filtrado.</div>
+              <div class="form-hint">Se escolher produtos, o link padrão da campanha abre o catálogo já filtrado.</div>
             </div>
           </div>
           <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
@@ -1166,7 +1166,7 @@ function convertAvifToJpegDataUrl(file) {
     };
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl);
-      reject(new Error(`Nao foi possivel converter "${file.name}". Tente salvar essa imagem como JPG ou PNG.`));
+      reject(new Error(`Não foi possível converter "${file.name}". Tente salvar essa imagem como JPG ou PNG.`));
     };
     img.src = objectUrl;
   });
@@ -1441,7 +1441,7 @@ async function loadProductVariantsIntoModal(productId) {
   } catch {
     currentVariants = [];
     renderVariantGrid();
-    toast('Nao foi possivel carregar as combinacoes de cor e tamanho.', 'error');
+    toast('Não foi possível carregar as combinações de cor e tamanho.', 'error');
   }
 }
 
@@ -2664,7 +2664,7 @@ async function loadHomeHighlightsAdmin() {
     renderHomeHighlightsAdmin(await res.json());
   } catch {
     renderHomeHighlightsAdmin();
-    toast('Nao foi possivel carregar destaques. Mostrando padrao.', 'error');
+    toast('Não foi possível carregar destaques. Mostrando padrão.', 'error');
   }
 }
 
@@ -2772,7 +2772,7 @@ function updateTemaProductSelect() {
     .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || '')))
     .map(p => `<option value="${p.id}">${escapeHtml(p.nome || 'Produto')} ${p.referencia ? '- Ref: ' + escapeHtml(p.referencia) : ''}</option>`)
     .join('');
-  select.innerHTML = options || '<option value="">Nenhum produto disponivel</option>';
+  select.innerHTML = options || '<option value="">Nenhum produto disponível</option>';
 }
 
 function renderTemaProducts() {
@@ -2898,7 +2898,7 @@ function renderTemasSiteList() {
     return;
   }
   list.innerHTML = siteThemesState.map(theme => {
-    const period = `${theme.inicio ? new Date(theme.inicio).toLocaleString('pt-BR') : 'sem inicio'} ate ${theme.fim ? new Date(theme.fim).toLocaleString('pt-BR') : 'sem fim'}`;
+    const period = `${theme.inicio ? new Date(theme.inicio).toLocaleString('pt-BR') : 'sem início'} até ${theme.fim ? new Date(theme.fim).toLocaleString('pt-BR') : 'sem fim'}`;
     const img = theme.banner_url
       ? `<img class="theme-card-img" src="${escapeAttr(theme.banner_url)}" alt="${escapeAttr(theme.nome)}">`
       : '<div class="theme-card-img"></div>';
@@ -2933,7 +2933,7 @@ async function loadTemasSiteAdmin() {
     renderTemasSiteList();
     renderTemaProducts();
   } catch (err) {
-    if (list) list.innerHTML = '<div class="table-empty">Nao foi possivel carregar temas.</div>';
+    if (list) list.innerHTML = '<div class="table-empty">Não foi possível carregar temas.</div>';
     toast('Erro ao carregar temas: ' + (err.message || 'tente novamente.'), 'error');
   }
 }
@@ -3037,7 +3037,7 @@ const ENVIO_LABEL = {
   aguardando_envio: 'Aguardando envio',
   enviado: 'Enviado',
   entregue: 'Entregue',
-  retirada_disponivel: 'Retirada disponivel',
+  retirada_disponivel: 'Retirada disponível',
   retirado: 'Retirado'
 };
 
@@ -3117,7 +3117,7 @@ function renderPedidosTable() {
     pendente:   '<span class="badge" style="background:rgba(255,152,0,0.15);color:#ff9800;border:1px solid rgba(255,152,0,0.3)">⏳ Pendente</span>',
     em_analise: '<span class="badge" style="background:rgba(74,144,226,0.15);color:#4a90e2;border:1px solid rgba(74,144,226,0.3)">🔍 Em análise</span>',
     recusado:   '<span class="badge" style="background:rgba(230,57,70,0.15);color:var(--red);border:1px solid rgba(230,57,70,0.3)">❌ Recusado</span>',
-    estoque_indisponivel: '<span class="badge" style="background:rgba(230,57,70,0.22);color:#ffb3b8;border:1px solid rgba(230,57,70,0.45)">Estoque indisponivel</span>',
+    estoque_indisponivel: '<span class="badge" style="background:rgba(230,57,70,0.22);color:#ffb3b8;border:1px solid rgba(230,57,70,0.45)">Estoque indisponível</span>',
     cancelado:  '<span class="badge badge-inactive">Cancelado</span>',
   };
   if (!lista.length) {
