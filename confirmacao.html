@@ -335,8 +335,8 @@ function updateStoreHoursStep() {
   if (!step) return;
   const status = getStoreOpenStatus();
   step.innerHTML = status.isOpen
-    ? `<strong>Separacao</strong><br>Estamos abertos agora. Nossa equipe ira separar e embalar seu pedido durante o horario de atendimento. Atendimento: ${STORE_HOURS_TEXT}`
-    : `<strong>Separacao</strong><br>Estamos fechados agora. Seu pedido foi recebido; vamos separar e embalar no proximo horario de funcionamento. Atendimento: ${STORE_HOURS_TEXT}`;
+    ? `<strong>Separação</strong><br>Estamos abertos agora. Nossa equipe irá separar e embalar seu pedido durante o horário de atendimento. Atendimento: ${STORE_HOURS_TEXT}`
+    : `<strong>Separação</strong><br>Estamos fechados agora. Seu pedido foi recebido; vamos separar e embalar no próximo horário de funcionamento. Atendimento: ${STORE_HOURS_TEXT}`;
 }
 
 function statusFromPedido(pedido, fallback) {

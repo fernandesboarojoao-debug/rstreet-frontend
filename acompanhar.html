@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Acompanhar Pedido | R Street</title>
-<meta name="description" content="Acompanhe o status do seu pedido R Street usando o numero do pedido e e-mail.">
+<meta name="description" content="Acompanhe o status do seu pedido R Street usando o número do pedido e e-mail.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.rstreet.com.br/acompanhar.html">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
@@ -54,7 +54,7 @@
 </nav>
 <main>
   <h1>Acompanhar Pedido</h1>
-  <p class="intro">Digite o numero do pedido e o e-mail usado na compra para consultar pagamento, envio e rastreio.</p>
+  <p class="intro">Digite o número do pedido e o e-mail usado na compra para consultar pagamento, envio e rastreio.</p>
   <div class="box">
     <label for="pedidoId">Numero do pedido</label>
     <input id="pedidoId" inputmode="numeric" placeholder="Ex: 48">
@@ -102,7 +102,7 @@ async function consultarPedido() {
   resultado.className = 'result';
   resultado.innerHTML = '';
 
-  if (!id || !email) return showError('Informe o numero do pedido e o e-mail da compra.');
+  if (!id || !email) return showError('Informe o número do pedido e o e-mail da compra.');
 
   btn.disabled = true;
   btn.textContent = 'Consultando...';
@@ -126,7 +126,7 @@ async function consultarPedido() {
       ${p.rastreio_url ? `<a class="track" href="${escapeHtml(p.rastreio_url)}" target="_blank">Abrir rastreio</a>` : ''}
       <div class="items">
         <strong>Itens</strong><br>
-        ${itens.map(i => `${escapeHtml(i.quantidade)}x ${escapeHtml(i.nome_produto)}${i.cor ? ' - '+escapeHtml(i.cor) : ''}${i.tamanho ? ' / '+escapeHtml(i.tamanho) : ''}`).join('<br>') || 'Itens indisponiveis'}
+        ${itens.map(i => `${escapeHtml(i.quantidade)}x ${escapeHtml(i.nome_produto)}${i.cor ? ' - '+escapeHtml(i.cor) : ''}${i.tamanho ? ' / '+escapeHtml(i.tamanho) : ''}`).join('<br>') || 'Itens indisponíveis'}
       </div>`;
     resultado.className = 'result open';
   } catch (err) {

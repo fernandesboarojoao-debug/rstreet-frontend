@@ -488,8 +488,8 @@ function updateStoreHoursAlert() {
   if (!alert) return;
   const status = getStoreOpenStatus();
   alert.innerHTML = status.isOpen
-    ? `<span>Aberto</span><span><strong>Estamos abertos agora.</strong> Pedidos pagos entram na separacao durante o horario de atendimento. Atendimento: ${STORE_HOURS_TEXT}</span>`
-    : `<span>Fechado</span><span><strong>Estamos fechados agora.</strong> A compra pode ser feita normalmente; se o pagamento for aprovado, vamos separar e embalar no proximo horario de funcionamento. Atendimento: ${STORE_HOURS_TEXT}</span>`;
+    ? `<span>Aberto</span><span><strong>Estamos abertos agora.</strong> Pedidos pagos entram na separação durante o horário de atendimento. Atendimento: ${STORE_HOURS_TEXT}</span>`
+    : `<span>Fechado</span><span><strong>Estamos fechados agora.</strong> A compra pode ser feita normalmente; se o pagamento for aprovado, vamos separar e embalar no próximo horário de funcionamento. Atendimento: ${STORE_HOURS_TEXT}</span>`;
 }
 
 const FRETE_REGRAS = {

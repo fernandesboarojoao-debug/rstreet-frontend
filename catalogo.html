@@ -2014,7 +2014,7 @@ async function loadProductVariants() {
     });
     allProductVariants = res.ok ? await res.json() : [];
   } catch (err) {
-    console.warn('Falha ao buscar variacoes do catalogo:', err.message);
+    console.warn('Falha ao buscar variações do catálogo:', err.message);
     allProductVariants = [];
   }
 }
@@ -2241,7 +2241,7 @@ async function loadActiveCatalogTheme() {
     updateCampaignFilterBar();
     startCatalogThemeCarousel();
   } catch (err) {
-    console.warn('Falha ao buscar tema do catalogo:', err.message);
+    console.warn('Falha ao buscar tema do catálogo:', err.message);
   }
 }
 
@@ -3124,7 +3124,7 @@ function renderShowcaseMediaArrows(showcaseKey) {
 
 function renderShowcaseColorSwatches(product, groups, selectedColor = '', showcaseKey = '') {
   if (!groups || groups.length < 2) return '';
-  return `<div class="showcase-color-swatches" aria-label="Cores disponiveis">
+  return `<div class="showcase-color-swatches" aria-label="Cores disponíveis">
     ${groups.slice(0, 6).map(group => {
       const image = getCatalogGroupImage(group, product);
       const fallbackColor = group.cor_hex || getColorValue(group.cor);
@@ -3483,7 +3483,7 @@ function getPixPrice(value) {
 function renderCatalogColorSwatches(product, groups) {
   if (!groups || groups.length < 2) return '';
   const selectedColor = catalogMediaState[product.id]?.color || groups[0]?.cor || '';
-  return `<div class="catalog-color-swatches" aria-label="Cores disponiveis">
+  return `<div class="catalog-color-swatches" aria-label="Cores disponíveis">
     ${groups.map((group, index) => {
       const image = getCatalogGroupImage(group, product);
       const swatchContent = image

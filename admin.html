@@ -690,10 +690,10 @@
 
       <div class="import-card">
         <h3>Produtos em destaque da Home</h3>
-        <p>Edite somente os cards da pagina inicial: marca, titulo, foto/video e link de destino.</p>
+        <p>Edite somente os cards da página inicial: marca, título, foto/vídeo e link de destino.</p>
         <div class="alert alert-info">
           <span class="alert-icon">💡</span>
-          <span>O link pode ser um produto especifico, por exemplo <strong>produto.html?id=10</strong>, ou qualquer pagina do site.</span>
+          <span>O link pode ser um produto específico, por exemplo <strong>produto.html?id=10</strong>, ou qualquer página do site.</span>
         </div>
         <div class="home-highlights-editor" id="homeHighlightsEditor">
           <div class="table-empty">Carregando destaques...</div>
@@ -1718,7 +1718,7 @@ function addVariantFromForm() {
   if (!cor) return toast('Informe o nome da cor.', 'error');
 
   if (getVariantColorGroups().some(g => sameAdminText(g.cor, cor))) {
-    return toast('Essa cor ja existe nesse produto.', 'error');
+    return toast('Essa cor já existe nesse produto.', 'error');
   }
 
   currentVariants.push({ cor, tamanho: '', estoque: 0, preco: null, preco_antigo: null, imagem_url: null, imagens: [], videos: [], cor_hex, ordem: currentVariants.length, ativo: true });
@@ -1926,7 +1926,7 @@ function addSizeToColor(groupIndex) {
   const tamanho = String(sizeEl?.value || '').trim();
   const estoque = Math.max(0, parseInt(stockEl?.value, 10) || 0);
   if (!isValidVariantSize(tamanho)) return toast('Informe um tamanho válido.', 'error');
-  if (group.sizes.some(v => sameAdminText(v.tamanho, tamanho))) return toast('Esse tamanho ja existe nessa cor.', 'error');
+  if (group.sizes.some(v => sameAdminText(v.tamanho, tamanho))) return toast('Esse tamanho já existe nessa cor.', 'error');
 
   const placeholderIndex = currentVariants.findIndex(v => sameAdminText(v.cor, group.cor) && !isValidVariantSize(v.tamanho));
   const nextVariant = {
@@ -2080,7 +2080,7 @@ function renderLowStockTable() {
     .slice(0, 10);
 
   if (!low.length) {
-    wrap.innerHTML = '<div class="table-empty"><div class="table-empty-icon">OK</div>Nenhuma variacao com estoque baixo.</div>';
+    wrap.innerHTML = '<div class="table-empty"><div class="table-empty-icon">OK</div>Nenhuma variação com estoque baixo.</div>';
     return;
   }
 
