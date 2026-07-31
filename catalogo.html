@@ -2710,6 +2710,45 @@ function matchesSearchText(haystack, search) {
   return search.split(/\s+/).filter(Boolean).every(term => text.includes(term));
 }
 
+const COLOR_SEARCH_FAMILIES = [
+  ['azul', 'marinho', 'navy', 'royal', 'celeste', 'turquesa', 'jeans'],
+  ['preto', 'preta', 'black', 'grafite', 'chumbo'],
+  ['branco', 'branca', 'off', 'off white', 'offwhite', 'creme', 'gelo'],
+  ['cinza', 'prata', 'silver'],
+  ['marrom', 'cafe', 'café', 'caramelo', 'chocolate', 'tabaco'],
+  ['bege', 'areia', 'khaki', 'caqui'],
+  ['verde', 'militar', 'oliva', 'musgo'],
+  ['vermelho', 'vermelha', 'vinho', 'bordo', 'bordô'],
+  ['rosa', 'pink'],
+  ['amarelo', 'amarela', 'mostarda'],
+  ['laranja', 'coral'],
+  ['roxo', 'lilas', 'lilás', 'violeta']
+].map(group => group.map(normalizeSearchText));
+
+function getColorFamily(value) {
+  const text = normalizeSearchText(value);
+  if (!text) return null;
+  return COLOR_SEARCH_FAMILIES.find(group =>
+    group.some(term => text === term || text.includes(term) || term.includes(text))
+  ) || null;
+}
+
+function colorMatchesSearchTerm(color, term) {
+  const colorText = normalizeSearchText(color);
+  const searchText = normalizeSearchText(term);
+  if (!colorText || !searchText) return false;
+  if (colorText.includes(searchText) || searchText.includes(colorText)) return true;
+  const colorFamily = getColorFamily(colorText);
+  const searchFamily = getColorFamily(searchText);
+  return Boolean(colorFamily && searchFamily && colorFamily === searchFamily);
+}
+
+function getSearchPreferredColorGroup(groups, search) {
+  const terms = normalizeSearchText(search).split(/\s+/).filter(Boolean);
+  if (!groups?.length || !terms.length) return null;
+  return groups.find(group => terms.some(term => colorMatchesSearchTerm(group.cor, term))) || null;
+}
+
 function updateCatalogSearchMode() {
   const input = document.getElementById('searchInput');
   const hasSearch = normalizeSearchText(input?.value || '').length > 0;
@@ -2942,18 +2981,22 @@ function updateSmartFilterOptions() {
 }
 
 function matchesProductSearch(product, search) {
-  const variantText = allProductVariants
+  const variants = allProductVariants
     .filter(v => Number(v.produto_id) === Number(product?.id))
-    .map(v => [v.cor, v.tamanho, v.codigo_cor].filter(Boolean).join(' '))
-    .join(' ');
-  return matchesSearchText([
+  const productText = normalizeSearchText([
     product?.nome,
     product?.marca,
     product?.referencia,
     product?.categoria,
-    product?.descricao,
-    variantText
+    product?.descricao
   ].filter(Boolean).join(' '), search);
+  const variantText = normalizeSearchText(variants.map(v => [v.cor, v.tamanho, v.codigo_cor].filter(Boolean).join(' ')).join(' '));
+  const colorGroups = getCatalogColorGroups(product?.id);
+  return search.split(/\s+/).filter(Boolean).every(term =>
+    productText.includes(term) ||
+    variantText.includes(term) ||
+    colorGroups.some(group => colorMatchesSearchTerm(group.cor, term))
+  );
 }
 
 function updateCategoryCounts() {
@@ -2995,10 +3038,12 @@ function renderPage() {
 function renderCard(p) {
   const colorGroups = getCatalogColorGroups(p.id);
   const state = catalogMediaState[p.id] || {};
+  const searchText = normalizeSearchText(document.getElementById('searchInput')?.value || '');
   const filteredGroup = currentColor !== 'todos'
     ? colorGroups.find(group => sameCatalogText(group.cor, currentColor))
     : null;
-  const initialGroup = filteredGroup || colorGroups.find(group => sameCatalogText(group.cor, state.color)) || colorGroups[0] || null;
+  const searchGroup = searchText ? getSearchPreferredColorGroup(colorGroups, searchText) : null;
+  const initialGroup = filteredGroup || searchGroup || colorGroups.find(group => sameCatalogText(group.cor, state.color)) || colorGroups[0] || null;
   const initialColor = initialGroup?.cor || '';
   const initialMediaList = getCatalogGroupMedia(initialGroup, p);
   const initialIndex = clampCatalogMediaIndex(state.mediaIndex, initialMediaList);
@@ -3641,6 +3686,10 @@ function getColorValue(color) {
     branco: '#f4f1ea',
     branca: '#f4f1ea',
     azul: '#24558f',
+    marinho: '#172947',
+    navy: '#172947',
+    royal: '#1f57a5',
+    turquesa: '#22a6a6',
     marrom: '#6b4423',
     vermelho: '#a11f2b',
     vermelha: '#a11f2b',
