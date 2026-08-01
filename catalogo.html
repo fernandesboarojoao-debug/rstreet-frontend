@@ -655,6 +655,10 @@
   .showcase-card-badge { position:absolute; top:8px; left:8px; background:var(--gold); color:var(--black); font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; padding:4px 6px; border-radius:2px; }
   .showcase-color-swatches { position:absolute; left:8px; bottom:8px; display:flex; align-items:center; gap:5px; z-index:3; max-width:calc(100% - 16px); overflow-x:auto; overflow-y:hidden; padding:2px 1px; scrollbar-width:none; }
   .showcase-color-swatches::-webkit-scrollbar { display:none; }
+  .showcase-color-swatches.is-draggable,
+  .catalog-color-swatches.is-draggable { cursor:grab; }
+  .showcase-color-swatches.is-dragging,
+  .catalog-color-swatches.is-dragging { cursor:grabbing; scroll-snap-type:none; }
   .showcase-color-dot { width:20px; height:20px; flex:0 0 20px; border-radius:50%; border:1px solid rgba(255,255,255,.78); background:var(--gray-700); box-shadow:0 3px 10px rgba(0,0,0,.35); overflow:hidden; padding:0; cursor:pointer; }
   .showcase-color-dot img { width:100%; height:100%; object-fit:cover; display:block; }
   .showcase-color-dot.is-active { border-color:var(--gold); transform:scale(1.08); }
@@ -3035,6 +3039,58 @@ function renderPage() {
 
   grid.innerHTML = page.map(p => renderCard(p)).join('');
   prepareCatalogVideos(grid);
+  enableDragScrollForColorRails();
+}
+
+function enableDragScrollForColorRails(root = document) {
+  root.querySelectorAll('.catalog-color-swatches, .showcase-color-swatches').forEach(enableDragScroll);
+}
+
+function enableDragScroll(el) {
+  if (!el || el.dataset.dragScrollReady === 'true') return;
+  el.dataset.dragScrollReady = 'true';
+  el.classList.add('is-draggable');
+  let isDown = false;
+  let startX = 0;
+  let startScroll = 0;
+  let moved = false;
+
+  el.addEventListener('pointerdown', event => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    isDown = true;
+    moved = false;
+    startX = event.clientX;
+    startScroll = el.scrollLeft;
+    el.classList.add('is-dragging');
+    try { el.setPointerCapture(event.pointerId); } catch {}
+  });
+
+  el.addEventListener('pointermove', event => {
+    if (!isDown) return;
+    const delta = event.clientX - startX;
+    if (Math.abs(delta) > 4) moved = true;
+    if (moved) {
+      event.preventDefault();
+      el.scrollLeft = startScroll - delta;
+    }
+  });
+
+  const stopDrag = event => {
+    if (!isDown) return;
+    isDown = false;
+    el.classList.remove('is-dragging');
+    try { el.releasePointerCapture(event.pointerId); } catch {}
+  };
+
+  el.addEventListener('pointerup', stopDrag);
+  el.addEventListener('pointercancel', stopDrag);
+  el.addEventListener('pointerleave', stopDrag);
+  el.addEventListener('click', event => {
+    if (!moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+    moved = false;
+  }, true);
 }
 
 function renderCard(p) {
@@ -3282,6 +3338,7 @@ function renderCatalogRail(sectionId, options) {
     </div>
   `;
   prepareCatalogVideos(section);
+  enableDragScrollForColorRails(section);
   return true;
 }
 
