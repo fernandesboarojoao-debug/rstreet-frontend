@@ -2717,18 +2717,35 @@ function matchesSearchText(haystack, search) {
 }
 
 const COLOR_SEARCH_FAMILIES = [
-  ['azul', 'marinho', 'navy', 'royal', 'celeste', 'turquesa', 'jeans'],
-  ['preto', 'preta', 'black', 'grafite', 'chumbo'],
-  ['branco', 'branca', 'off', 'off white', 'offwhite', 'creme', 'gelo'],
-  ['cinza', 'prata', 'silver'],
-  ['marrom', 'cafe', 'café', 'caramelo', 'chocolate', 'tabaco'],
-  ['bege', 'areia', 'khaki', 'caqui'],
-  ['verde', 'militar', 'oliva', 'musgo'],
-  ['vermelho', 'vermelha', 'vinho', 'bordo', 'bordô'],
-  ['rosa', 'pink'],
-  ['amarelo', 'amarela', 'mostarda'],
-  ['laranja', 'coral'],
-  ['roxo', 'lilas', 'lilás', 'violeta']
+  ['azul', 'azul claro', 'azul escuro', 'marinho', 'navy', 'royal', 'bic', 'celeste', 'turquesa', 'petroleo', 'petróleo', 'anil', 'jeans'],
+  ['preto', 'preta', 'black', 'grafite', 'chumbo', 'onix', 'ônix'],
+  ['branco', 'branca', 'white', 'off', 'off white', 'offwhite', 'gelo', 'neve', 'perola', 'pérola'],
+  ['cinza', 'prata', 'silver', 'mescla', 'concreto'],
+  ['marrom', 'cafe', 'café', 'caramelo', 'chocolate', 'tabaco', 'castanho', 'conhaque', 'cognac', 'camel'],
+  ['bege', 'creme', 'areia', 'nude', 'palha', 'linho', 'khaki', 'caqui'],
+  ['verde', 'verde claro', 'verde escuro', 'militar', 'oliva', 'musgo', 'menta', 'lima', 'limao', 'limão'],
+  ['vermelho', 'vermelha', 'vinho', 'bordo', 'bordô', 'marsala', 'cereja', 'rubi', 'carmim', 'bordaux', 'burgundy'],
+  ['rosa', 'pink', 'rose', 'rosé', 'goiaba', 'fucsia', 'fúcsia'],
+  ['amarelo', 'amarela', 'mostarda', 'dourado', 'ouro'],
+  ['laranja', 'coral', 'salmao', 'salmão', 'terracota'],
+  ['roxo', 'lilas', 'lilás', 'violeta', 'lavanda'],
+  ['colorido', 'estampado', 'estampa', 'multicolor', 'multi color']
+].map(group => group.map(normalizeSearchText));
+
+const SEARCH_SYNONYM_FAMILIES = [
+  ['camisa', 'camiseta', 'tee', 'tshirt', 't shirt', 'blusa', 'blusinha'],
+  ['regata', 'sem manga'],
+  ['calca', 'calça', 'pants', 'jeans', 'sarja'],
+  ['bermuda', 'short', 'shorts'],
+  ['tenis', 'tênis', 'sapato', 'calcado', 'calçado', 'sapatênis', 'sapateni', 'sneaker'],
+  ['chinelo', 'sandalia', 'sandália', 'slide'],
+  ['carteira', 'acessorio', 'acessório', 'acessorios', 'acessórios'],
+  ['novo', 'novidade', 'novidades', 'lancamento', 'lançamento', 'lançamentos'],
+  ['oferta', 'ofertas', 'promocao', 'promoção', 'promocoes', 'promoções', 'desconto', 'sale'],
+  ['masculino', 'homem', 'masculina'],
+  ['casual', 'dia a dia', 'basico', 'básico'],
+  ['social', 'arrumado', 'elegante'],
+  ['esporte', 'sport', 'sports', 'academia', 'treino']
 ].map(group => group.map(normalizeSearchText));
 
 function getColorFamily(value) {
@@ -2747,6 +2764,21 @@ function colorMatchesSearchTerm(color, term) {
   const colorFamily = getColorFamily(colorText);
   const searchFamily = getColorFamily(searchText);
   return Boolean(colorFamily && searchFamily && colorFamily === searchFamily);
+}
+
+function getSearchFamilyTerms(term) {
+  const text = normalizeSearchText(term);
+  if (!text) return [];
+  const families = [...COLOR_SEARCH_FAMILIES, ...SEARCH_SYNONYM_FAMILIES];
+  const family = families.find(group =>
+    group.some(item => item === text || item.includes(text) || text.includes(item))
+  );
+  return family ? [...new Set([text, ...family])] : [text];
+}
+
+function textMatchesSearchFamily(text, term) {
+  const normalizedText = normalizeSearchText(text);
+  return getSearchFamilyTerms(term).some(related => normalizedText.includes(related));
 }
 
 function getSearchPreferredColorGroup(groups, search) {
@@ -2999,8 +3031,8 @@ function matchesProductSearch(product, search) {
   const variantText = normalizeSearchText(variants.map(v => [v.cor, v.tamanho, v.codigo_cor].filter(Boolean).join(' ')).join(' '));
   const colorGroups = getCatalogColorGroups(product?.id);
   return search.split(/\s+/).filter(Boolean).every(term =>
-    productText.includes(term) ||
-    variantText.includes(term) ||
+    textMatchesSearchFamily(productText, term) ||
+    textMatchesSearchFamily(variantText, term) ||
     colorGroups.some(group => colorMatchesSearchTerm(group.cor, term))
   );
 }
