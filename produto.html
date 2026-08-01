@@ -168,8 +168,7 @@
   .colors-grid { display:flex; flex-wrap:nowrap; gap:12px; margin-bottom:24px; overflow-x:auto; overflow-y:hidden; padding:2px 2px 8px; scroll-snap-type:x proximity; scrollbar-width:thin; scrollbar-color:rgba(200,169,110,0.45) transparent; }
   .colors-grid::-webkit-scrollbar { height:5px; }
   .colors-grid::-webkit-scrollbar-thumb { background:rgba(200,169,110,0.45); border-radius:10px; }
-  .colors-grid.is-draggable { cursor:grab; }
-  .colors-grid.is-dragging { cursor:grabbing; scroll-snap-type:none; }
+  .colors-grid { overscroll-behavior:contain; }
   .color-btn { width:64px; flex:0 0 64px; scroll-snap-align:start; border:2px solid rgba(255,255,255,0.16); background:var(--gray-800); border-radius:4px; padding:4px; cursor:pointer; transition:all 0.2s; position:relative; color:var(--gray-200); font-family:'Inter',sans-serif; }
   .color-btn:hover { border-color:rgba(200,169,110,0.6); transform:translateY(-1px); }
   .color-btn.selected { border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-bg); color:var(--gold); }
@@ -693,58 +692,28 @@ function renderProduct() {
   const cartBtn = document.getElementById('btnCarrinho');
   if (cartBtn) cartBtn.innerHTML = `<span style="font-size:20px">🛒</span> ${addText}`;
   prepareProductVideos(document.getElementById('mainContent'));
-  enableDragScrollForColorRails();
+  enableWheelScrollForColorRails();
 }
 
-function enableDragScrollForColorRails(root = document) {
-  root.querySelectorAll('.colors-grid').forEach(enableDragScroll);
+function enableWheelScrollForColorRails(root = document) {
+  root.querySelectorAll('.colors-grid').forEach(enableWheelScroll);
 }
 
-function enableDragScroll(el) {
-  if (!el || el.dataset.dragScrollReady === 'true') return;
-  el.dataset.dragScrollReady = 'true';
-  el.classList.add('is-draggable');
-  let isDown = false;
-  let startX = 0;
-  let startScroll = 0;
-  let moved = false;
-
-  el.addEventListener('pointerdown', event => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    isDown = true;
-    moved = false;
-    startX = event.clientX;
-    startScroll = el.scrollLeft;
-    el.classList.add('is-dragging');
-    try { el.setPointerCapture(event.pointerId); } catch {}
-  });
-
-  el.addEventListener('pointermove', event => {
-    if (!isDown) return;
-    const delta = event.clientX - startX;
-    if (Math.abs(delta) > 4) moved = true;
-    if (moved) {
-      event.preventDefault();
-      el.scrollLeft = startScroll - delta;
-    }
-  });
-
-  const stopDrag = event => {
-    if (!isDown) return;
-    isDown = false;
-    el.classList.remove('is-dragging');
-    try { el.releasePointerCapture(event.pointerId); } catch {}
-  };
-
-  el.addEventListener('pointerup', stopDrag);
-  el.addEventListener('pointercancel', stopDrag);
-  el.addEventListener('pointerleave', stopDrag);
-  el.addEventListener('click', event => {
-    if (!moved) return;
+function enableWheelScroll(el) {
+  if (!el || el.dataset.wheelScrollReady === 'true') return;
+  el.dataset.wheelScrollReady = 'true';
+  el.addEventListener('wheel', event => {
+    if (el.scrollWidth <= el.clientWidth) return;
+    const horizontal = Math.abs(event.deltaX) > Math.abs(event.deltaY);
+    const amount = horizontal ? event.deltaX : event.deltaY;
+    if (!amount) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    const atStart = el.scrollLeft <= 0;
+    const atEnd = el.scrollLeft >= maxScroll - 1;
+    if ((amount < 0 && atStart) || (amount > 0 && atEnd)) return;
     event.preventDefault();
-    event.stopPropagation();
-    moved = false;
-  }, true);
+    el.scrollLeft += amount;
+  }, { passive:false });
 }
 
 function isProductNew(product, days = 30) {
