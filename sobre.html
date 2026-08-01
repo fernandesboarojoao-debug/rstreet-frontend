@@ -283,7 +283,7 @@
     position: absolute; inset: 0;
     background:
       linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.8) 100%),
-      url('hero-primavera.png') center/cover no-repeat;
+      #050505 url('hero-primavera.png') right center / auto 100% no-repeat;
     transform: scale(1.05);
     transition: transform 8s ease;
     will-change: transform;
@@ -1249,7 +1249,12 @@
     .shop-path-hint { display:block; margin-top:12px; }
     .shop-path-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
     .shop-path-card { flex: 0 0 155px; min-height: 102px; scroll-snap-align: start; padding: 14px; }
-    .hero-bg { filter: brightness(0.72); }
+    .hero-bg {
+      filter: brightness(0.72);
+      background:
+        linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.8) 100%),
+        url('hero-primavera.png') center/cover no-repeat;
+    }
     .hero-overlay { background: linear-gradient(180deg, rgba(10,10,10,0.32) 0%, rgba(10,10,10,0.74) 58%, rgba(10,10,10,0.72) 100%); }
     .hero-content { padding: 0 24px; }
     .hero-stats { display: none; }
