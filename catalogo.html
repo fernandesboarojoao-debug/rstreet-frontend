@@ -1907,6 +1907,7 @@ let currentSize = 'todos';
 let currentMaxPrice = 1000;
 let currentMobileCatalogMode = 'all';
 let currentPage = 1;
+let suppressCatalogUrlUpdate = false;
 const PER_PAGE = 12;
 
 // ─────────────────────────────────────────────
@@ -1955,8 +1956,7 @@ async function loadProducts(silent = false) {
     allProducts = getDemoProducts();
     updateMaxPrice(silent);
     updateCategoryCounts();
-    applyFilters();
-    checkURLParams();
+    if (!checkCatalogUrlParams()) applyFilters();
     isRefreshingProducts = false;
     return;
   }
@@ -1996,8 +1996,11 @@ async function loadProducts(silent = false) {
   }
   updateMaxPrice(silent);
   updateCategoryCounts();
-  applyFilters();
-  if (!silent) checkURLParams();
+  if (!silent && checkCatalogUrlParams()) {
+    // Filtros aplicados pela URL.
+  } else {
+    applyFilters();
+  }
   if (pendingProductsRefresh) {
     pendingProductsRefresh = false;
     scheduleProductsRefresh(100);
@@ -2037,6 +2040,7 @@ async function loadProductVariants() {
 function safeCatalogThemeLink(theme) {
   const clean = String(theme?.botao_link || '').trim();
   if (theme?.slug) return `catalogo.html?campanha=${encodeURIComponent(theme.slug)}`;
+  if (theme?.id) return `catalogo.html?campanha_id=${encodeURIComponent(theme.id)}`;
   if (clean && /^(https?:)?\/\//i.test(clean)) return clean;
   if (clean && /^[a-z0-9_\-./?=&%#]+$/i.test(clean)) return clean;
   return 'catalogo.html';
@@ -2230,6 +2234,7 @@ async function loadActiveCatalogTheme() {
   try {
     const params = new URLSearchParams(window.location.search);
     const campaignSlug = params.get('campanha');
+    const campaignId = params.get('campanha_id');
     const res = await fetch(`${SUPABASE_URL}/rest/v1/temas_site?select=*&order=criado_em.desc`, {
       headers: {
         'apikey': SUPABASE_ANON_KEY,
@@ -2242,8 +2247,8 @@ async function loadActiveCatalogTheme() {
       .filter(item => item.local_exibicao === 'catalogo' || item.local_exibicao === 'ambos');
     allCatalogThemes = themes;
     activeCatalogTheme = themes[0] || null;
-    currentCampaignTheme = campaignSlug
-      ? themes.find(item => String(item.slug || '') === campaignSlug) || null
+    currentCampaignTheme = campaignSlug || campaignId
+      ? themes.find(item => String(item.slug || '') === campaignSlug || String(item.id || '') === campaignId) || null
       : null;
     updateCatalogSearchMode();
     catalogThemeIndex = Math.max(0, themes.findIndex(item => Number(item.id) === Number((currentCampaignTheme || activeCatalogTheme)?.id)));
@@ -2445,7 +2450,9 @@ function setCampaignCategoryFromMenu(themeId, cat = 'todos', el) {
   currentPage = 1;
   applyCatalogThemeBanner(theme, true);
   syncCatalogMenuCategory(currentCategory);
-  const baseUrl = theme.slug ? `catalogo.html?campanha=${encodeURIComponent(theme.slug)}` : 'catalogo.html';
+  const baseUrl = theme.slug
+    ? `catalogo.html?campanha=${encodeURIComponent(theme.slug)}`
+    : `catalogo.html?campanha_id=${encodeURIComponent(theme.id)}`;
   const url = baseUrl + (currentCategory !== 'todos' ? `&categoria=${encodeURIComponent(currentCategory)}` : '');
   if (window.history?.replaceState) window.history.replaceState(null, '', url);
   applyFilters();
@@ -2657,6 +2664,7 @@ function updateBrandOrbitActive() {
 
 function applyFilters() {
   updateCatalogSearchMode();
+  updateCatalogShareUrl();
   const sort = document.getElementById('sortSelect').value;
   filtered = getCatalogBaseProducts().filter(productMatchesColorAndSize);
 
@@ -2675,6 +2683,33 @@ function applyFilters() {
   updateCatalogQuickNav();
   renderPage();
   renderPagination();
+}
+
+function updateCatalogShareUrl() {
+  if (suppressCatalogUrlUpdate || !window.history?.replaceState) return;
+  const params = new URLSearchParams();
+  const searchInput = document.getElementById('searchInput');
+  const search = String(searchInput?.value || '').trim();
+
+  if (currentCampaignTheme?.slug) {
+    params.set('campanha', currentCampaignTheme.slug);
+  } else if (currentCampaignTheme?.id) {
+    params.set('campanha_id', currentCampaignTheme.id);
+  } else if (currentMobileCatalogMode === 'featured') {
+    params.set('tipo', 'novos');
+  } else if (currentMobileCatalogMode === 'sale') {
+    params.set('tipo', 'ofertas');
+  }
+
+  if (currentBrand !== 'todos') params.set('marca', currentBrand);
+  if (currentCategory !== 'todos') params.set('categoria', currentCategory);
+  if (currentColor !== 'todos') params.set('cor', currentColor);
+  if (currentSize !== 'todos') params.set('tamanho', currentSize);
+  if (currentStock !== 'todos') params.set('estoque', currentStock);
+  if (search) params.set('busca', search);
+
+  const nextUrl = params.toString() ? `catalogo.html?${params.toString()}` : 'catalogo.html';
+  window.history.replaceState(null, '', nextUrl);
 }
 
 function updateMaxPrice(preserveCurrent = false) {
@@ -3894,6 +3929,79 @@ function checkURLParams() {
 }
 
 // ─── FILTROS MOBILE ─────────────────────────────────
+function checkCatalogUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const marca = params.get('marca');
+  const categoria = params.get('categoria');
+  const campanha = params.get('campanha');
+  const campanhaId = params.get('campanha_id');
+  const cor = params.get('cor');
+  const tamanho = params.get('tamanho');
+  const estoque = params.get('estoque');
+  const busca = params.get('busca') || params.get('q') || params.get('search');
+  const tipo = String(params.get('tipo') || '').toLowerCase();
+  const hasParams = marca || categoria || campanha || campanhaId || cor || tamanho || estoque || busca || tipo;
+  if (!hasParams) return false;
+
+  suppressCatalogUrlUpdate = true;
+
+  if (campanha || campanhaId) {
+    const theme = allCatalogThemes.find(item =>
+      sameCatalogText(item.slug, campanha) ||
+      String(item.id || '') === String(campanhaId || '') ||
+      sameCatalogText(item.nome, campanha) ||
+      sameCatalogText(item.titulo, campanha)
+    );
+    if (theme) {
+      currentCampaignTheme = theme;
+      currentMobileCatalogMode = 'all';
+      applyCatalogThemeBanner(theme, true);
+    }
+  } else if (tipo === 'destaques' || tipo === 'novos') {
+    currentMobileCatalogMode = 'featured';
+  } else if (tipo === 'promocoes' || tipo === 'promoções' || tipo === 'ofertas') {
+    currentMobileCatalogMode = 'sale';
+  }
+
+  if (marca) {
+    const btn = Array.from(document.querySelectorAll('#brandFilters .filter-btn'))
+      .find(b => sameCatalogText(b.textContent.trim(), marca));
+    currentBrand = marca.trim();
+    syncBrandFilterButtons(currentBrand);
+    if (btn) {
+      document.querySelectorAll('#brandFilters .filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  }
+
+  if (categoria) {
+    const cleanCategory = categoria.trim();
+    const sidebarBtn = Array.from(document.querySelectorAll('.sidebar-option'))
+      .find(btn => normalizeSearchText(btn.getAttribute('onclick') || '').includes(normalizeSearchText(cleanCategory)));
+    currentCategory = cleanCategory;
+    currentSize = 'todos';
+    syncCatalogMenuCategory(cleanCategory);
+    if (sidebarBtn) {
+      document.querySelectorAll('.sidebar-option').forEach(btn => btn.classList.remove('active'));
+      sidebarBtn.classList.add('active');
+    }
+  }
+
+  if (cor) currentColor = cor.trim();
+  if (tamanho) currentSize = tamanho.trim();
+  if (estoque) currentStock = estoque.trim();
+  if (busca) {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = busca.trim();
+  }
+
+  currentPage = 1;
+  applyFilters();
+  suppressCatalogUrlUpdate = false;
+  updateCatalogShareUrl();
+  return true;
+}
+
 function toggleMobileFilters() {
   const panel = document.getElementById('mobileFiltersPanel');
   panel.classList.toggle('open');
