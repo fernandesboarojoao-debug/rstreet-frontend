@@ -497,6 +497,10 @@ render();
 loadLatestProducts();
 window.addEventListener('storage', e => {
   if (e.key === 'rstreet_products_changed') loadLatestProducts();
+  if (e.key === 'rstreet_cart') {
+    render();
+    loadLatestProducts();
+  }
 });
 setInterval(loadLatestProducts, 15000);
 </script>
