@@ -1,0 +1,146 @@
+(function () {
+  const CONFIG = {
+    gaMeasurementId: '',
+    metaPixelId: '',
+    currency: 'BRL'
+  };
+
+  function hasValue(value) {
+    return typeof value === 'string' && value.trim().length > 4 && !value.includes('COLE_');
+  }
+
+  function loadScript(src) {
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = src;
+    document.head.appendChild(script);
+  }
+
+  if (hasValue(CONFIG.gaMeasurementId)) {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+    loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(CONFIG.gaMeasurementId)}`);
+    window.gtag('js', new Date());
+    window.gtag('config', CONFIG.gaMeasurementId);
+  }
+
+  if (hasValue(CONFIG.metaPixelId)) {
+    window.fbq = window.fbq || function () {
+      window.fbq.callMethod ? window.fbq.callMethod.apply(window.fbq, arguments) : window.fbq.queue.push(arguments);
+    };
+    if (!window._fbq) window._fbq = window.fbq;
+    window.fbq.push = window.fbq;
+    window.fbq.loaded = true;
+    window.fbq.version = '2.0';
+    window.fbq.queue = window.fbq.queue || [];
+    loadScript('https://connect.facebook.net/en_US/fbevents.js');
+    window.fbq('init', CONFIG.metaPixelId);
+    window.fbq('track', 'PageView');
+  }
+
+  function number(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function normalizeItem(item) {
+    return {
+      item_id: String(item.id || item.produto_id || item.produto_variante_id || ''),
+      item_name: String(item.nome || item.name || 'Produto R Street'),
+      item_brand: String(item.marca || ''),
+      item_category: String(item.categoria || ''),
+      item_variant: [item.cor, item.tamanho].filter(Boolean).join(' / '),
+      price: number(item.preco || item.preco_unitario || item.price),
+      quantity: number(item.qty || item.quantidade || 1) || 1
+    };
+  }
+
+  function gaEvent(name, params) {
+    if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+  }
+
+  function metaEvent(name, params) {
+    if (typeof window.fbq === 'function') window.fbq('track', name, params || {});
+  }
+
+  window.RStreetTrack = {
+    pageView() {
+      gaEvent('page_view', {
+        page_location: window.location.href,
+        page_title: document.title
+      });
+    },
+    viewContent(product) {
+      const item = normalizeItem(product || {});
+      gaEvent('view_item', {
+        currency: CONFIG.currency,
+        value: item.price,
+        items: [item]
+      });
+      metaEvent('ViewContent', {
+        currency: CONFIG.currency,
+        value: item.price,
+        content_ids: [item.item_id],
+        content_name: item.item_name,
+        content_type: 'product'
+      });
+    },
+    addToCart(item) {
+      const normalized = normalizeItem(item || {});
+      const value = normalized.price * normalized.quantity;
+      gaEvent('add_to_cart', {
+        currency: CONFIG.currency,
+        value,
+        items: [normalized]
+      });
+      metaEvent('AddToCart', {
+        currency: CONFIG.currency,
+        value,
+        content_ids: [normalized.item_id],
+        content_name: normalized.item_name,
+        content_type: 'product'
+      });
+    },
+    beginCheckout(cart, total) {
+      const items = Array.isArray(cart) ? cart.map(normalizeItem) : [];
+      gaEvent('begin_checkout', {
+        currency: CONFIG.currency,
+        value: number(total),
+        items
+      });
+      metaEvent('InitiateCheckout', {
+        currency: CONFIG.currency,
+        value: number(total),
+        num_items: items.reduce((sum, item) => sum + item.quantity, 0)
+      });
+    },
+    purchase(order) {
+      const items = Array.isArray(order?.itens) ? order.itens.map(normalizeItem) : [];
+      gaEvent('purchase', {
+        transaction_id: String(order?.pedido_id || order?.id || ''),
+        currency: CONFIG.currency,
+        value: number(order?.total),
+        shipping: number(order?.frete?.valor),
+        items
+      });
+      metaEvent('Purchase', {
+        currency: CONFIG.currency,
+        value: number(order?.total),
+        content_ids: items.map(item => item.item_id).filter(Boolean),
+        content_type: 'product'
+      });
+    },
+    contactWhatsApp(label) {
+      gaEvent('generate_lead', { method: 'whatsapp', label: String(label || '') });
+      metaEvent('Contact', { content_name: String(label || 'WhatsApp R Street') });
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    window.RStreetTrack.pageView();
+    document.body.addEventListener('click', event => {
+      const link = event.target.closest('a[href*="wa.me"],a[href*="api.whatsapp.com"]');
+      if (link) window.RStreetTrack.contactWhatsApp(link.textContent || link.href);
+    });
+  });
+})();

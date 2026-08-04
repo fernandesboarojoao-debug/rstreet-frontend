@@ -22,6 +22,7 @@
 <meta property="og:image:alt" content="Logo R Street Moda Masculina">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://www.rstreet.com.br/rstreet-social-image.jpg">
+<script src="rstreet-tracking.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -473,6 +474,7 @@ let selectedSize = null;
 let selectedMediaUrl = null;
 let selectedMediaType = null;
 let openProductAccordionKey = null;
+let productViewTrackedKey = '';
 
 const productParams = new URLSearchParams(window.location.search);
 const productId = parseInt(productParams.get('id'));
@@ -554,6 +556,24 @@ function finish() {
   document.title = product.nome + ' | R Street';
   updateProductSeo(product);
   document.getElementById('breadcrumbName').textContent = product.nome;
+  trackProductView();
+}
+
+function trackProductView() {
+  if (!product || !window.RStreetTrack) return;
+  const colorData = getSelectedColorData();
+  const key = `${product.id}:${selectedColor || ''}:${colorData.preco || product.preco || ''}`;
+  if (productViewTrackedKey === key) return;
+  productViewTrackedKey = key;
+  window.RStreetTrack.viewContent({
+    id: product.id,
+    nome: product.nome,
+    marca: product.marca,
+    categoria: product.categoria,
+    preco: colorData.preco || product.preco,
+    cor: selectedColor || '',
+    tamanho: selectedSize || ''
+  });
 }
 
 function updateProductSeo(p) {
@@ -1250,6 +1270,17 @@ function adicionarCarrinho() {
     });
   }
   localStorage.setItem('rstreet_cart', JSON.stringify(cart));
+  window.RStreetTrack?.addToCart({
+    id: product.id,
+    produto_variante_id: variantId,
+    nome: product.nome,
+    marca: product.marca,
+    categoria: product.categoria,
+    preco: colorData.preco,
+    cor: selectedColor || '',
+    tamanho: selectedSize || '',
+    quantidade: 1
+  });
   const btn = document.getElementById('btnCarrinho');
   if (btn) {
     btn.innerHTML = '<span style="font-size:20px">✅</span> Adicionado!';

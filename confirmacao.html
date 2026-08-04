@@ -8,6 +8,7 @@
 <link rel="canonical" href="https://www.rstreet.com.br/confirmacao.html">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script src="rstreet-tracking.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -421,6 +422,16 @@ function restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus) {
   }
 }
 
+function trackApprovedPurchase(pedido) {
+  if (!pedido || !window.RStreetTrack) return;
+  const orderId = pedido.pedido_id || pedido.id || '';
+  if (!orderId) return;
+  const key = `rstreet_purchase_tracked_${orderId}`;
+  if (localStorage.getItem(key) === '1') return;
+  window.RStreetTrack.purchase(pedido);
+  localStorage.setItem(key, '1');
+}
+
 async function init() {
   updateStoreHoursStep();
   // Pega status do Mercado Pago da URL
@@ -487,7 +498,10 @@ async function init() {
   }
 
   restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus);
-  if (finalStatus === 'approved' && pedido) localStorage.setItem('rstreet_pedido', JSON.stringify(pedido));
+  if (finalStatus === 'approved' && pedido) {
+    localStorage.setItem('rstreet_pedido', JSON.stringify(pedido));
+    trackApprovedPurchase(pedido);
+  }
 }
 
 init();

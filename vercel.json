@@ -3,6 +3,10 @@
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
+    },
+    {
+      "source": "/merchant-feed.xml",
+      "destination": "/api/merchant-feed"
     }
   ]
 }

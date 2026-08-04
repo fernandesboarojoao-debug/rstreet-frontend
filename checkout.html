@@ -8,6 +8,7 @@
 <link rel="canonical" href="https://www.rstreet.com.br/checkout.html">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script src="rstreet-tracking.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -456,6 +457,7 @@ const PIX_DISCOUNT_RATE = 0.05;
 let freteVal = 0;
 let freteLabel = '';
 let paymentMethod = 'credit_card';
+let checkoutTracked = false;
 
 const STORE_HOURS_TEXT = 'segunda a sexta das 9h as 18h, sabado das 9h as 13h. Domingo fechado.';
 
@@ -610,6 +612,14 @@ function renderSummary() {
   `).join('');
 
   updateTotals();
+  trackBeginCheckout(cart);
+}
+
+function trackBeginCheckout(cart) {
+  if (checkoutTracked || !window.RStreetTrack) return;
+  checkoutTracked = true;
+  const subtotal = cart.reduce((sum, item) => sum + (Number(item.preco) || 0) * (Number(item.qty) || 1), 0);
+  window.RStreetTrack.beginCheckout(cart, subtotal);
 }
 
 function updateTotals() {
