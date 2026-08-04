@@ -146,7 +146,7 @@
         bottom: calc(22px + env(safe-area-inset-bottom, 0px));
         z-index: 900;
         display: block;
-        width: 82px;
+        width: 74px;
         height: auto;
         padding: 0;
         background: transparent;
@@ -168,7 +168,7 @@
         .rstreet-whatsapp-float {
           right: 14px;
           bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-          width: 70px;
+          width: 62px;
         }
       }`;
     document.head.appendChild(style);
