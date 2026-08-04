@@ -148,31 +148,26 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 9px;
-        min-width: 58px;
-        height: 58px;
-        padding: 0 18px;
+        width: 62px;
+        height: 62px;
+        padding: 0;
         border-radius: 999px;
-        background: #25d366;
-        color: #07130a;
-        border: 1px solid rgba(255,255,255,0.2);
+        background: transparent;
+        border: 0;
         box-shadow: 0 14px 34px rgba(0,0,0,0.35);
         text-decoration: none;
-        font-family: Inter, Arial, sans-serif;
-        font-size: 13px;
-        font-weight: 900;
-        letter-spacing: 0.8px;
-        text-transform: uppercase;
         transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        overflow: hidden;
       }
       .rstreet-whatsapp-float:hover {
         transform: translateY(-2px);
-        background: #2ee676;
         box-shadow: 0 18px 42px rgba(0,0,0,0.42);
       }
-      .rstreet-whatsapp-float-icon {
-        font-size: 23px;
-        line-height: 1;
+      .rstreet-whatsapp-float-img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
       }
       @media (max-width: 640px) {
         .rstreet-whatsapp-float {
@@ -181,10 +176,6 @@
           width: 54px;
           height: 54px;
           min-width: 54px;
-          padding: 0;
-        }
-        .rstreet-whatsapp-float-label {
-          display: none;
         }
       }`;
     document.head.appendChild(style);
@@ -196,7 +187,7 @@
     link.target = '_blank';
     link.rel = 'noopener';
     link.setAttribute('aria-label', 'Falar com a R Street no WhatsApp');
-    link.innerHTML = '<span class="rstreet-whatsapp-float-icon">💬</span><span class="rstreet-whatsapp-float-label">WhatsApp</span>';
+    link.innerHTML = '<img class="rstreet-whatsapp-float-img" src="whatsapp-floating.png" alt="">';
     document.body.appendChild(link);
   }
 
