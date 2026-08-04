@@ -145,27 +145,22 @@
         right: 22px;
         bottom: calc(22px + env(safe-area-inset-bottom, 0px));
         z-index: 900;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 62px;
-        height: 62px;
+        display: block;
+        width: 82px;
+        height: auto;
         padding: 0;
-        border-radius: 999px;
         background: transparent;
         border: 0;
-        box-shadow: 0 14px 34px rgba(0,0,0,0.35);
+        box-shadow: none;
         text-decoration: none;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        overflow: hidden;
+        transition: transform 0.2s ease;
       }
       .rstreet-whatsapp-float:hover {
         transform: translateY(-2px);
-        box-shadow: 0 18px 42px rgba(0,0,0,0.42);
       }
       .rstreet-whatsapp-float-img {
         width: 100%;
-        height: 100%;
+        height: auto;
         display: block;
         object-fit: contain;
       }
@@ -173,9 +168,7 @@
         .rstreet-whatsapp-float {
           right: 14px;
           bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-          width: 54px;
-          height: 54px;
-          min-width: 54px;
+          width: 70px;
         }
       }`;
     document.head.appendChild(style);
