@@ -273,7 +273,7 @@
   /* HEADER BANNER */
   .catalog-header {
     background:
-      linear-gradient(90deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.66) 42%, rgba(10,10,10,0.22) 100%),
+      linear-gradient(90deg, rgba(10,10,10,0.18) 0%, rgba(10,10,10,0.08) 48%, rgba(10,10,10,0.04) 100%),
       url('hero-pc.jpg') center 42% / cover no-repeat;
     min-height: 430px;
     padding: 96px 60px 58px;
@@ -294,6 +294,8 @@
     pointer-events: none;
   }
   .catalog-header-content { position:relative; z-index:1; width:min(680px, 100%); }
+  .catalog-header.is-image-only .catalog-header-content,
+  .catalog-header.is-image-only::before { display:none; }
   .catalog-header-label { font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; font-weight:800; }
   .catalog-header-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(54px, 7.4vw, 96px); line-height: .92; margin-bottom: 16px; max-width:620px; }
   .catalog-header-title span { color: var(--gold); }
@@ -1239,7 +1241,7 @@
       min-height: 340px;
       padding: 92px 20px 28px;
       background:
-        linear-gradient(90deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.66) 42%, rgba(10,10,10,0.22) 100%),
+        linear-gradient(90deg, rgba(10,10,10,0.18) 0%, rgba(10,10,10,0.08) 48%, rgba(10,10,10,0.04) 100%),
         url('hero-primavera.png') center top / cover no-repeat;
     }
     .catalog-header::before { font-size: 110px; right: -50px; bottom: 18px; letter-spacing: 10px; }
@@ -1482,7 +1484,7 @@
 </div>
 
 <!-- HEADER -->
-<div class="catalog-header">
+<div class="catalog-header is-image-only" aria-label="R Street Moda Masculina">
   <div class="catalog-header-content">
     <div class="catalog-header-label">R Street Moda Masculina</div>
     <h1 class="catalog-header-title">Escolha seu estilo<br><span>sem procurar demais</span></h1>
