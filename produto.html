@@ -665,7 +665,7 @@ function renderProduct() {
             R$ ${fmt(colorData.preco)}
             ${discount ? `<span class="price-discount">-${discount}%</span>` : ''}
           </div>
-          <span class="price-installment">em at&eacute; 6x</span>
+          <span class="price-installment">${renderInstallmentText(colorData.preco)}</span>
           <span class="price-pix">At&eacute; 5% off no Pix</span>
         </div>
 
@@ -1197,7 +1197,7 @@ function renderRelated() {
         <div class="related-brand">${p.marca}</div>
         <div class="related-name">${p.nome}</div>
         <div class="related-price">R$ ${fmt(p.preco)}</div>
-        <div class="related-installment">em at&eacute; 6x</div>
+        <div class="related-installment">${renderInstallmentText(p.preco)}</div>
         <div class="related-pix">At&eacute; 5% off no Pix</div>
       </div>
     </a>`;
@@ -1290,6 +1290,26 @@ function syncCartWithStock() {
 }
 
 function fmt(v) { return Number(v).toFixed(2).replace('.',','); }
+
+const INSTALLMENT_RULES = [
+  { installments: 6, min: 300 },
+  { installments: 5, min: 250 },
+  { installments: 4, min: 180 },
+  { installments: 3, min: 120 },
+  { installments: 2, min: 80 },
+];
+
+function getInstallmentCount(price) {
+  const value = Number(price || 0);
+  return INSTALLMENT_RULES.find(rule => value >= rule.min)?.installments || 1;
+}
+
+function renderInstallmentText(price) {
+  const installments = getInstallmentCount(price);
+  return installments > 1
+    ? `em at\u00e9 ${installments}x sem juros`
+    : '1x sem juros';
+}
 
 function getPixPrice(value) {
   return Math.max(0, Number(value || 0) * (1 - PIX_DISCOUNT_RATE));

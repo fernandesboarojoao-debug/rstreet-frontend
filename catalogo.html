@@ -3182,7 +3182,7 @@ function renderCard(p) {
         <div>
           <div id="catalog-old-price-${p.id}">${oldPrice}</div>
           <div class="product-price" id="catalog-price-${p.id}">R$ ${formatCatalogPrice(initialPrice.preco)}</div>
-          <div class="product-installment">em at&eacute; 6x</div>
+          <div class="product-installment" id="catalog-installment-${p.id}">${renderInstallmentText(initialPrice.preco)}</div>
           <div class="product-pix-price" id="catalog-pix-${p.id}">At&eacute; 5% off no Pix</div>
           ${stockInfo}
         </div>
@@ -3248,7 +3248,7 @@ function renderShowcaseCard(product, badge = '', preferSale = false, showcaseKey
         <div class="showcase-card-name">${escapeHtml(product.nome || '')}</div>
         <div class="showcase-card-old-wrap">${oldPrice > 0 ? `<div class="showcase-card-old">R$ ${formatCatalogPrice(oldPrice)}</div>` : ''}</div>
         <div class="showcase-card-price">R$ ${formatCatalogPrice(price.preco)}</div>
-        <div class="showcase-card-installment">em at&eacute; 6x</div>
+        <div class="showcase-card-installment">${renderInstallmentText(price.preco)}</div>
         <div class="showcase-card-pix">At&eacute; 5% off no Pix</div>
       </div>
     </div>
@@ -3341,6 +3341,8 @@ function updateShowcaseCard(showcaseKey) {
   if (oldWrap) oldWrap.innerHTML = oldPrice > 0 ? `<div class="showcase-card-old">R$ ${formatCatalogPrice(oldPrice)}</div>` : '';
   const priceEl = card.querySelector('.showcase-card-price');
   if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
+  const installmentEl = card.querySelector('.showcase-card-installment');
+  if (installmentEl) installmentEl.textContent = renderInstallmentText(price.preco);
 }
 
 function openShowcaseProduct(showcaseKey) {
@@ -3623,6 +3625,26 @@ function formatCatalogPrice(value) {
   return Number(value || 0).toFixed(2).replace('.', ',');
 }
 
+const INSTALLMENT_RULES = [
+  { installments: 6, min: 300 },
+  { installments: 5, min: 250 },
+  { installments: 4, min: 180 },
+  { installments: 3, min: 120 },
+  { installments: 2, min: 80 },
+];
+
+function getInstallmentCount(price) {
+  const value = Number(price || 0);
+  return INSTALLMENT_RULES.find(rule => value >= rule.min)?.installments || 1;
+}
+
+function renderInstallmentText(price) {
+  const installments = getInstallmentCount(price);
+  return installments > 1
+    ? `em at\u00e9 ${installments}x sem juros`
+    : '1x sem juros';
+}
+
 function getPixPrice(value) {
   return Math.max(0, Number(value || 0) * (1 - PIX_DISCOUNT_RATE));
 }
@@ -3660,6 +3682,8 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   updateCatalogMedia(productId);
   const priceEl = card.querySelector(`#catalog-price-${productId}`);
   if (priceEl) priceEl.textContent = `R$ ${formatCatalogPrice(price.preco)}`;
+  const installmentEl = card.querySelector(`#catalog-installment-${productId}`);
+  if (installmentEl) installmentEl.textContent = renderInstallmentText(price.preco);
   const pixEl = card.querySelector(`#catalog-pix-${productId}`);
   if (pixEl) pixEl.textContent = 'At\u00e9 5% off no Pix';
   const oldPriceEl = card.querySelector(`#catalog-old-price-${productId}`);
