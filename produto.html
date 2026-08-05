@@ -51,7 +51,11 @@
   .btn-back:hover { color:var(--gold); border-color:var(--gold); }
   nav > .btn-back[href="catalogo.html"] { color:var(--gold); border-color:rgba(200,169,110,0.45); background:rgba(200,169,110,0.08); font-weight:800; }
   nav > .btn-back[href="catalogo.html"]:hover { background:var(--gold); color:var(--black); }
-  .btn-cart-nav { color:var(--gold); border-color:rgba(200,169,110,0.3); }
+  .btn-cart-nav { color:var(--gold); border-color:rgba(200,169,110,0.42); background:rgba(200,169,110,0.06); font-weight:800; gap:9px; }
+  .btn-cart-nav:hover { background:var(--gold); color:var(--black); }
+  .nav-cart-icon { font-size:15px; line-height:1; }
+  .nav-cart-count { min-width:22px; height:22px; padding:0 6px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:var(--gold); color:var(--black); font-size:11px; font-weight:900; letter-spacing:0; }
+  .btn-cart-nav:hover .nav-cart-count { background:var(--black); color:var(--gold); }
   .mobile-menu-toggle { display:none; width:42px; height:42px; border:1px solid rgba(200,169,110,0.34); background:transparent; color:var(--gold); border-radius:2px; align-items:center; justify-content:center; font-size:22px; line-height:1; cursor:pointer; }
   .site-mobile-menu { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.62); }
   .site-mobile-menu.open { display:block; }
@@ -340,8 +344,8 @@
     .nav-logo { font-size:24px; letter-spacing:4px; flex-shrink:0; }
     .btn-back { right:18px; min-height:38px; padding:8px 10px; font-size:0; }
     .btn-cart-nav .cart-nav-label { display:none; }
-    .btn-cart-nav::before { content:'Carrinho'; font-size:11px; letter-spacing:1px; }
-    .btn-cart-nav span { font-size:11px; margin-left:4px; }
+    .btn-cart-nav .nav-cart-icon { font-size:17px; }
+    .btn-cart-nav .nav-cart-count { font-size:11px; margin-left:0; }
     .breadcrumb { overflow:hidden; white-space:nowrap; }
     .breadcrumb-current { overflow:hidden; text-overflow:ellipsis; }
     .product-page { padding:22px 18px 52px; }
@@ -388,7 +392,7 @@
   <button type="button" class="mobile-menu-toggle" onclick="toggleSiteMenu()" aria-label="Abrir menu" aria-expanded="false">☰</button>
   <a href="index.html" class="nav-logo">R<span>.</span>Street</a>
   <a href="catalogo.html" class="btn-back">← Catálogo</a>
-  <a href="carrinho.html" class="btn-back btn-cart-nav" id="navCartBtn" data-cart-drawer-trigger><span class="cart-nav-label">Carrinho</span> <span id="navCartCount" data-cart-count>0</span></a>
+  <a href="carrinho.html" class="btn-back btn-cart-nav" id="navCartBtn" data-cart-drawer-trigger><span class="nav-cart-icon">🛍</span><span class="cart-nav-label">Carrinho</span><span class="nav-cart-count" id="navCartCount" data-cart-count>0</span></a>
 </nav>
 
 <div class="site-mobile-menu" id="siteMobileMenu" onclick="handleSiteMenuBackdrop(event)">

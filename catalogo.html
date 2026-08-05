@@ -62,6 +62,11 @@
   .nav-action { color: var(--gold); text-decoration: none; font-size: 12px; border: 1px solid rgba(200,169,110,0.3); padding: 8px 18px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: all 0.3s; white-space: nowrap; }
   .nav-action:hover { background: var(--gold); color: var(--black); }
   .nav-actions { margin-left:auto; display:flex; align-items:center; gap:14px; }
+  .nav-cart-btn { color:var(--gold); text-decoration:none; font-size:12px; border:1px solid rgba(200,169,110,0.42); padding:8px 16px; border-radius:2px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; display:flex; align-items:center; gap:9px; transition:all .25s; background:rgba(200,169,110,0.06); }
+  .nav-cart-btn:hover { background:var(--gold); color:var(--black); }
+  .nav-cart-icon { font-size:15px; line-height:1; }
+  .nav-cart-count { min-width:22px; height:22px; padding:0 6px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:var(--gold); color:var(--black); font-size:11px; font-weight:900; letter-spacing:0; }
+  .nav-cart-btn:hover .nav-cart-count { background:var(--black); color:var(--gold); }
   .mobile-menu-toggle {
     display:none;
     width:40px;
@@ -1309,7 +1314,9 @@
     nav { padding: 12px 14px; gap: 6px; }
     .nav-logo { font-size: 24px; letter-spacing: 4px; }
     .mobile-menu-toggle { width:38px; height:38px; font-size:21px; }
-    #navCartBtn { right:14px; top:12px; min-height: 38px; padding: 8px 12px !important; }
+    #navCartBtn { right:14px; top:12px; min-height: 38px; padding: 8px 10px !important; }
+    #navCartBtn .nav-cart-label { display:none; }
+    #navCartBtn .nav-cart-icon { font-size:17px; }
     .catalog-header { min-height: 318px; padding: 88px 20px 24px; }
     .catalog-header::before { font-size: 92px; right: -54px; bottom: 18px; letter-spacing: 9px; }
     .catalog-header-label { letter-spacing: 3px; line-height: 1.6; }
@@ -1396,7 +1403,7 @@
   <div class="nav-actions">
     <a href="acompanhar.html" class="nav-action">Acompanhar Pedido</a>
     <a href="sobre.html" class="nav-back">Sobre a Loja</a>
-    <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn" data-cart-drawer-trigger>Carrinho <span id="navCartCount">0</span></a>
+    <a href="carrinho.html" class="nav-cart-btn" id="navCartBtn" data-cart-drawer-trigger><span class="nav-cart-icon">🛍</span><span class="nav-cart-label">Carrinho</span><span class="nav-cart-count" id="navCartCount">0</span></a>
   </div>
 </nav>
 
