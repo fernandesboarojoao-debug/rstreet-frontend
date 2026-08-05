@@ -39,16 +39,18 @@
   nav {
     background:rgba(10,10,10,0.97); backdrop-filter:blur(20px);
     border-bottom:1px solid rgba(200,169,110,0.15);
-    padding:18px 60px; display:flex; align-items:center; justify-content:space-between;
+    padding:18px 60px; display:flex; align-items:center; justify-content:flex-start; gap:12px;
     position:sticky; top:0; z-index:100;
   }
-  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:5px; color:var(--white); text-decoration:none; }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:5px; color:var(--white); text-decoration:none; margin-right:auto; }
   .nav-logo span { color:var(--gold); }
   .nav-links { display:flex; gap:24px; list-style:none; align-items:center; }
   .nav-links a { color:var(--gray-200); text-decoration:none; font-size:13px; font-weight:500; letter-spacing:1.5px; text-transform:uppercase; transition:color 0.2s; }
   .nav-links a:hover { color:var(--gold); }
   .btn-back { display:inline-flex; align-items:center; gap:8px; color:var(--gray-400); text-decoration:none; font-size:13px; font-weight:500; letter-spacing:1px; text-transform:uppercase; transition:color 0.2s; border:1px solid rgba(255,255,255,0.12); padding:8px 18px; border-radius:2px; }
   .btn-back:hover { color:var(--gold); border-color:var(--gold); }
+  nav > .btn-back[href="catalogo.html"] { color:var(--gold); border-color:rgba(200,169,110,0.45); background:rgba(200,169,110,0.08); font-weight:800; }
+  nav > .btn-back[href="catalogo.html"]:hover { background:var(--gold); color:var(--black); }
   .btn-cart-nav { color:var(--gold); border-color:rgba(200,169,110,0.3); }
   .mobile-menu-toggle { display:none; width:42px; height:42px; border:1px solid rgba(200,169,110,0.34); background:transparent; color:var(--gold); border-radius:2px; align-items:center; justify-content:center; font-size:22px; line-height:1; cursor:pointer; }
   .site-mobile-menu { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.62); }
@@ -397,7 +399,7 @@
     </div>
     <div class="site-mobile-menu-title">Comprar</div>
     <div class="site-mobile-menu-links">
-      <a class="site-mobile-menu-link is-primary" href="catalogo.html">Ver catálogo</a>
+      <a class="site-mobile-menu-link is-primary" href="catalogo.html">Voltar</a>
       <a class="site-mobile-menu-link" href="carrinho.html" data-cart-drawer-trigger>Meu carrinho</a>
       <a class="site-mobile-menu-link" href="catalogo.html?tipo=novos">Novos</a>
       <a class="site-mobile-menu-link" href="catalogo.html?tipo=ofertas">Ofertas</a>
