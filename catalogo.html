@@ -49,7 +49,7 @@
     backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(200,169,110,0.15);
     padding: 18px 60px;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; justify-content: flex-start; gap: 34px;
   }
   .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 5px; color: var(--white); text-decoration: none; }
   .nav-logo span { color: var(--gold); }
@@ -61,6 +61,7 @@
   .nav-back:hover { background: var(--gold); color: var(--black); }
   .nav-action { color: var(--gold); text-decoration: none; font-size: 12px; border: 1px solid rgba(200,169,110,0.3); padding: 8px 18px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 6px; transition: all 0.3s; white-space: nowrap; }
   .nav-action:hover { background: var(--gold); color: var(--black); }
+  .nav-actions { margin-left:auto; display:flex; align-items:center; gap:14px; }
   .mobile-menu-toggle {
     display:none;
     width:40px;
@@ -1392,9 +1393,11 @@
     <li><a href="catalogo.html" class="active">Catálogo</a></li>
     <li><a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a></li>
   </ul>
-  <a href="acompanhar.html" class="nav-action">Acompanhar Pedido</a>
-  <a href="sobre.html" class="nav-back">Sobre a Loja</a>
-  <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn" data-cart-drawer-trigger>Carrinho <span id="navCartCount">0</span></a>
+  <div class="nav-actions">
+    <a href="acompanhar.html" class="nav-action">Acompanhar Pedido</a>
+    <a href="sobre.html" class="nav-back">Sobre a Loja</a>
+    <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn" data-cart-drawer-trigger>Carrinho <span id="navCartCount">0</span></a>
+  </div>
 </nav>
 
 <div class="catalog-mobile-menu" id="catalogMobileMenu" onclick="handleCatalogMenuBackdrop(event)">
