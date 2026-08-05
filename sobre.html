@@ -1253,8 +1253,9 @@
     .hero-bg {
       filter: brightness(0.72);
       background:
-        linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.8) 100%),
-        url('hero-primavera.png') center/cover no-repeat;
+        linear-gradient(180deg, rgba(10,10,10,0.5) 0%, rgba(10,10,10,0.12) 42%, rgba(10,10,10,0.72) 100%),
+        url('hero-primavera.png') center center / contain no-repeat,
+        #080808;
     }
     .hero-overlay { background: linear-gradient(180deg, rgba(10,10,10,0.32) 0%, rgba(10,10,10,0.74) 58%, rgba(10,10,10,0.72) 100%); }
     .hero-content { padding: 0 24px; }
@@ -1390,7 +1391,10 @@
     .exp-icon { width: 30px; font-size: 22px; text-align: center; }
     .exp-num { width: 48px; font-size: 30px; }
     .exp-label { font-size: 10px; letter-spacing: 1.3px; }
-    .about-visual { height: 320px; }
+    .about-visual { height: 320px; max-width: 420px; margin: 0 auto; }
+    .about-img-main { width: 76%; height: 68%; top: 0; right: 0; background-size: cover; background-position: center; }
+    .about-img-accent { width: 58%; height: 54%; bottom: 0; left: 0; background-size: cover; background-position: center; }
+    .about-badge { width: 82px; height: 82px; }
     .section-title { font-size: 46px; }
     .shop-path-section { padding-left: 18px; padding-right: 18px; }
     .shop-path-grid { margin-right: -18px; padding-right: 18px; }
