@@ -1394,7 +1394,7 @@
   </ul>
   <a href="acompanhar.html" class="nav-action">Acompanhar Pedido</a>
   <a href="sobre.html" class="nav-back">Sobre a Loja</a>
-  <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn">🛒 <span id="navCartCount">0</span></a>
+  <a href="carrinho.html" style="color:var(--gold);text-decoration:none;font-size:13px;border:1px solid rgba(200,169,110,0.3);padding:8px 18px;border-radius:2px;font-weight:600;display:flex;align-items:center;gap:6px" id="navCartBtn" data-cart-drawer-trigger>Carrinho <span id="navCartCount">0</span></a>
 </nav>
 
 <div class="catalog-mobile-menu" id="catalogMobileMenu" onclick="handleCatalogMenuBackdrop(event)">
@@ -1451,7 +1451,7 @@
     <div class="catalog-mobile-menu-actions">
       <button type="button" class="catalog-mobile-menu-link is-primary" data-menu-mode="all" onclick="setMobileCatalogMode('all')">Catálogo completo</button>
       <a class="catalog-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
-      <a class="catalog-mobile-menu-link" href="carrinho.html">Carrinho</a>
+      <a class="catalog-mobile-menu-link" href="carrinho.html" data-cart-drawer-trigger>Carrinho</a>
     </div>
   </div>
 </div>
@@ -4126,5 +4126,6 @@ setInterval(() => {
   if (!document.hidden) refreshProducts();
 }, 3000);
 </script>
+<script src="rstreet-cart-drawer.js"></script>
 </body>
 </html>

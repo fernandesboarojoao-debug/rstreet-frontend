@@ -49,6 +49,7 @@
   .nav-links a:hover { color:var(--gold); }
   .btn-back { display:inline-flex; align-items:center; gap:8px; color:var(--gray-400); text-decoration:none; font-size:13px; font-weight:500; letter-spacing:1px; text-transform:uppercase; transition:color 0.2s; border:1px solid rgba(255,255,255,0.12); padding:8px 18px; border-radius:2px; }
   .btn-back:hover { color:var(--gold); border-color:var(--gold); }
+  .btn-cart-nav { color:var(--gold); border-color:rgba(200,169,110,0.3); }
   .mobile-menu-toggle { display:none; width:42px; height:42px; border:1px solid rgba(200,169,110,0.34); background:transparent; color:var(--gold); border-radius:2px; align-items:center; justify-content:center; font-size:22px; line-height:1; cursor:pointer; }
   .site-mobile-menu { display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.62); }
   .site-mobile-menu.open { display:block; }
@@ -285,6 +286,8 @@
     .mobile-menu-toggle { display:inline-flex; position:absolute; left:20px; top:50%; transform:translateY(-50%); }
     .nav-logo { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); line-height:1; }
     .btn-back { position:absolute; right:20px; top:50%; transform:translateY(-50%); min-height:40px; padding:8px 12px; font-size:11px; }
+    nav > .btn-back[href="catalogo.html"] { display:none; }
+    .btn-cart-nav { right:20px; }
     .breadcrumb { padding:14px 20px; }
     .product-page {
       display:block;
@@ -334,7 +337,9 @@
     .mobile-menu-toggle { left:18px; width:38px; height:38px; font-size:21px; }
     .nav-logo { font-size:24px; letter-spacing:4px; flex-shrink:0; }
     .btn-back { right:18px; min-height:38px; padding:8px 10px; font-size:0; }
-    .btn-back::after { content:'Catálogo'; font-size:11px; letter-spacing:1px; }
+    .btn-cart-nav .cart-nav-label { display:none; }
+    .btn-cart-nav::before { content:'Carrinho'; font-size:11px; letter-spacing:1px; }
+    .btn-cart-nav span { font-size:11px; margin-left:4px; }
     .breadcrumb { overflow:hidden; white-space:nowrap; }
     .breadcrumb-current { overflow:hidden; text-overflow:ellipsis; }
     .product-page { padding:22px 18px 52px; }
@@ -385,6 +390,7 @@
     <li><a href="catalogo.html">Catálogo</a></li>
   </ul>
   <a href="catalogo.html" class="btn-back">← Catálogo</a>
+  <a href="carrinho.html" class="btn-back btn-cart-nav" id="navCartBtn" data-cart-drawer-trigger><span class="cart-nav-label">Carrinho</span> <span id="navCartCount" data-cart-count>0</span></a>
 </nav>
 
 <div class="site-mobile-menu" id="siteMobileMenu" onclick="handleSiteMenuBackdrop(event)">
@@ -396,7 +402,7 @@
     <div class="site-mobile-menu-title">Comprar</div>
     <div class="site-mobile-menu-links">
       <a class="site-mobile-menu-link is-primary" href="catalogo.html">Ver catálogo</a>
-      <a class="site-mobile-menu-link" href="carrinho.html">Meu carrinho</a>
+      <a class="site-mobile-menu-link" href="carrinho.html" data-cart-drawer-trigger>Meu carrinho</a>
       <a class="site-mobile-menu-link" href="catalogo.html?tipo=novos">Novos</a>
       <a class="site-mobile-menu-link" href="catalogo.html?tipo=ofertas">Ofertas</a>
     </div>
@@ -1323,6 +1329,8 @@ function adicionarCarrinho() {
     });
   }
   localStorage.setItem('rstreet_cart', JSON.stringify(cart));
+  window.RStreetCartDrawer?.updateBadges(cart);
+  window.RStreetCartDrawer?.open();
   window.RStreetTrack?.addToCart({
     id: product.id,
     produto_variante_id: variantId,
@@ -1432,5 +1440,6 @@ window.addEventListener('storage', e => {
 });
 setInterval(refreshProduct, 15000);
 </script>
+<script src="rstreet-cart-drawer.js"></script>
 </body>
 </html>
