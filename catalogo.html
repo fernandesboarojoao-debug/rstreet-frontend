@@ -2329,6 +2329,7 @@ function setBrandFromMenu(brand, el) {
   if (el) el.classList.add('active');
   currentPage = 1;
   applyFilters();
+  finishMobileCatalogMenuSelection();
 }
 
 function setCategoryFilter(cat, el) {
@@ -2409,6 +2410,13 @@ function handleCatalogMenuBackdrop(event) {
   if (event.target?.id === 'catalogMobileMenu') closeCatalogMenu();
 }
 
+function finishMobileCatalogMenuSelection() {
+  closeCatalogMenu();
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeCatalogMenu();
 });
@@ -2438,6 +2446,7 @@ function setCategoryFromMenu(cat, el) {
   currentPage = 1;
   syncCatalogMenuCategory(cat);
   applyFilters();
+  finishMobileCatalogMenuSelection();
 }
 
 function setCollectionCategoryFromMenu(mode, cat = 'todos', el) {
@@ -2450,6 +2459,7 @@ function setCollectionCategoryFromMenu(mode, cat = 'todos', el) {
   if (el) el.classList.add('active');
   syncCatalogMenuCategory(currentCategory);
   applyFilters();
+  finishMobileCatalogMenuSelection();
 }
 
 function setCampaignCategoryFromMenu(themeId, cat = 'todos', el) {
@@ -2469,6 +2479,7 @@ function setCampaignCategoryFromMenu(themeId, cat = 'todos', el) {
   const url = baseUrl + (currentCategory !== 'todos' ? `&categoria=${encodeURIComponent(currentCategory)}` : '');
   if (window.history?.replaceState) window.history.replaceState(null, '', url);
   applyFilters();
+  finishMobileCatalogMenuSelection();
 }
 
 function setMobileCatalogMode(mode = 'all') {
@@ -2488,9 +2499,8 @@ function setMobileCatalogMode(mode = 'all') {
   syncBrandFilterButtons('todos');
   syncCatalogMenuCategory('todos');
   currentPage = 1;
-  closeCatalogMenu();
   applyFilters();
-  document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
+  finishMobileCatalogMenuSelection();
 }
 
 function setCategoryFromQuick(category) {
