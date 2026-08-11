@@ -126,8 +126,11 @@
     if (event) event.preventDefault();
     if (typeof window.closeCatalogMenu === 'function') window.closeCatalogMenu();
     if (typeof window.closeSiteMenu === 'function') window.closeSiteMenu();
-    ensureDrawer();
+    const drawer = ensureDrawer();
     renderDrawer();
+    // Force the initial off-screen state to be painted before opening.
+    // Without this, the first opening can skip the slide transition.
+    if (drawer) void drawer.offsetWidth;
     document.body.classList.add('rstreet-cart-open');
   }
 
@@ -136,7 +139,8 @@
   }
 
   function ensureDrawer() {
-    if (document.getElementById('rstreetCartDrawer')) return;
+    const existing = document.getElementById('rstreetCartDrawer');
+    if (existing) return existing;
     injectStyles();
     document.body.insertAdjacentHTML('beforeend', `
       <div class="rstreet-cart-backdrop" onclick="window.RStreetCartDrawer.close()"></div>
@@ -160,6 +164,7 @@
         </div>
       </aside>
     `);
+    return document.getElementById('rstreetCartDrawer');
   }
 
   function injectStyles() {
