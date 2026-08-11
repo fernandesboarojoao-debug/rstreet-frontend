@@ -2691,7 +2691,10 @@ function applyFilters() {
   const sort = document.getElementById('sortSelect').value;
   filtered = getCatalogBaseProducts().filter(productMatchesColorAndSize);
 
-  if (sort === 'preco_asc') filtered.sort((a,b) => a.preco - b.preco);
+  const search = normalizeSearchText(document.getElementById('searchInput')?.value || '');
+  if (sort === 'default' && search) {
+    filtered.sort((a, b) => getProductSearchScore(b, search) - getProductSearchScore(a, search));
+  } else if (sort === 'preco_asc') filtered.sort((a,b) => a.preco - b.preco);
   else if (sort === 'preco_desc') filtered.sort((a,b) => b.preco - a.preco);
   else if (sort === 'nome') filtered.sort((a,b) => a.nome.localeCompare(b.nome));
   else if (sort === 'novos') filtered.sort((a,b) => b.id - a.id);
@@ -3082,22 +3085,49 @@ function updateSmartFilterOptions() {
 }
 
 function matchesProductSearch(product, search) {
-  const variants = allProductVariants
-    .filter(v => Number(v.produto_id) === Number(product?.id))
-  const productText = normalizeSearchText([
-    product?.nome,
-    product?.marca,
-    product?.referencia,
-    product?.categoria,
-    product?.descricao
-  ].filter(Boolean).join(' '), search);
-  const variantText = normalizeSearchText(variants.map(v => [v.cor, v.tamanho, v.codigo_cor].filter(Boolean).join(' ')).join(' '));
+  return getProductSearchScore(product, search) >= 0;
+}
+
+function getProductSearchScore(product, search) {
+  const terms = normalizeSearchText(search).split(/\s+/).filter(Boolean);
+  if (!terms.length) return 0;
+
+  const variants = allProductVariants.filter(v => Number(v.produto_id) === Number(product?.id));
+  const fields = {
+    name: normalizeSearchText(product?.nome),
+    brand: normalizeSearchText(product?.marca),
+    category: normalizeSearchText(product?.categoria),
+    reference: normalizeSearchText(product?.referencia),
+    description: normalizeSearchText(product?.descricao),
+    variants: normalizeSearchText(variants.map(v => [v.cor, v.tamanho, v.codigo_cor].filter(Boolean).join(' ')).join(' '))
+  };
   const colorGroups = getCatalogColorGroups(product?.id);
-  return search.split(/\s+/).filter(Boolean).every(term =>
-    textMatchesSearchFamily(productText, term) ||
-    textMatchesSearchFamily(variantText, term) ||
-    colorGroups.some(group => colorMatchesSearchTerm(group.cor, term))
-  );
+  let score = 0;
+
+  for (const term of terms) {
+    const family = getSearchFamilyTerms(term);
+    const direct = value => value.includes(term);
+    const related = value => family.some(item => value.includes(item));
+    let termScore = 0;
+
+    if (direct(fields.name)) termScore = Math.max(termScore, fields.name.startsWith(term) ? 1000 : 850);
+    else if (related(fields.name)) termScore = Math.max(termScore, 700);
+    if (direct(fields.category)) termScore = Math.max(termScore, 780);
+    else if (related(fields.category)) termScore = Math.max(termScore, 620);
+    if (direct(fields.brand)) termScore = Math.max(termScore, 560);
+    else if (related(fields.brand)) termScore = Math.max(termScore, 420);
+    if (direct(fields.reference)) termScore = Math.max(termScore, 480);
+    if (direct(fields.variants)) termScore = Math.max(termScore, 360);
+    if (colorGroups.some(group => colorMatchesSearchTerm(group.cor, term))) termScore = Math.max(termScore, 500);
+    if (direct(fields.description)) termScore = Math.max(termScore, 80);
+
+    // Related words are intentionally limited to name/category/brand above.
+    // This prevents a description such as "calçado" from ranking a chinelo for "tênis".
+    if (!termScore) return -1;
+    score += termScore;
+  }
+
+  return score;
 }
 
 function updateCategoryCounts() {
