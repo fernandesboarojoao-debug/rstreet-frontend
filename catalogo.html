@@ -3088,11 +3088,20 @@ function matchesProductSearch(product, search) {
   return getProductSearchScore(product, search) >= 0;
 }
 
+function isCatalogSizeSearchTerm(term) {
+  const value = normalizeSearchText(term);
+  return /^(pp|p|m|g|gg|xg|xgg|exg|exgg|medio|\d{2})$/.test(value);
+}
+
 function getProductSearchScore(product, search) {
   const terms = normalizeSearchText(search).split(/\s+/).filter(Boolean);
   if (!terms.length) return 0;
 
-  const variants = allProductVariants.filter(v => Number(v.produto_id) === Number(product?.id));
+  const variants = allProductVariants.filter(v =>
+    Number(v.produto_id) === Number(product?.id) &&
+    v.ativo !== false &&
+    Math.max(0, Number(v.estoque) || 0) > 0
+  );
   const fields = {
     name: normalizeSearchText(product?.nome),
     brand: normalizeSearchText(product?.marca),
@@ -3101,6 +3110,10 @@ function getProductSearchScore(product, search) {
     description: normalizeSearchText(product?.descricao),
     variants: normalizeSearchText(variants.map(v => [v.cor, v.tamanho, v.codigo_cor].filter(Boolean).join(' ')).join(' '))
   };
+  const variantTokens = fields.variants.split(/\s+/).filter(Boolean);
+  if (!variantTokens.length && Array.isArray(product?.tamanhos)) {
+    variantTokens.push(...product.tamanhos.map(normalizeSearchText).filter(Boolean));
+  }
   const colorGroups = getCatalogColorGroups(product?.id);
   let score = 0;
 
@@ -3108,18 +3121,24 @@ function getProductSearchScore(product, search) {
     const family = getSearchFamilyTerms(term);
     const direct = value => value.includes(term);
     const related = value => family.some(item => value.includes(item));
+    const sizeTerm = isCatalogSizeSearchTerm(term);
     let termScore = 0;
 
-    if (direct(fields.name)) termScore = Math.max(termScore, fields.name.startsWith(term) ? 1000 : 850);
-    else if (related(fields.name)) termScore = Math.max(termScore, 700);
-    if (direct(fields.category)) termScore = Math.max(termScore, 780);
-    else if (related(fields.category)) termScore = Math.max(termScore, 620);
-    if (direct(fields.brand)) termScore = Math.max(termScore, 560);
-    else if (related(fields.brand)) termScore = Math.max(termScore, 420);
-    if (direct(fields.reference)) termScore = Math.max(termScore, 480);
-    if (direct(fields.variants)) termScore = Math.max(termScore, 360);
+    if (!sizeTerm) {
+      if (direct(fields.name)) termScore = Math.max(termScore, fields.name.startsWith(term) ? 1000 : 850);
+      else if (related(fields.name)) termScore = Math.max(termScore, 700);
+      if (direct(fields.category)) termScore = Math.max(termScore, 780);
+      else if (related(fields.category)) termScore = Math.max(termScore, 620);
+      if (direct(fields.brand)) termScore = Math.max(termScore, 560);
+      else if (related(fields.brand)) termScore = Math.max(termScore, 420);
+      if (direct(fields.reference)) termScore = Math.max(termScore, 480);
+    }
+    const variantMatch = isCatalogSizeSearchTerm(term)
+      ? variantTokens.includes(term)
+      : direct(fields.variants);
+    if (variantMatch) termScore = Math.max(termScore, 360);
     if (colorGroups.some(group => colorMatchesSearchTerm(group.cor, term))) termScore = Math.max(termScore, 500);
-    if (direct(fields.description)) termScore = Math.max(termScore, 80);
+    if (!sizeTerm && direct(fields.description)) termScore = Math.max(termScore, 80);
 
     // Related words are intentionally limited to name/category/brand above.
     // This prevents a description such as "calçado" from ranking a chinelo for "tênis".
@@ -3189,9 +3208,10 @@ function enableWheelScroll(el) {
 }
 
 function renderCard(p) {
-  const colorGroups = getCatalogColorGroups(p.id);
+  const allColorGroups = getCatalogColorGroups(p.id);
   const state = catalogMediaState[p.id] || {};
   const searchText = normalizeSearchText(document.getElementById('searchInput')?.value || '');
+  const colorGroups = getCatalogVisibleColorGroups(p, allColorGroups, searchText);
   const filteredGroup = currentColor !== 'todos'
     ? colorGroups.find(group => sameCatalogText(group.cor, currentColor))
     : null;
@@ -3513,13 +3533,16 @@ function getCatalogColorGroups(productId) {
         ordem: Number(v.ordem) || 0,
         imagens: [],
         videos: [],
+        tamanhos: [],
         preco: null,
         preco_antigo: null,
         estoque: 0
       });
     }
     const group = groups.get(color);
-    group.estoque += Math.max(0, Number(v.estoque) || 0);
+    const stock = Math.max(0, Number(v.estoque) || 0);
+    group.estoque += stock;
+    if (stock > 0 && v.tamanho) group.tamanhos.push(String(v.tamanho).trim());
     if (!group.cor_hex && v.cor_hex) group.cor_hex = v.cor_hex;
     if (group.preco === null && v.preco !== null && v.preco !== undefined && v.preco !== '') group.preco = Number(v.preco);
     if (group.preco_antigo === null && v.preco_antigo !== null && v.preco_antigo !== undefined && v.preco_antigo !== '') group.preco_antigo = Number(v.preco_antigo);
@@ -3532,8 +3555,39 @@ function getCatalogColorGroups(productId) {
     group.videos.push(...videos);
   });
   return [...groups.values()]
-    .map(group => ({ ...group, imagens: [...new Set(group.imagens)], videos: [...new Set(group.videos)] }))
+    .map(group => ({
+      ...group,
+      tamanhos: [...new Set(group.tamanhos)],
+      imagens: [...new Set(group.imagens)],
+      videos: [...new Set(group.videos)]
+    }))
     .sort((a, b) => a.ordem - b.ordem || a.cor.localeCompare(b.cor));
+}
+
+function getCatalogVisibleColorGroups(product, groups, search = '') {
+  let visible = Array.isArray(groups) ? groups : [];
+  if (!visible.length) return visible;
+
+  if (currentColor !== 'todos') {
+    visible = visible.filter(group => sameCatalogText(group.cor, currentColor));
+  }
+  if (currentSize !== 'todos') {
+    visible = visible.filter(group => group.tamanhos.some(size => sameCatalogText(size, currentSize)));
+  }
+
+  const terms = normalizeSearchText(search).split(/\s+/).filter(Boolean);
+  const sizeTerms = terms.filter(isCatalogSizeSearchTerm);
+  if (sizeTerms.length) {
+    visible = visible.filter(group => sizeTerms.every(term =>
+      group.tamanhos.some(size => sameCatalogText(size, term))
+    ));
+  }
+
+  const colorTerms = terms.filter(term => getColorFamily(term));
+  if (colorTerms.length) {
+    visible = visible.filter(group => colorTerms.some(term => colorMatchesSearchTerm(group.cor, term)));
+  }
+  return visible;
 }
 
 function getCatalogGroupImage(group, product) {
