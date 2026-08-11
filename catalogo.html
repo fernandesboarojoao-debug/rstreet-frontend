@@ -1470,7 +1470,7 @@
 <div class="toolbar">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="applyFilters()">
+    <input type="text" id="searchInput" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="handleCatalogSearchInput()">
   </div>
   <div class="filter-group" id="brandFilters">
     <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
@@ -2706,6 +2706,13 @@ function applyFilters() {
   updateCatalogQuickNav();
   renderPage();
   renderPagination();
+}
+
+function handleCatalogSearchInput() {
+  applyFilters();
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 }
 
 function updateCatalogShareUrl() {
