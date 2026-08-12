@@ -57,7 +57,7 @@
   <h1>Acompanhar Pedido</h1>
   <p class="intro">Digite o número do pedido e o e-mail usado na compra para consultar pagamento, envio e rastreio.</p>
   <div class="box">
-    <label for="pedidoId">Numero do pedido</label>
+    <label for="pedidoId">Número do pedido</label>
     <input id="pedidoId" inputmode="numeric" placeholder="Ex: 48">
     <label for="pedidoEmail">E-mail da compra</label>
     <input id="pedidoEmail" type="email" placeholder="seuemail@exemplo.com">
@@ -74,6 +74,17 @@ const ENVIO_LABEL = {
   entregue: 'Entregue',
   retirada_disponivel: 'Retirada disponível',
   retirado: 'Retirado'
+};
+
+const PAGAMENTO_LABEL = {
+  pago: 'Pago',
+  pendente: 'Aguardando pagamento',
+  em_analise: 'Em análise',
+  recusado: 'Recusado',
+  cancelado: 'Cancelado',
+  estoque_indisponivel: 'Pagamento confirmado - revisão de estoque',
+  reembolsado: 'Reembolsado',
+  estornado: 'Estornado'
 };
 
 function escapeHtml(value) {
@@ -120,7 +131,7 @@ async function consultarPedido() {
     const itens = data.itens || [];
     resultado.innerHTML = `
       <div class="row"><span>Pedido</span><strong>#${escapeHtml(p.id)}</strong></div>
-      <div class="row"><span>Status do pagamento</span><strong>${escapeHtml(p.status)}</strong></div>
+      <div class="row"><span>Status do pagamento</span><strong>${escapeHtml(PAGAMENTO_LABEL[p.status] || p.status)}</strong></div>
       <div class="row"><span>Status do envio</span><strong>${escapeHtml(ENVIO_LABEL[p.envio_status] || 'Aguardando envio')}</strong></div>
       <div class="row"><span>Total</span><strong>${fmtMoney(p.total)}</strong></div>
       ${p.codigo_rastreio ? `<div class="row"><span>Rastreio</span><strong>${escapeHtml(p.codigo_rastreio)}</strong></div>` : ''}

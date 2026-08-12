@@ -498,6 +498,11 @@ const productId = parseInt(productParams.get('id'));
 const requestedColor = productParams.get('cor') || productParams.get('color') || '';
 
 async function init() {
+  if (!Number.isInteger(productId) || productId <= 0) {
+    finish();
+    return;
+  }
+
   // Sem credenciais configuradas → usa dados de exemplo
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     allProducts = getDemoProducts();
@@ -605,6 +610,7 @@ function updateProductSeo(p) {
   const ogImage = document.querySelector('meta[property="og:image"]');
   const ogImageSecure = document.querySelector('meta[property="og:image:secure_url"]');
   const twitterImage = document.querySelector('meta[name="twitter:image"]');
+  const ogImageAlt = document.querySelector('meta[property="og:image:alt"]');
   const image = getSelectedColorData().thumbnail || getProductImages()[0] || 'https://www.rstreet.com.br/rstreet-social-image.jpg';
   if (metaDescription) metaDescription.setAttribute('content', description);
   if (canonical) canonical.setAttribute('href', url);
@@ -613,7 +619,38 @@ function updateProductSeo(p) {
   if (ogUrl) ogUrl.setAttribute('content', url);
   if (ogImage) ogImage.setAttribute('content', image);
   if (ogImageSecure) ogImageSecure.setAttribute('content', image);
+  if (ogImageAlt) ogImageAlt.setAttribute('content', p.nome);
   if (twitterImage) twitterImage.setAttribute('content', image);
+
+  let structuredData = document.getElementById('productStructuredData');
+  if (!structuredData) {
+    structuredData = document.createElement('script');
+    structuredData.id = 'productStructuredData';
+    structuredData.type = 'application/ld+json';
+    document.head.appendChild(structuredData);
+  }
+  const colorData = getSelectedColorData();
+  structuredData.textContent = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: p.nome,
+    description: p.descricao || description,
+    image: image ? [image] : undefined,
+    sku: p.referencia || String(p.id),
+    brand: p.marca ? { '@type': 'Brand', name: p.marca } : undefined,
+    category: p.categoria || undefined,
+    color: selectedColor || undefined,
+    offers: {
+      '@type': 'Offer',
+      url,
+      priceCurrency: 'BRL',
+      price: Number(colorData.preco || p.preco || 0).toFixed(2),
+      availability: getCurrentStock() > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition'
+    }
+  });
 }
 
 function renderProduct() {
@@ -775,6 +812,7 @@ function renderProduct() {
   if (cartBtn) cartBtn.innerHTML = `<span style="font-size:20px">🛒</span> ${addText}`;
   prepareProductVideos(document.getElementById('mainContent'));
   enableWheelScrollForColorRails();
+  updateProductSeo(p);
 }
 
 function enableWheelScrollForColorRails(root = document) {

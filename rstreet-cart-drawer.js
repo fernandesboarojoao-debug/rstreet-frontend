@@ -1,5 +1,9 @@
 (function () {
   const CART_KEY = 'rstreet_cart';
+  const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';
+  let stockReady = false;
+  let stockRefreshPromise = null;
 
   function money(value) {
     return 'R$ ' + Number(value || 0).toFixed(2).replace('.', ',');
@@ -32,13 +36,18 @@
 
   function itemMax(item) {
     const stock = Number(item.estoque);
-    return Number.isFinite(stock) && stock > 0 ? stock : 99;
+    return Number.isFinite(stock) && stock >= 0 ? stock : Math.max(1, Number(item.qty) || 1);
   }
 
   function changeQty(index, delta) {
     const cart = getCart();
     const item = cart[index];
     if (!item) return;
+    if (delta > 0 && !stockReady) {
+      showDrawerNotice('Confirmando o estoque. Tente novamente em um instante.');
+      refreshCartStock();
+      return;
+    }
     const max = itemMax(item);
     const nextQty = Math.max(1, Math.min(max, (Number(item.qty) || 1) + delta));
     if (delta > 0 && (Number(item.qty) || 1) >= max) {
@@ -60,12 +69,17 @@
     const body = document.getElementById('rstreetCartDrawerBody');
     const subtotalEl = document.getElementById('rstreetCartDrawerSubtotal');
     const countEl = document.getElementById('rstreetCartDrawerCount');
+    const checkoutEl = document.querySelector('.rstreet-cart-primary');
     if (!body || !subtotalEl || !countEl) return;
 
     const cart = getCart();
     updateBadges(cart);
     countEl.textContent = `${getCartCount(cart)} item(ns)`;
     subtotalEl.textContent = money(cart.reduce((sum, item) => sum + Number(item.preco || 0) * Number(item.qty || 0), 0));
+    if (checkoutEl) {
+      checkoutEl.classList.toggle('is-checking', !stockReady || !cart.length);
+      checkoutEl.setAttribute('aria-disabled', String(!stockReady || !cart.length));
+    }
 
     if (!cart.length) {
       body.innerHTML = '<div class="rstreet-cart-empty">Seu carrinho está vazio.</div>';
@@ -122,16 +136,100 @@
     showDrawerNotice.timer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
+  async function refreshCartStock() {
+    if (stockRefreshPromise) return stockRefreshPromise;
+    const cart = getCart();
+    if (!cart.length) {
+      stockReady = true;
+      return;
+    }
+
+    stockRefreshPromise = (async () => {
+      try {
+        const productIds = [...new Set(cart.map(item => Number(item.id)).filter(id => Number.isInteger(id) && id > 0))];
+        if (!productIds.length) throw new Error('Carrinho inválido.');
+        const ids = productIds.join(',');
+        const headers = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+        const [prodRes, varRes] = await Promise.all([
+          fetch(`${SUPABASE_URL}/rest/v1/produtos?id=in.(${ids})&select=id,estoque,ativo`, { headers }),
+          fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?produto_id=in.(${ids})&select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, { headers })
+        ]);
+        if (!prodRes.ok || !varRes.ok) throw new Error('Falha ao consultar estoque.');
+        const [products, variants] = await Promise.all([prodRes.json(), varRes.json()]);
+        const notices = [];
+        const consolidados = new Map();
+
+        cart.forEach(item => {
+          const key = `${Number(item.id)}:${Number(item.produto_variante_id) || 0}`;
+          const existente = consolidados.get(key);
+          if (existente) existente.qty += Math.max(1, Number(item.qty) || 1);
+          else consolidados.set(key, { ...item, qty: Math.max(1, Number(item.qty) || 1) });
+        });
+
+        const next = [...consolidados.values()].map(item => {
+          const product = products.find(p => Number(p.id) === Number(item.id));
+          if (!product || product.ativo === false) {
+            notices.push(`${item.nome || 'Produto'} não está mais disponível e foi removido.`);
+            return null;
+          }
+
+          let estoque = Math.max(0, Number(product.estoque) || 0);
+          const hasVariants = variants.some(v => Number(v.produto_id) === Number(item.id) && v.ativo !== false);
+          if (hasVariants && !item.produto_variante_id) {
+            notices.push(`${item.nome || 'Produto'} precisa de cor e tamanho e foi removido.`);
+            return null;
+          }
+
+          if (item.produto_variante_id) {
+            const variant = variants.find(v => Number(v.id) === Number(item.produto_variante_id));
+            if (!variant || variant.ativo === false || Number(variant.estoque) <= 0) {
+              notices.push(`${item.nome || 'Produto'} esgotou e foi removido.`);
+              return null;
+            }
+            estoque = Math.max(0, Number(variant.estoque) || 0);
+            if (variant.preco != null) item = { ...item, preco: Number(variant.preco) };
+            const images = Array.isArray(variant.imagens) && variant.imagens.length
+              ? variant.imagens
+              : (variant.imagem_url ? [variant.imagem_url] : []);
+            if (images[0]) item = { ...item, imagem: images[0] };
+          }
+
+          if (estoque <= 0) {
+            notices.push(`${item.nome || 'Produto'} esgotou e foi removido.`);
+            return null;
+          }
+          const qty = Math.min(item.qty, estoque);
+          if (qty !== item.qty) notices.push(`A quantidade de ${item.nome || 'produto'} foi ajustada para ${qty}.`);
+          return { ...item, qty, estoque };
+        }).filter(Boolean);
+
+        stockReady = true;
+        saveCart(next);
+        if (notices.length) showDrawerNotice(notices[0]);
+      } catch {
+        stockReady = false;
+        renderDrawer();
+        showDrawerNotice('Não foi possível confirmar o estoque agora. Revise o carrinho antes de finalizar.');
+      } finally {
+        stockRefreshPromise = null;
+      }
+    })();
+
+    return stockRefreshPromise;
+  }
+
   function openDrawer(event) {
     if (event) event.preventDefault();
     if (typeof window.closeCatalogMenu === 'function') window.closeCatalogMenu();
     if (typeof window.closeSiteMenu === 'function') window.closeSiteMenu();
+    stockReady = false;
     const drawer = ensureDrawer();
     renderDrawer();
     // Force the initial off-screen state to be painted before opening.
     // Without this, the first opening can skip the slide transition.
     if (drawer) void drawer.offsetWidth;
     document.body.classList.add('rstreet-cart-open');
+    refreshCartStock();
   }
 
   function closeDrawer() {
@@ -201,6 +299,7 @@
       .rstreet-cart-subtotal strong{color:#c8a96e;font-family:'Bebas Neue',Impact,sans-serif;font-size:30px}
       .rstreet-cart-primary,.rstreet-cart-secondary{min-height:46px;display:flex;align-items:center;justify-content:center;text-decoration:none;text-transform:uppercase;letter-spacing:1px;font-weight:900;font-size:12px;border-radius:3px}
       .rstreet-cart-primary{background:#c8a96e;color:#080808}
+      .rstreet-cart-primary.is-checking{opacity:.45;pointer-events:none}
       .rstreet-cart-secondary{border:1px solid rgba(255,255,255,.14);color:#eee;background:transparent}
       @media(max-width:520px){.rstreet-cart-drawer{width:92vw}.rstreet-cart-head{padding:18px}.rstreet-cart-item{grid-template-columns:76px 1fr}.rstreet-cart-img{width:76px}.rstreet-cart-controls .is-remove{width:100%;margin:8px 0 0}}
     `;
@@ -222,12 +321,14 @@
     render: renderDrawer,
     updateBadges,
     changeQty,
-    removeItem
+    removeItem,
+    refreshStock: refreshCartStock
   };
 
   document.addEventListener('DOMContentLoaded', bindTriggers);
   window.addEventListener('storage', event => {
     if (event.key === CART_KEY) {
+      stockReady = false;
       updateBadges();
       renderDrawer();
     }

@@ -294,6 +294,8 @@ const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';
 let latestProducts = [];
 let latestVariants = [];
+let stockValidationOk = false;
+let stockErrorShown = false;
 
 // ─── CARRINHO UTILS ─────────────────────────────────
 function getCart() {
@@ -323,11 +325,20 @@ async function loadLatestProducts() {
         headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
       })
     ]);
-    if (!prodRes.ok) return;
-    latestProducts = await prodRes.json();
-    if (varRes.ok) latestVariants = await varRes.json();
+    if (!prodRes.ok || !varRes.ok) throw new Error('Falha ao consultar estoque.');
+    [latestProducts, latestVariants] = await Promise.all([prodRes.json(), varRes.json()]);
+    stockValidationOk = true;
+    stockErrorShown = false;
     syncCartWithStock();
-  } catch {}
+    render();
+  } catch {
+    stockValidationOk = false;
+    render();
+    if (!stockErrorShown) {
+      stockErrorShown = true;
+      toast('Não foi possível confirmar o estoque agora. Tente novamente em instantes.');
+    }
+  }
 }
 
 function syncCartWithStock() {
@@ -335,8 +346,20 @@ function syncCartWithStock() {
   if (!latestProducts.length || !cart.length) return;
   let changed = false;
   const notices = [];
-  const next = cart.map(item => {
-    const product = latestProducts.find(p => p.id === item.id);
+  const consolidados = new Map();
+  cart.forEach(item => {
+    const key = `${Number(item.id)}:${Number(item.produto_variante_id) || 0}`;
+    const existente = consolidados.get(key);
+    if (existente) {
+      existente.qty += Math.max(1, Number(item.qty) || 1);
+      changed = true;
+    } else {
+      consolidados.set(key, { ...item, qty: Math.max(1, Number(item.qty) || 1) });
+    }
+  });
+
+  const next = [...consolidados.values()].map(item => {
+    const product = latestProducts.find(p => Number(p.id) === Number(item.id));
     if (!product) {
       changed = true;
       notices.push(`${item.nome} não está mais disponível e foi removido do carrinho.`);
@@ -357,9 +380,9 @@ function syncCartWithStock() {
         return null;
       }
       estoque = Math.max(0, Number(variant.estoque) || 0);
-      if (variant.preco !== null && variant.preco !== undefined) item.preco = Number(variant.preco);
+      if (variant.preco !== null && variant.preco !== undefined) item = { ...item, preco: Number(variant.preco) };
       const variantImages = Array.isArray(variant.imagens) && variant.imagens.length ? variant.imagens : variant.imagem_url ? [variant.imagem_url] : [];
-      if (variantImages[0]) item.imagem = variantImages[0];
+      if (variantImages[0]) item = { ...item, imagem: variantImages[0] };
     }
     if (estoque <= 0) {
       changed = true;
@@ -396,9 +419,15 @@ function render() {
   } else {
     empty.classList.remove('show');
     clearBtn.style.display = '';
-    checkoutBtn.removeAttribute('disabled');
-    checkoutBtn.style.pointerEvents = '';
-    checkoutBtn.style.opacity = '';
+    if (stockValidationOk) {
+      checkoutBtn.removeAttribute('disabled');
+      checkoutBtn.style.pointerEvents = '';
+      checkoutBtn.style.opacity = '';
+    } else {
+      checkoutBtn.setAttribute('disabled', true);
+      checkoutBtn.style.pointerEvents = 'none';
+      checkoutBtn.style.opacity = '0.4';
+    }
   }
 
   document.getElementById('itemsLabel').textContent =
@@ -447,7 +476,8 @@ function updateTotals(cart) {
 // ─── AÇÕES ──────────────────────────────────────────
 function changeQty(idx, delta) {
   const cart = getCart();
-  const max = cart[idx].estoque === undefined ? 99 : Number(cart[idx].estoque);
+  const estoque = Number(cart[idx].estoque);
+  const max = Number.isFinite(estoque) && estoque >= 0 ? estoque : Math.max(1, Number(cart[idx].qty) || 1);
   if (delta > 0 && cart[idx].qty >= max) {
     toast(`Temos apenas ${max} unidade(s) disponível(is).`);
     return;
@@ -459,7 +489,8 @@ function changeQty(idx, delta) {
 
 function setQty(idx, val) {
   const cart = getCart();
-  const max = cart[idx].estoque === undefined ? 99 : Number(cart[idx].estoque);
+  const estoque = Number(cart[idx].estoque);
+  const max = Number.isFinite(estoque) && estoque >= 0 ? estoque : Math.max(1, Number(cart[idx].qty) || 1);
   cart[idx].qty = Math.min(max, Math.max(1, parseInt(val) || 1));
   saveCart(cart);
   render();

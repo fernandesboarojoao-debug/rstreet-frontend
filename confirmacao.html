@@ -303,9 +303,12 @@ const STATUS_MAP = {
   cancelled: { icon:'⏳', cls:'pending', title:'Pagamento não Finalizado', sub:'Seu pagamento não foi concluído. Seu carrinho foi mantido para você tentar novamente.' },
   failure:  { icon:'❌', cls:'failed',  title:'Pagamento Recusado', sub:'Houve um problema com seu pagamento. Tente novamente ou use outra forma de pagamento.' },
   in_process: { icon:'⏳', cls:'pending', title:'Pagamento em Análise', sub:'Seu pagamento está sendo analisado. Em breve confirmaremos seu pedido.' },
+  stock_issue: { icon:'⚠️', cls:'pending', title:'Pagamento Confirmado', sub:'Recebemos seu pagamento, mas precisamos revisar a disponibilidade de um item. A loja entrará em contato com você.' },
+  refunded: { icon:'↩', cls:'pending', title:'Pagamento Reembolsado', sub:'O pagamento deste pedido foi reembolsado.' },
+  charged_back: { icon:'↩', cls:'pending', title:'Pagamento Estornado', sub:'O pagamento deste pedido foi estornado.' },
 };
 
-const STORE_HOURS_TEXT = 'segunda a sexta das 9h as 18h, sabado das 9h as 13h. Domingo fechado.';
+const STORE_HOURS_TEXT = 'segunda a sexta das 9h às 18h, sábado das 9h às 13h. Domingo fechado.';
 
 function getStoreOpenStatus(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -343,8 +346,11 @@ function updateStoreHoursStep() {
 function statusFromPedido(pedido, fallback) {
   const status = String(pedido?.status || '').toLowerCase();
   if (status === 'pago' || status === 'approved') return 'approved';
+  if (status === 'estoque_indisponivel') return 'stock_issue';
   if (status === 'em_analise' || status === 'in_process') return 'in_process';
   if (status === 'cancelado' || status === 'cancelled') return 'cancelled';
+  if (status === 'reembolsado' || status === 'refunded') return 'refunded';
+  if (status === 'estornado' || status === 'charged_back') return 'charged_back';
   if (['recusado','rejected','failure'].includes(status)) return 'failure';
   return fallback || 'pending';
 }
@@ -398,18 +404,31 @@ function normalizeBackendPedido(pedido, itens) {
 
 async function loadPedidoFromBackend(pedidoId, paymentId) {
   if (!pedidoId || !paymentId) return null;
-  const res = await fetch(`${BACKEND_BASE}/pedidos/confirmacao`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pedido_id: pedidoId, payment_id: paymentId }),
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return normalizeBackendPedido(data.pedido, data.itens);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetch(`${BACKEND_BASE}/pedidos/confirmacao`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pedido_id: pedidoId, payment_id: paymentId }),
+        signal: controller.signal,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return normalizeBackendPedido(data.pedido, data.itens);
+      }
+    } catch {}
+    finally {
+      clearTimeout(timeout);
+    }
+    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 1200 * (attempt + 1)));
+  }
+  return null;
 }
 
 function restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus) {
-  if (finalStatus === 'approved') {
+  if (finalStatus === 'approved' || finalStatus === 'stock_issue') {
     localStorage.removeItem('rstreet_cart');
     localStorage.removeItem('rstreet_checkout_cart_backup');
     return;
