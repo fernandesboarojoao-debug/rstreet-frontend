@@ -3563,7 +3563,11 @@ function getCatalogColorGroups(productId) {
       imagens: [...new Set(group.imagens)],
       videos: [...new Set(group.videos)]
     }))
-    .sort((a, b) => a.ordem - b.ordem || a.cor.localeCompare(b.cor));
+    .sort((a, b) => {
+      const aEsgotada = Number(a.estoque) <= 0 ? 1 : 0;
+      const bEsgotada = Number(b.estoque) <= 0 ? 1 : 0;
+      return aEsgotada - bEsgotada || a.ordem - b.ordem || a.cor.localeCompare(b.cor);
+    });
 }
 
 function getCatalogVisibleColorGroups(product, groups, search = '') {

@@ -1059,11 +1059,18 @@ function getActiveVariants() {
 }
 
 function getVariantColors() {
-  const colors = [...new Set(getActiveVariants().map(v => String(v.cor || '').trim()).filter(Boolean))];
+  const variants = getActiveVariants();
+  const colors = [...new Set(variants.map(v => String(v.cor || '').trim()).filter(Boolean))];
   return colors.sort((a, b) => {
-    const aOrder = Math.min(...getActiveVariants().filter(v => sameText(v.cor, a)).map(v => Number(v.ordem) || 0));
-    const bOrder = Math.min(...getActiveVariants().filter(v => sameText(v.cor, b)).map(v => Number(v.ordem) || 0));
-    return aOrder - bOrder || a.localeCompare(b);
+    const aRequested = requestedColor && sameText(a, requestedColor) ? 0 : 1;
+    const bRequested = requestedColor && sameText(b, requestedColor) ? 0 : 1;
+    const aVariants = variants.filter(v => sameText(v.cor, a));
+    const bVariants = variants.filter(v => sameText(v.cor, b));
+    const aEsgotada = aVariants.some(v => Number(v.estoque) > 0) ? 0 : 1;
+    const bEsgotada = bVariants.some(v => Number(v.estoque) > 0) ? 0 : 1;
+    const aOrder = Math.min(...aVariants.map(v => Number(v.ordem) || 0));
+    const bOrder = Math.min(...bVariants.map(v => Number(v.ordem) || 0));
+    return aRequested - bRequested || aEsgotada - bEsgotada || aOrder - bOrder || a.localeCompare(b);
   });
 }
 
