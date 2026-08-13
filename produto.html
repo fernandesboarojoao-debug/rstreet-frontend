@@ -464,6 +464,8 @@
   </div>
 </div>
 
+<section class="product-reviews-section" id="productReviews" aria-live="polite"></section>
+
 <div class="related-section" id="relatedSection" style="display:none">
   <div class="related-header">
     <div class="related-title" id="relatedTitle">Você também pode gostar</div>
@@ -471,7 +473,6 @@
   </div>
   <div class="related-grid" id="relatedGrid"></div>
 </div>
-<section class="product-reviews-section" id="productReviews" aria-live="polite"></section>
 
 <footer>
   <div class="footer-logo">R<span>.</span>Street</div>
@@ -576,6 +577,9 @@ async function init() {
 }
 
 async function refreshProduct() {
+  // Nao redesenha a pagina enquanto o cliente esta avaliando ou preenchendo um campo.
+  const activeElement = document.activeElement;
+  if (reviewFormOpen || activeElement?.matches('input, textarea, select, button')) return;
   if (!SUPABASE_URL || !SUPABASE_KEY || !productId) return;
   try {
     const [r1, r2, r3] = await Promise.all([
@@ -1623,7 +1627,9 @@ init();
 window.addEventListener('storage', e => {
   if (e.key === 'rstreet_products_changed') refreshProduct();
 });
-setInterval(refreshProduct, 15000);
+setInterval(() => {
+  if (!document.hidden) refreshProduct();
+}, 15000);
 </script>
 <script src="rstreet-cart-drawer.js"></script>
 </body>
