@@ -1568,6 +1568,8 @@
   <div class="catalog-rail-section" id="campaignProductsSection"></div>
   <div class="catalog-rail-section" id="featuredProductsSection"></div>
   <div class="catalog-rail-section" id="saleProductsSection"></div>
+  <div class="catalog-rail-section" id="bestSellersSection"></div>
+  <div class="catalog-rail-section" id="lastUnitsSection"></div>
 </section>
 
 <section class="catalog-collection-bar" aria-label="Vitrines do catálogo">
@@ -1891,6 +1893,7 @@ const SUPABASE_URL      = 'https://dxttqvmrpfwxsgrpancz.supabase.co';  // ← co
 const SUPABASE_ANON_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';                // ← cole sua chave
 const WHATSAPP_NUMBER   = '5519993111599';
 const PIX_DISCOUNT_RATE = 0.05;
+const ENGAGEMENT_API    = 'https://rstreet-backend.onrender.com/api/engajamento';
 // ═══════════════════════════════════════════════
 
 // ─────────────────────────────────────────────
@@ -1920,6 +1923,7 @@ let currentSize = 'todos';
 let currentMaxPrice = 1000;
 let currentMobileCatalogMode = 'all';
 let currentPage = 1;
+let bestSellerProductIds = [];
 let suppressCatalogUrlUpdate = false;
 const PER_PAGE = 12;
 
@@ -2022,6 +2026,20 @@ async function loadProducts(silent = false) {
 
 async function refreshProducts() {
   await loadProducts(true);
+}
+
+async function loadBestSellerProducts() {
+  try {
+    const response = await fetch(`${ENGAGEMENT_API}/vitrines`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Erro ${response.status}`);
+    const data = await response.json();
+    bestSellerProductIds = Array.isArray(data?.mais_vendidos)
+      ? data.mais_vendidos.map(Number).filter(Number.isFinite)
+      : [];
+  } catch (error) {
+    // A vitrine e opcional: o catalogo continua normalmente se o backend estiver indisponivel.
+    bestSellerProductIds = [];
+  }
 }
 
 function scheduleProductsRefresh(delay = 250) {
@@ -2781,7 +2799,31 @@ function normalizeSearchText(value) {
 
 function matchesSearchText(haystack, search) {
   const text = normalizeSearchText(haystack);
-  return search.split(/\s+/).filter(Boolean).every(term => text.includes(term));
+  return search.split(/\s+/).filter(Boolean).every(term => searchTextMatchesTerm(text, term));
+}
+
+function isSearchTypoClose(word, term) {
+  if (term.length < 4 || word.length < 4 || Math.abs(word.length - term.length) > 1) return false;
+  const limit = term.length >= 7 ? 2 : 1;
+  const previous = Array.from({ length: word.length + 1 }, (_, index) => index);
+  for (let row = 1; row <= term.length; row++) {
+    const current = [row];
+    for (let column = 1; column <= word.length; column++) {
+      current[column] = Math.min(
+        current[column - 1] + 1,
+        previous[column] + 1,
+        previous[column - 1] + (term[row - 1] === word[column - 1] ? 0 : 1)
+      );
+    }
+    for (let index = 0; index < previous.length; index++) previous[index] = current[index];
+  }
+  return previous[word.length] <= limit;
+}
+
+function searchTextMatchesTerm(value, term) {
+  if (!term) return true;
+  if (value.includes(term)) return true;
+  return value.split(/\s+/).some(word => word.startsWith(term) || isSearchTypoClose(word, term));
 }
 
 const COLOR_SEARCH_FAMILIES = [
@@ -3121,7 +3163,7 @@ function getProductSearchScore(product, search) {
 
   for (const term of terms) {
     const family = getSearchFamilyTerms(term);
-    const direct = value => value.includes(term);
+    const direct = value => searchTextMatchesTerm(value, term);
     const related = value => family.some(item => value.includes(item));
     const sizeTerm = isCatalogSizeSearchTerm(term);
     let termScore = 0;
@@ -3472,7 +3514,7 @@ function updateCatalogShowcases() {
   if (!wrapper) return;
   if (currentCampaignTheme) {
     wrapper.classList.remove('is-visible');
-    ['campaignProductsSection', 'featuredProductsSection', 'saleProductsSection'].forEach(id => {
+    ['campaignProductsSection', 'featuredProductsSection', 'saleProductsSection', 'bestSellersSection', 'lastUnitsSection'].forEach(id => {
       const section = document.getElementById(id);
       if (section) {
         section.classList.remove('is-visible');
@@ -3490,6 +3532,15 @@ function updateCatalogShowcases() {
   const saleProducts = activeInStock
     .filter(product => getProductDiscountValue(product) > 0)
     .sort((a, b) => getProductDiscountValue(b) - getProductDiscountValue(a))
+    .slice(0, 10);
+  const bestSellers = bestSellerProductIds
+    .map(id => activeInStock.find(product => Number(product.id) === Number(id)))
+    .filter(Boolean)
+    .slice(0, 10);
+  const lastUnits = activeInStock
+    .filter(product => getCatalogProductStock(product) <= 3)
+    .sort((a, b) => getCatalogProductStock(a) - getCatalogProductStock(b) ||
+      new Date(b.criado_em || 0) - new Date(a.criado_em || 0))
     .slice(0, 10);
 
   const visibleSections = [
@@ -3516,6 +3567,20 @@ function updateCatalogShowcases() {
       sub: 'Itens com condicao especial.',
       badge: 'Oferta',
       preferSale: true
+    }),
+    renderCatalogRail('bestSellersSection', {
+      products: bestSellers,
+      kicker: 'Escolhidos pelos clientes',
+      title: 'Mais vendidos',
+      sub: 'Pecas que mais sairam na R Street.',
+      badge: 'Mais vendido'
+    }),
+    renderCatalogRail('lastUnitsSection', {
+      products: lastUnits,
+      kicker: 'Estoque limitado',
+      title: 'Ultimas unidades',
+      sub: 'Poucas unidades disponiveis.',
+      badge: 'Ultimas unidades'
     })
   ].filter(Boolean);
 
@@ -4223,6 +4288,8 @@ updateCartNav();
 async function initCatalogPage() {
   await loadActiveCatalogTheme();
   await loadProducts();
+  await loadBestSellerProducts();
+  updateCatalogShowcases();
 }
 initCatalogPage();
 window.addEventListener('storage', e => {

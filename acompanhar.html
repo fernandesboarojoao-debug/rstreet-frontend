@@ -44,8 +44,14 @@
   .result.open{display:block}
   .row{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding:10px 0;color:#ddd}
   .row strong{color:var(--gold)}
-  .items{margin-top:14px;color:#ddd;line-height:1.8}
-  .track{display:inline-block;margin-top:12px;color:var(--gold);text-decoration:none}
+   .items{margin-top:14px;color:#ddd;line-height:1.8}
+   .track{display:inline-block;margin-top:12px;color:var(--gold);text-decoration:none}
+   .timeline{margin-top:22px;border-top:1px solid var(--border);padding-top:18px}
+   .timeline-title{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+   .timeline-item{position:relative;padding:0 0 18px 22px;border-left:1px solid rgba(200,169,110,.35);margin-left:6px}
+   .timeline-item:last-child{padding-bottom:0;border-left-color:transparent}
+   .timeline-dot{position:absolute;left:-5px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(200,169,110,.12)}
+   .timeline-item strong{display:block;color:#fff;font-size:13px;margin-bottom:3px}.timeline-item p{color:var(--gray);font-size:12px;line-height:1.5}.timeline-date{display:block;color:#777;font-size:11px;margin-top:5px}
 </style>
 </head>
 <body>
@@ -70,6 +76,7 @@
 const BACKEND_BASE = 'https://rstreet-backend.onrender.com/api';
 const ENVIO_LABEL = {
   aguardando_envio: 'Aguardando envio',
+  em_preparacao: 'Pedido em preparação',
   enviado: 'Enviado',
   entregue: 'Entregue',
   retirada_disponivel: 'Retirada disponível',
@@ -79,6 +86,7 @@ const ENVIO_LABEL = {
 const PAGAMENTO_LABEL = {
   pago: 'Pago',
   pendente: 'Aguardando pagamento',
+  processando_pagamento: 'Processando pagamento',
   em_analise: 'Em análise',
   recusado: 'Recusado',
   cancelado: 'Cancelado',
@@ -95,6 +103,21 @@ function escapeHtml(value) {
 
 function fmtMoney(value) {
   return 'R$ ' + Number(value || 0).toFixed(2).replace('.', ',');
+}
+
+function fmtDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+function renderTimeline(pedido, updates) {
+  const history = Array.isArray(updates) ? updates : [];
+  const items = history.length ? history : [{
+    titulo: 'Status atual do pedido',
+    descricao: `${PAGAMENTO_LABEL[pedido.status] || pedido.status}. ${ENVIO_LABEL[pedido.envio_status] || 'Aguardando envio'}.`,
+    criado_em: pedido.atualizado_em || pedido.criado_em
+  }];
+  return `<div class="timeline"><div class="timeline-title">Atualizações do pedido</div>${items.map(item => `<div class="timeline-item"><span class="timeline-dot"></span><strong>${escapeHtml(item.titulo || 'Atualização')}</strong><p>${escapeHtml(item.descricao || '')}</p><span class="timeline-date">${escapeHtml(fmtDate(item.criado_em))}</span></div>`).join('')}</div>`;
 }
 
 function showError(text) {
@@ -129,6 +152,7 @@ async function consultarPedido() {
 
     const p = data.pedido;
     const itens = data.itens || [];
+    const updates = data.atualizacoes || [];
     resultado.innerHTML = `
       <div class="row"><span>Pedido</span><strong>#${escapeHtml(p.id)}</strong></div>
       <div class="row"><span>Status do pagamento</span><strong>${escapeHtml(PAGAMENTO_LABEL[p.status] || p.status)}</strong></div>
@@ -136,10 +160,11 @@ async function consultarPedido() {
       <div class="row"><span>Total</span><strong>${fmtMoney(p.total)}</strong></div>
       ${p.codigo_rastreio ? `<div class="row"><span>Rastreio</span><strong>${escapeHtml(p.codigo_rastreio)}</strong></div>` : ''}
       ${p.rastreio_url ? `<a class="track" href="${escapeHtml(p.rastreio_url)}" target="_blank">Abrir rastreio</a>` : ''}
-      <div class="items">
+       <div class="items">
         <strong>Itens</strong><br>
         ${itens.map(i => `${escapeHtml(i.quantidade)}x ${escapeHtml(i.nome_produto)}${i.cor ? ' - '+escapeHtml(i.cor) : ''}${i.tamanho ? ' / '+escapeHtml(i.tamanho) : ''}`).join('<br>') || 'Itens indisponíveis'}
-      </div>`;
+       </div>
+       ${renderTimeline(p, updates)}`;
     resultado.className = 'result open';
   } catch (err) {
     showError(err.message || 'Não foi possível consultar o pedido.');

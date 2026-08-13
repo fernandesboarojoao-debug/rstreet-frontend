@@ -266,6 +266,34 @@
   .related-price { font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--gold); }
   .related-installment { color:var(--gray-400); font-size:9px; font-weight:800; letter-spacing:.7px; text-transform:uppercase; margin-top:3px; }
   .related-pix { color:var(--green); font-size:10px; font-weight:800; line-height:1.25; margin-top:2px; }
+  .product-reviews-section { padding:0 60px 56px; }
+  .product-reviews-box { border-top:1px solid var(--border); padding-top:34px; }
+  .product-reviews-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:20px; }
+  .product-reviews-title { font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:1px; }
+  .product-reviews-sub { color:var(--gray-400); font-size:13px; margin-top:4px; }
+  .review-average { display:flex; align-items:baseline; gap:8px; color:var(--gold); white-space:nowrap; }
+  .review-average strong { font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:1px; }
+  .review-average span { font-size:13px; }
+  .review-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .review-card { background:var(--gray-800); border:1px solid var(--border); border-radius:4px; padding:16px; }
+  .review-card-top { display:flex; justify-content:space-between; gap:10px; margin-bottom:9px; }
+  .review-name { color:var(--white); font-size:13px; font-weight:700; }
+  .review-stars { color:var(--gold); font-size:15px; letter-spacing:2px; white-space:nowrap; }
+  .review-comment { color:var(--gray-200); font-size:13px; line-height:1.6; white-space:pre-line; }
+  .review-empty { background:var(--gray-800); border:1px dashed rgba(200,169,110,.28); border-radius:4px; padding:18px; color:var(--gray-400); font-size:13px; line-height:1.55; }
+  .review-action { appearance:none; border:1px solid rgba(200,169,110,.42); background:var(--gold-bg); color:var(--gold); border-radius:3px; padding:10px 13px; font:700 11px 'Inter',sans-serif; letter-spacing:1.2px; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
+  .review-action:hover { border-color:var(--gold); }
+  .review-form { margin-top:16px; background:var(--gray-800); border:1px solid rgba(200,169,110,.26); border-radius:4px; padding:18px; }
+  .review-form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .review-form label { display:block; color:var(--gray-400); font-size:10px; font-weight:800; letter-spacing:1.3px; text-transform:uppercase; margin-bottom:6px; }
+  .review-form input,.review-form textarea { width:100%; border:1px solid var(--border); background:var(--gray-900); color:var(--white); border-radius:3px; padding:11px 12px; font:13px 'Inter',sans-serif; outline:0; }
+  .review-form textarea { min-height:92px; resize:vertical; }
+  .review-form input:focus,.review-form textarea:focus { border-color:var(--gold); }
+  .review-star-picker { display:flex; gap:4px; margin:4px 0 14px; }
+  .review-star-picker button { appearance:none; background:transparent; border:0; color:var(--gray-500); cursor:pointer; font-size:27px; line-height:1; padding:0 2px; }
+  .review-star-picker button.active { color:var(--gold); }
+  .review-form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:14px; }
+  .review-form-actions button { min-height:40px; }
 
   .loading-screen { min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; text-align:center; }
   .spinner { width:48px; height:48px; border:3px solid rgba(200,169,110,0.2); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
@@ -376,6 +404,10 @@
     .related-section { padding:36px 18px 52px; }
     .related-header { align-items:flex-start; gap:12px; }
     .related-title { font-size:26px; }
+    .product-reviews-section { padding:0 24px 44px; }
+    .product-reviews-head { flex-direction:column; gap:8px; }
+    .review-list { grid-template-columns:1fr; }
+    .review-form-grid { grid-template-columns:1fr; }
     .related-card { flex-basis:138px; }
     .related-body { padding:9px 10px; }
     .related-brand { font-size:7px; letter-spacing:1.5px; }
@@ -434,11 +466,12 @@
 
 <div class="related-section" id="relatedSection" style="display:none">
   <div class="related-header">
-    <div class="related-title">Você também pode gostar</div>
+    <div class="related-title" id="relatedTitle">Você também pode gostar</div>
     <a href="catalogo.html" class="related-link">Ver tudo →</a>
   </div>
   <div class="related-grid" id="relatedGrid"></div>
 </div>
+<section class="product-reviews-section" id="productReviews" aria-live="polite"></section>
 
 <footer>
   <div class="footer-logo">R<span>.</span>Street</div>
@@ -480,6 +513,7 @@ const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';  // ← cole su
 const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';                // ← cole sua chave
 const WHATSAPP     = '5519993111599';
 const PIX_DISCOUNT_RATE = 0.05;
+const BACKEND_BASE = 'https://rstreet-backend.onrender.com/api';
 // ═══════════════════════════════════════════════
 
 let product = null;
@@ -492,6 +526,9 @@ let selectedMediaUrl = null;
 let selectedMediaType = null;
 let openProductAccordionKey = null;
 let productViewTrackedKey = '';
+let productReviews = [];
+let reviewFormOpen = false;
+let selectedReviewRating = 0;
 
 const productParams = new URLSearchParams(window.location.search);
 const productId = parseInt(productParams.get('id'));
@@ -575,6 +612,7 @@ function finish() {
   }
   renderProduct();
   renderRelated();
+  loadProductReviews();
   document.title = product.nome + ' | R Street';
   updateProductSeo(product);
   document.getElementById('breadcrumbName').textContent = product.nome;
@@ -1281,12 +1319,13 @@ function buildWppLink() {
 }
 
 function renderRelated() {
-  const rel = allProducts
-    .filter(p => p.id !== product.id && p.ativo !== false &&
-      (p.marca === product.marca || p.categoria === product.categoria))
-    .slice(0, 4);
+  const sameBrand = allProducts.filter(p => p.id !== product.id && p.ativo !== false && p.marca === product.marca);
+  const sameCategory = allProducts.filter(p => p.id !== product.id && p.ativo !== false && p.categoria === product.categoria && !sameBrand.some(item => item.id === p.id));
+  const rel = [...sameBrand, ...sameCategory].slice(0, 4);
   if (!rel.length) return;
   document.getElementById('relatedSection').style.display = 'block';
+  const title = document.getElementById('relatedTitle');
+  if (title) title.textContent = sameBrand.length ? `Mais da ${product.marca}` : 'Você também pode gostar';
   document.getElementById('relatedGrid').innerHTML = rel.map(p => {
     const imgs = Array.isArray(p.imagens) && p.imagens.length ? p.imagens : p.imagem_url ? [p.imagem_url] : [];
     return `<a class="related-card" href="produto.html?id=${p.id}">
@@ -1300,6 +1339,105 @@ function renderRelated() {
       </div>
     </a>`;
   }).join('');
+}
+
+async function loadProductReviews() {
+  const target = document.getElementById('productReviews');
+  if (!target || !product?.id) return;
+  target.innerHTML = '<div class="product-reviews-box"><div class="review-empty">Carregando avaliações...</div></div>';
+  try {
+    const response = await fetch(`${BACKEND_BASE}/engajamento/avaliacoes/produto/${encodeURIComponent(product.id)}`);
+    productReviews = response.ok ? await response.json() : [];
+  } catch {
+    productReviews = [];
+  }
+  renderProductReviews();
+}
+
+function reviewStars(rating) {
+  const value = Math.max(0, Math.min(5, Number(rating) || 0));
+  return '★'.repeat(value) + '☆'.repeat(5 - value);
+}
+
+function renderProductReviews() {
+  const target = document.getElementById('productReviews');
+  if (!target || !product) return;
+  const count = productReviews.length;
+  const average = count ? productReviews.reduce((sum, item) => sum + Number(item.nota || 0), 0) / count : 0;
+  const list = count
+    ? `<div class="review-list">${productReviews.slice(0, 6).map(item => `
+      <article class="review-card">
+        <div class="review-card-top"><span class="review-name">${escapeHtml(item.nome_cliente || 'Cliente R Street')}</span><span class="review-stars" aria-label="${Number(item.nota || 0)} de 5 estrelas">${reviewStars(item.nota)}</span></div>
+        <p class="review-comment">${escapeHtml(item.comentario)}</p>
+      </article>`).join('')}</div>`
+    : '<div class="review-empty">Ainda não há avaliações publicadas para este produto. Comprou? Conte como foi sua experiência.</div>';
+  const form = reviewFormOpen ? renderReviewForm() : '';
+  target.innerHTML = `
+    <div class="product-reviews-box">
+      <div class="product-reviews-head">
+        <div><div class="product-reviews-title">Avaliações de clientes</div><div class="product-reviews-sub">Comentários verificados e aprovados pela R Street.</div></div>
+        ${count ? `<div class="review-average"><strong>${average.toFixed(1).replace('.', ',')}</strong><span>${count} ${count === 1 ? 'avaliação' : 'avaliações'}</span></div>` : '<button class="review-action" type="button" onclick="toggleReviewForm()">Avaliar compra</button>'}
+      </div>
+      ${list}
+      ${count ? `<div style="margin-top:14px"><button class="review-action" type="button" onclick="toggleReviewForm()">Avaliar compra</button></div>` : ''}
+      ${form}
+    </div>`;
+}
+
+function renderReviewForm() {
+  return `<form class="review-form" onsubmit="submitProductReview(event)">
+    <div class="review-form-grid">
+      <div><label for="reviewOrder">Número do pedido</label><input id="reviewOrder" inputmode="numeric" required placeholder="Ex.: 125"></div>
+      <div><label for="reviewEmail">E-mail usado na compra</label><input id="reviewEmail" type="email" required placeholder="voce@email.com"></div>
+    </div>
+    <label style="margin-top:14px">Sua nota</label>
+    <div class="review-star-picker" role="radiogroup" aria-label="Nota da avaliação">${[1,2,3,4,5].map(value => `<button type="button" class="${value <= selectedReviewRating ? 'active' : ''}" onclick="setReviewRating(${value})" aria-label="${value} estrela${value > 1 ? 's' : ''}">★</button>`).join('')}</div>
+    <label for="reviewComment">Comentário</label><textarea id="reviewComment" minlength="8" maxlength="800" required placeholder="Conte como foi sua compra e o produto."></textarea>
+    <div class="review-form-actions"><button type="button" class="btn-secondary-act" onclick="toggleReviewForm()">Cancelar</button><button type="submit" class="review-action">Enviar avaliação</button></div>
+  </form>`;
+}
+
+function toggleReviewForm() {
+  reviewFormOpen = !reviewFormOpen;
+  selectedReviewRating = reviewFormOpen ? selectedReviewRating : 0;
+  renderProductReviews();
+}
+
+function setReviewRating(value) {
+  selectedReviewRating = value;
+  document.querySelectorAll('.review-star-picker button').forEach((button, index) => {
+    button.classList.toggle('active', index < value);
+  });
+}
+
+async function submitProductReview(event) {
+  event.preventDefault();
+  if (!selectedReviewRating) return toast('Escolha de 1 a 5 estrelas para avaliar.');
+  const button = event.currentTarget.querySelector('[type="submit"]');
+  const payload = {
+    pedido_id: document.getElementById('reviewOrder')?.value.trim(),
+    email: document.getElementById('reviewEmail')?.value.trim(),
+    produto_id: product.id,
+    nota: selectedReviewRating,
+    comentario: document.getElementById('reviewComment')?.value.trim()
+  };
+  button.disabled = true;
+  button.textContent = 'Enviando...';
+  try {
+    const response = await fetch(`${BACKEND_BASE}/engajamento/avaliacoes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.erro || 'Não foi possível enviar sua avaliação.');
+    reviewFormOpen = false;
+    selectedReviewRating = 0;
+    renderProductReviews();
+    toast('Avaliação enviada para aprovação. Obrigado!');
+  } catch (error) {
+    button.disabled = false;
+    button.textContent = 'Enviar avaliação';
+    toast(error.message || 'Não foi possível enviar sua avaliação.');
+  }
 }
 
 function getCurrentPurchaseLimit() {

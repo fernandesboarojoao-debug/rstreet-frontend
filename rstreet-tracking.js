@@ -2,8 +2,39 @@
   const CONFIG = {
     gaMeasurementId: '',
     metaPixelId: '',
-    currency: 'BRL'
+    currency: 'BRL',
+    engagementApi: 'https://rstreet-backend.onrender.com/api/engajamento/metricas'
   };
+
+  function getSessionId() {
+    const key = 'rstreet_metrics_session';
+    let id = sessionStorage.getItem(key);
+    if (!id) {
+      id = `rs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 14)}`;
+      sessionStorage.setItem(key, id);
+    }
+    return id;
+  }
+
+  function saveMetric(type, data = {}) {
+    if (!CONFIG.engagementApi || typeof fetch !== 'function') return;
+    const payload = {
+      tipo: type,
+      sessao_id: getSessionId(),
+      pagina: location.pathname.replace(/^\//, '') || 'index.html',
+      produto_id: data.id || data.produto_id || data.item_id || null,
+      produto_variante_id: data.produto_variante_id || null,
+      marca: data.marca || data.item_brand || '',
+      categoria: data.categoria || data.item_category || '',
+      valor: data.valor ?? data.preco ?? data.price ?? null
+    };
+    fetch(CONFIG.engagementApi, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(() => {});
+  }
 
   function hasValue(value) {
     return typeof value === 'string' && value.trim().length > 4 && !value.includes('COLE_');
@@ -69,6 +100,7 @@
         page_location: window.location.href,
         page_title: document.title
       });
+      saveMetric('page_view');
     },
     viewContent(product) {
       const item = normalizeItem(product || {});
@@ -84,6 +116,7 @@
         content_name: item.item_name,
         content_type: 'product'
       });
+      saveMetric('view_item', product || {});
     },
     addToCart(item) {
       const normalized = normalizeItem(item || {});
@@ -100,6 +133,7 @@
         content_name: normalized.item_name,
         content_type: 'product'
       });
+      saveMetric('add_to_cart', item || {});
     },
     beginCheckout(cart, total) {
       const items = Array.isArray(cart) ? cart.map(normalizeItem) : [];
@@ -113,6 +147,8 @@
         value: number(total),
         num_items: items.reduce((sum, item) => sum + item.quantity, 0)
       });
+      saveMetric('begin_checkout', { valor: total });
+      items.forEach(item => saveMetric('begin_checkout_item', item));
     },
     purchase(order) {
       const items = Array.isArray(order?.itens) ? order.itens.map(normalizeItem) : [];
@@ -129,10 +165,13 @@
         content_ids: items.map(item => item.item_id).filter(Boolean),
         content_type: 'product'
       });
+      saveMetric('purchase', { valor: order?.total });
+      items.forEach(item => saveMetric('purchase_item', item));
     },
     contactWhatsApp(label) {
       gaEvent('generate_lead', { method: 'whatsapp', label: String(label || '') });
       metaEvent('Contact', { content_name: String(label || 'WhatsApp R Street') });
+      saveMetric('whatsapp');
     }
   };
 

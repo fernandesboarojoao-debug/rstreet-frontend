@@ -498,6 +498,8 @@
     <button class="nav-item" onclick="showTab('produtos')"><span class="nav-icon">👕</span> Produtos</button>
     <button class="nav-item" onclick="showTab('importar')"><span class="nav-icon">📥</span> Importar</button>
     <button class="nav-item" onclick="showTab('pedidos')"><span class="nav-icon">🧾</span> Pedidos <span id="badge-pedidos" style="margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;display:none">0</span></button>
+    <button class="nav-item" onclick="showTab('avaliacoes')"><span class="nav-icon">★</span> Avaliações <span id="badge-avaliacoes" style="margin-left:auto;background:var(--gold);color:#111;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;display:none">0</span></button>
+    <button class="nav-item" onclick="showTab('metricas')"><span class="nav-icon">↗</span> Métricas</button>
     <div class="nav-section-title">Loja</div>
     <a class="nav-item" href="catalogo.html" target="_blank"><span class="nav-icon">🛍</span> Ver Catálogo</a>
     <a class="nav-item" href="sobre.html" target="_blank"><span class="nav-icon">🌐</span> Ver Loja/Sobre</a>
@@ -873,6 +875,50 @@
             <tr><td colspan="8" class="table-empty"><div class="table-empty-icon">⏳</div>Carregando pedidos...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div id="tab-avaliacoes" style="display:none">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Avaliações de clientes</div>
+          <div style="margin-top:6px;color:var(--gray1);font-size:13px">Aprove somente comentários de compras reais antes de mostrar no site.</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadAvaliacoes()">Atualizar</button>
+      </div>
+      <div class="stats-row" style="margin-bottom:24px">
+        <div class="stat-card"><div class="stat-label">Aguardando aprovação</div><div class="stat-num" id="review-pending" style="color:var(--gold)">0</div></div>
+        <div class="stat-card"><div class="stat-label">Publicadas</div><div class="stat-num" id="review-approved" style="color:var(--green)">0</div></div>
+        <div class="stat-card"><div class="stat-label">Recusadas</div><div class="stat-num" id="review-rejected" style="color:var(--red)">0</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Cliente</th><th>Produto</th><th>Nota</th><th>Comentário</th><th>Data</th><th>Ações</th></tr></thead>
+          <tbody id="avaliacoesTableBody"><tr><td colspan="6" class="table-empty">Abra esta tela para carregar as avaliações.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-metricas" style="display:none">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Métricas da loja</div>
+          <div style="margin-top:6px;color:var(--gray1);font-size:13px">Últimos 30 dias. Dados anônimos para entender interesse e jornada de compra.</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadMetricas()">Atualizar</button>
+      </div>
+      <div class="stats-row" style="margin-bottom:24px">
+        <div class="stat-card"><div class="stat-label">Visitas</div><div class="stat-num" id="metric-pages">0</div></div>
+        <div class="stat-card"><div class="stat-label">Produtos vistos</div><div class="stat-num" id="metric-products">0</div></div>
+        <div class="stat-card"><div class="stat-label">Adições ao carrinho</div><div class="stat-num" id="metric-carts">0</div></div>
+        <div class="stat-card"><div class="stat-label">Inícios de checkout</div><div class="stat-num" id="metric-checkouts">0</div></div>
+        <div class="stat-card"><div class="stat-label">Compras confirmadas</div><div class="stat-num" id="metric-purchases">0</div></div>
+        <div class="stat-card"><div class="stat-label">Cliques no WhatsApp</div><div class="stat-num" id="metric-whatsapp">0</div></div>
+      </div>
+      <div class="section-header" style="margin-top:8px"><div class="section-title" style="font-size:26px">Produtos com mais interesse</div></div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Produto</th><th>Marca</th><th>Visualizações</th><th>Carrinhos</th><th>Checkouts</th><th>Compras</th></tr></thead>
+        <tbody id="metricasTableBody"><tr><td colspan="6" class="table-empty">Abra esta tela para carregar as métricas.</td></tr></tbody></table>
       </div>
     </div>
 
@@ -3122,14 +3168,16 @@ async function saveTemaSite() {
   }
 }
 
-const tabs = { dashboard:'Dashboard', produtos:'Produtos', importar:'Importar Produtos', pedidos:'Pedidos', temas:'Temas do Site', config:'Configurações' };
+const tabs = { dashboard:'Dashboard', produtos:'Produtos', importar:'Importar Produtos', pedidos:'Pedidos', avaliacoes:'Avaliações', metricas:'Métricas', temas:'Temas do Site', config:'Configurações' };
 function showTab(name) {
   Object.keys(tabs).forEach(t => {
     document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
   });
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  const normalizedName = String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   document.querySelectorAll('.nav-item').forEach(b => {
-    if (b.textContent.trim().toLowerCase().includes(name.toLowerCase())) b.classList.add('active');
+    const label = String(b.textContent || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    if (label.includes(normalizedName)) b.classList.add('active');
   });
   document.getElementById('topbarTitle').textContent = tabs[name] || name;
   if (name === 'pedidos') {
@@ -3142,6 +3190,8 @@ function showTab(name) {
     resetTemaSiteForm();
   }
   if (name === 'config') loadHomeHighlightsAdmin();
+  if (name === 'avaliacoes') loadAvaliacoes();
+  if (name === 'metricas') loadMetricas();
 }
 
 // ─── PEDIDOS ─────────────────────────────────────────
@@ -3149,11 +3199,94 @@ let allPedidos = [];
 
 const ENVIO_LABEL = {
   aguardando_envio: 'Aguardando envio',
+  em_preparacao: 'Pedido em preparação',
   enviado: 'Enviado',
   entregue: 'Entregue',
   retirada_disponivel: 'Retirada disponível',
   retirado: 'Retirado'
 };
+
+let allAvaliacoes = [];
+
+function formatAdminDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('pt-BR');
+}
+
+function escapeAdminHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[char]);
+}
+
+async function loadAvaliacoes() {
+  const body = document.getElementById('avaliacoesTableBody');
+  if (!body) return;
+  body.innerHTML = '<tr><td colspan="6" class="table-empty">Carregando avaliações...</td></tr>';
+  try {
+    const res = await fetch(`${API}/avaliacoes`, { headers: authHeaders() });
+    if (!res.ok) throw new Error();
+    allAvaliacoes = await res.json();
+    renderAvaliacoes();
+  } catch {
+    body.innerHTML = '<tr><td colspan="6" class="table-empty">Não foi possível carregar as avaliações.</td></tr>';
+  }
+}
+
+function renderAvaliacoes() {
+  const pending = allAvaliacoes.filter(item => item.status === 'pendente');
+  const approved = allAvaliacoes.filter(item => item.status === 'aprovada');
+  const rejected = allAvaliacoes.filter(item => item.status === 'recusada');
+  document.getElementById('review-pending').textContent = pending.length;
+  document.getElementById('review-approved').textContent = approved.length;
+  document.getElementById('review-rejected').textContent = rejected.length;
+  const badge = document.getElementById('badge-avaliacoes');
+  if (badge) { badge.textContent = pending.length; badge.style.display = pending.length ? '' : 'none'; }
+  const body = document.getElementById('avaliacoesTableBody');
+  if (!allAvaliacoes.length) {
+    body.innerHTML = '<tr><td colspan="6" class="table-empty">Nenhuma avaliação recebida ainda.</td></tr>';
+    return;
+  }
+  body.innerHTML = allAvaliacoes.map(item => `<tr>
+    <td>${escapeAdminHtml(item.nome_cliente || 'Cliente')}</td>
+    <td>${escapeAdminHtml(item.produto_nome || `Produto #${item.produto_id}`)}<br><span style="color:var(--gray1);font-size:11px">Pedido #${escapeAdminHtml(item.pedido_id)}</span></td>
+    <td style="color:var(--gold);letter-spacing:1px">${'★'.repeat(Number(item.nota || 0))}</td>
+    <td style="max-width:310px;white-space:normal;line-height:1.5">${escapeAdminHtml(item.comentario)}</td>
+    <td>${formatAdminDate(item.criado_em)}<br><span style="font-size:11px;color:${item.status === 'aprovada' ? 'var(--green)' : item.status === 'recusada' ? 'var(--red)' : 'var(--gold)'}">${item.status === 'aprovada' ? 'Publicada' : item.status === 'recusada' ? 'Recusada' : 'Pendente'}</span></td>
+    <td style="white-space:nowrap">${item.status === 'pendente' ? `<button class="btn btn-gold btn-sm" onclick="setAvaliacaoStatus(${Number(item.id)}, 'aprovada')">Publicar</button> <button class="btn btn-outline btn-sm" onclick="setAvaliacaoStatus(${Number(item.id)}, 'recusada')">Recusar</button>` : `<button class="btn btn-outline btn-sm" onclick="setAvaliacaoStatus(${Number(item.id)}, 'pendente')">Reabrir</button>`}</td>
+  </tr>`).join('');
+}
+
+async function setAvaliacaoStatus(id, status) {
+  try {
+    const res = await fetch(`${API}/avaliacoes/${id}`, {
+      method: 'PATCH', headers: authHeaders({ 'Content-Type':'application/json' }), body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw new Error();
+    toast(status === 'aprovada' ? 'Avaliação publicada no produto.' : status === 'recusada' ? 'Avaliação recusada.' : 'Avaliação reaberta.', 'success');
+    loadAvaliacoes();
+  } catch { toast('Não foi possível atualizar a avaliação.', 'error'); }
+}
+
+async function loadMetricas() {
+  const body = document.getElementById('metricasTableBody');
+  if (!body) return;
+  body.innerHTML = '<tr><td colspan="6" class="table-empty">Carregando métricas...</td></tr>';
+  try {
+    const res = await fetch(`${API}/metricas`, { headers: authHeaders() });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const totals = data.totais || {};
+    document.getElementById('metric-pages').textContent = totals.page_view || 0;
+    document.getElementById('metric-products').textContent = totals.view_item || 0;
+    document.getElementById('metric-carts').textContent = totals.add_to_cart || 0;
+    document.getElementById('metric-checkouts').textContent = totals.begin_checkout || 0;
+    document.getElementById('metric-purchases').textContent = totals.purchase || 0;
+    document.getElementById('metric-whatsapp').textContent = totals.whatsapp || 0;
+    const products = data.produtos || [];
+    body.innerHTML = products.length ? products.map(item => `<tr><td>${escapeAdminHtml(item.nome)}</td><td>${escapeAdminHtml(item.marca || '-')}</td><td>${item.visualizacoes || 0}</td><td>${item.carrinhos || 0}</td><td>${item.checkouts || 0}</td><td>${item.compras || 0}</td></tr>`).join('') : '<tr><td colspan="6" class="table-empty">Ainda não há dados suficientes. As métricas começam a aparecer após o deploy.</td></tr>';
+  } catch {
+    body.innerHTML = '<tr><td colspan="6" class="table-empty">Não foi possível carregar as métricas.</td></tr>';
+  }
+}
 
 async function loadPedidos() {
   document.getElementById('pedidosTableBody').innerHTML =
@@ -3352,7 +3485,7 @@ async function atualizarStatus(id) {
 async function atualizarEnvio(id) {
   const p = allPedidos.find(x => x.id === id);
   if (!p) return;
-  const status = prompt(`Status de envio atual: ${ENVIO_LABEL[p.envio_status] || 'Aguardando envio'}\n\nDigite:\n- aguardando_envio\n- enviado\n- entregue\n- retirada_disponivel\n- retirado`, p.envio_status || 'aguardando_envio');
+  const status = prompt(`Status de envio atual: ${ENVIO_LABEL[p.envio_status] || 'Aguardando envio'}\n\nDigite:\n- aguardando_envio\n- em_preparacao\n- enviado\n- entregue\n- retirada_disponivel\n- retirado`, p.envio_status || 'aguardando_envio');
   if (!status) return;
   if (!ENVIO_LABEL[status]) return toast('Status de envio invalido.', 'error');
 
