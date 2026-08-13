@@ -599,11 +599,11 @@ async function refreshProduct() {
     if (r2.ok) allProducts = await r2.json();
     if (r3.ok) productVariants = await r3.json();
     syncCartWithStock();
-    finish();
+    finish(true);
   } catch {}
 }
 
-function finish() {
+function finish(isBackgroundRefresh = false) {
   if (!product) {
     document.getElementById('mainContent').innerHTML = `
       <div class="not-found">
@@ -616,7 +616,8 @@ function finish() {
   }
   renderProduct();
   renderRelated();
-  loadProductReviews();
+  // Estoque/preco podem atualizar em segundo plano sem fazer as avaliacoes piscarem.
+  if (!isBackgroundRefresh) loadProductReviews();
   document.title = product.nome + ' | R Street';
   updateProductSeo(product);
   document.getElementById('breadcrumbName').textContent = product.nome;
