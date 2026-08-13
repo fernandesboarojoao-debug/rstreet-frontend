@@ -530,6 +530,9 @@ let productViewTrackedKey = '';
 let productReviews = [];
 let reviewFormOpen = false;
 let selectedReviewRating = 0;
+let showAllProductReviews = false;
+let productDataSignature = '';
+let lastProductRefreshAt = 0;
 
 const productParams = new URLSearchParams(window.location.search);
 const productId = parseInt(productParams.get('id'));
@@ -567,6 +570,8 @@ async function init() {
     product = arr[0] || null;
     if (r2.ok) allProducts = await r2.json();
     if (r3.ok) productVariants = await r3.json();
+    productDataSignature = getProductDataSignature();
+    lastProductRefreshAt = Date.now();
   } catch (err) {
     console.warn('Supabase erro:', err.message);
     allProducts = getDemoProducts();
@@ -599,8 +604,16 @@ async function refreshProduct() {
     if (r2.ok) allProducts = await r2.json();
     if (r3.ok) productVariants = await r3.json();
     syncCartWithStock();
+    const nextSignature = getProductDataSignature();
+    lastProductRefreshAt = Date.now();
+    if (nextSignature === productDataSignature) return;
+    productDataSignature = nextSignature;
     finish(true);
   } catch {}
+}
+
+function getProductDataSignature() {
+  return JSON.stringify({ product, variants: productVariants, related: allProducts });
 }
 
 function finish(isBackgroundRefresh = false) {
@@ -1369,8 +1382,9 @@ function renderProductReviews() {
   if (!target || !product) return;
   const count = productReviews.length;
   const average = count ? productReviews.reduce((sum, item) => sum + Number(item.nota || 0), 0) / count : 0;
+  const visibleReviews = showAllProductReviews ? productReviews : productReviews.slice(0, 6);
   const list = count
-    ? `<div class="review-list">${productReviews.slice(0, 6).map(item => `
+    ? `<div class="review-list">${visibleReviews.map(item => `
       <article class="review-card">
         <div class="review-card-top"><span class="review-name">${escapeHtml(item.nome_cliente || 'Cliente R Street')}</span><span class="review-stars" aria-label="${Number(item.nota || 0)} de 5 estrelas">${reviewStars(item.nota)}</span></div>
         <p class="review-comment">${escapeHtml(item.comentario)}</p>
@@ -1384,6 +1398,7 @@ function renderProductReviews() {
         ${count ? `<div class="review-average"><strong>${average.toFixed(1).replace('.', ',')}</strong><span>${count} ${count === 1 ? 'avaliação' : 'avaliações'}</span></div>` : '<button class="review-action" type="button" onclick="toggleReviewForm()">Avaliar compra</button>'}
       </div>
       ${list}
+      ${count > 6 ? `<button class="btn-secondary-act" type="button" style="margin-top:14px" onclick="toggleAllProductReviews()">${showAllProductReviews ? 'Mostrar menos avaliações' : `Ver todas as ${count} avaliações`}</button>` : ''}
       ${count ? `<div style="margin-top:14px"><button class="review-action" type="button" onclick="toggleReviewForm()">Avaliar compra</button></div>` : ''}
       ${form}
     </div>`;
@@ -1405,6 +1420,11 @@ function renderReviewForm() {
 function toggleReviewForm() {
   reviewFormOpen = !reviewFormOpen;
   selectedReviewRating = reviewFormOpen ? selectedReviewRating : 0;
+  renderProductReviews();
+}
+
+function toggleAllProductReviews() {
+  showAllProductReviews = !showAllProductReviews;
   renderProductReviews();
 }
 
@@ -1628,9 +1648,15 @@ init();
 window.addEventListener('storage', e => {
   if (e.key === 'rstreet_products_changed') refreshProduct();
 });
+window.addEventListener('focus', () => {
+  if (Date.now() - lastProductRefreshAt > 12000) refreshProduct();
+});
+window.addEventListener('pageshow', () => {
+  if (Date.now() - lastProductRefreshAt > 12000) refreshProduct();
+});
 setInterval(() => {
   if (!document.hidden) refreshProduct();
-}, 15000);
+}, 45000);
 </script>
 <script src="rstreet-cart-drawer.js"></script>
 </body>

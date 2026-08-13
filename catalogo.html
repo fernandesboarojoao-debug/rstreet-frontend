@@ -1671,53 +1671,53 @@
       </button>
     </div>
     <div class="brand-orbit-group" aria-hidden="true">
-      <button type="button" class="brand-orbit-item" data-brand="Acostamento" onclick="setBrandFromCarousel('Acostamento')">
+      <button type="button" class="brand-orbit-item" data-brand="Acostamento" tabindex="-1">
         <span class="brand-orbit-logo"><img src="marca-acostamento-quadrado.png" alt="Acostamento" loading="lazy"></span>
         <span class="brand-orbit-name">Acostamento</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="Aeropostale" onclick="setBrandFromCarousel('Aeropostale')">
+      <button type="button" class="brand-orbit-item" data-brand="Aeropostale" tabindex="-1">
         <span class="brand-orbit-logo is-contain"><img src="marca-aeropostale.webp" alt="Aeropostale" loading="lazy"></span>
         <span class="brand-orbit-name">Aeropostale</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="Nike" onclick="setBrandFromCarousel('Nike')">
+      <button type="button" class="brand-orbit-item" data-brand="Nike" tabindex="-1">
         <span class="brand-orbit-logo is-contain"><img src="marca-nike.jpg" alt="Nike" loading="lazy"></span>
         <span class="brand-orbit-name">Nike</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="TXC" onclick="setBrandFromCarousel('TXC')">
+      <button type="button" class="brand-orbit-item" data-brand="TXC" tabindex="-1">
         <span class="brand-orbit-logo"><img src="marca-txc.jpg" alt="TXC" loading="lazy"></span>
         <span class="brand-orbit-name">TXC</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="Ogochi" onclick="setBrandFromCarousel('Ogochi')">
+      <button type="button" class="brand-orbit-item" data-brand="Ogochi" tabindex="-1">
         <span class="brand-orbit-logo"><img src="marca-ogochi-quadrado.png" alt="Ogochi" loading="lazy"></span>
         <span class="brand-orbit-name">Ogochi</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="Freeway" onclick="setBrandFromCarousel('Freeway')">
+      <button type="button" class="brand-orbit-item" data-brand="Freeway" tabindex="-1">
         <span class="brand-orbit-logo"><img src="marca-freeway.jpg" alt="Freeway" loading="lazy"></span>
         <span class="brand-orbit-name">Freeway</span>
       </button>
     </div>
     <div class="brand-orbit-group" aria-hidden="true">
-      <button type="button" class="brand-orbit-item" data-brand="Acostamento" onclick="setBrandFromCarousel('Acostamento')">
+      <button type="button" class="brand-orbit-item" data-brand="Acostamento" tabindex="-1">
         <span class="brand-orbit-logo"><img src="marca-acostamento-quadrado.png" alt="Acostamento" loading="lazy"></span>
         <span class="brand-orbit-name">Acostamento</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="Aeropostale" onclick="setBrandFromCarousel('Aeropostale')">
+      <button type="button" class="brand-orbit-item" data-brand="Aeropostale" tabindex="-1">
         <span class="brand-orbit-logo is-contain"><img src="marca-aeropostale.webp" alt="Aeropostale" loading="lazy"></span>
         <span class="brand-orbit-name">Aeropostale</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="Nike" onclick="setBrandFromCarousel('Nike')">
+      <button type="button" class="brand-orbit-item" data-brand="Nike" tabindex="-1">
         <span class="brand-orbit-logo is-contain"><img src="marca-nike.jpg" alt="Nike" loading="lazy"></span>
         <span class="brand-orbit-name">Nike</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="TXC" onclick="setBrandFromCarousel('TXC')">
+      <button type="button" class="brand-orbit-item" data-brand="TXC" tabindex="-1">
         <span class="brand-orbit-logo"><img src="marca-txc.jpg" alt="TXC" loading="lazy"></span>
         <span class="brand-orbit-name">TXC</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="Ogochi" onclick="setBrandFromCarousel('Ogochi')">
+      <button type="button" class="brand-orbit-item" data-brand="Ogochi" tabindex="-1">
         <span class="brand-orbit-logo"><img src="marca-ogochi-quadrado.png" alt="Ogochi" loading="lazy"></span>
         <span class="brand-orbit-name">Ogochi</span>
       </button>
-      <button type="button" class="brand-orbit-item" data-brand="Freeway" onclick="setBrandFromCarousel('Freeway')">
+      <button type="button" class="brand-orbit-item" data-brand="Freeway" tabindex="-1">
         <span class="brand-orbit-logo"><img src="marca-freeway.jpg" alt="Freeway" loading="lazy"></span>
         <span class="brand-orbit-name">Freeway</span>
       </button>
@@ -1935,12 +1935,17 @@ function getCatalogDataSignature(products = allProducts, variants = allProductVa
     products: products.map(p => ({
       id: p.id,
       nome: p.nome,
+      marca: p.marca,
+      categoria: p.categoria,
+      referencia: p.referencia,
       preco: p.preco,
       preco_antigo: p.preco_antigo,
       estoque: p.estoque,
       ativo: p.ativo,
       imagem_url: p.imagem_url,
       imagens: p.imagens,
+      criado_em: p.criado_em,
+      tamanhos: p.tamanhos,
     })),
     variants: variants.map(v => ({
       id: v.id,
@@ -3195,7 +3200,8 @@ function getProductSearchScore(product, search) {
 
 function updateCategoryCounts() {
   const active = allProducts.filter(p => p.ativo);
-  document.getElementById('cat-todos').textContent = active.length;
+  const allCount = document.getElementById('cat-todos');
+  if (allCount) allCount.textContent = active.length;
   ['Camisa','Camiseta','Regata','Calca','Bermuda','Tenis','Chinelo','Acessorio'].forEach(cat => {
     const el = document.getElementById('cat-' + cat);
     if (el) el.textContent = active.filter(p => categoryMatches(p.categoria, cat)).length;
@@ -4304,11 +4310,11 @@ try {
 window.addEventListener('focus', () => scheduleProductsRefresh(150));
 window.addEventListener('pageshow', () => scheduleProductsRefresh(150));
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && Date.now() - lastProductsRefreshAt > 1000) scheduleProductsRefresh(150);
+  if (!document.hidden && Date.now() - lastProductsRefreshAt > 12000) scheduleProductsRefresh(150);
 });
 setInterval(() => {
   if (!document.hidden) refreshProducts();
-}, 3000);
+}, 20000);
 </script>
 <script src="rstreet-cart-drawer.js"></script>
 </body>
