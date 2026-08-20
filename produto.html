@@ -533,21 +533,22 @@ let selectedReviewRating = 0;
 let showAllProductReviews = false;
 let productDataSignature = '';
 let lastProductRefreshAt = 0;
+let productLoadError = false;
+let productRetryTimer = null;
 
 const productParams = new URLSearchParams(window.location.search);
 const productId = parseInt(productParams.get('id'));
 const requestedColor = productParams.get('cor') || productParams.get('color') || '';
 
-async function init() {
+async function init(retryAttempt = 0) {
   if (!Number.isInteger(productId) || productId <= 0) {
     finish();
     return;
   }
 
-  // Sem credenciais configuradas → usa dados de exemplo
+  // Sem credenciais, nao mostramos produtos ficticios em producao.
   if (!SUPABASE_URL || !SUPABASE_KEY) {
-    allProducts = getDemoProducts();
-    product = allProducts.find(p => p.id === productId) || null;
+    productLoadError = true;
     finish();
     return;
   }
@@ -572,13 +573,25 @@ async function init() {
     if (r3.ok) productVariants = await r3.json();
     productDataSignature = getProductDataSignature();
     lastProductRefreshAt = Date.now();
+    productLoadError = false;
+    clearTimeout(productRetryTimer);
   } catch (err) {
-    console.warn('Supabase erro:', err.message);
-    allProducts = getDemoProducts();
-    product = allProducts.find(p => p.id === productId) || null;
+    console.warn('Falha ao buscar produto do Supabase:', err.message);
+    // Mantem o produto ja exibido e nunca troca a loja por dados de exemplo.
+    productLoadError = !product;
+    if (productLoadError && retryAttempt < 3) {
+      clearTimeout(productRetryTimer);
+      productRetryTimer = setTimeout(() => init(retryAttempt + 1), 800 * (retryAttempt + 1));
+    }
   }
 
   finish();
+}
+
+function retryProductLoad() {
+  clearTimeout(productRetryTimer);
+  productLoadError = false;
+  init();
 }
 
 async function refreshProduct() {
@@ -618,12 +631,15 @@ function getProductDataSignature() {
 
 function finish(isBackgroundRefresh = false) {
   if (!product) {
+    const failedToLoad = productLoadError;
     document.getElementById('mainContent').innerHTML = `
       <div class="not-found">
         <div class="not-found-icon">🔍</div>
-        <div class="not-found-title">Produto não encontrado</div>
-        <div class="not-found-sub">Este produto pode ter sido removido ou o link está incorreto.</div>
-        <a href="catalogo.html" style="margin-top:16px;color:var(--gold);text-decoration:none;font-weight:600;border:1px solid rgba(200,169,110,0.4);padding:12px 28px;border-radius:2px;display:inline-block;">← Voltar ao catálogo</a>
+        <div class="not-found-title">${failedToLoad ? 'Não foi possível carregar o produto' : 'Produto não encontrado'}</div>
+        <div class="not-found-sub">${failedToLoad ? 'Verifique sua conexão e tente novamente em alguns instantes.' : 'Este produto pode ter sido removido ou o link está incorreto.'}</div>
+        ${failedToLoad
+          ? '<button type="button" onclick="retryProductLoad()" style="margin-top:16px;color:var(--gold);background:transparent;font:inherit;font-weight:600;border:1px solid rgba(200,169,110,0.4);padding:12px 28px;border-radius:2px;cursor:pointer;">Tentar novamente</button>'
+          : '<a href="catalogo.html" style="margin-top:16px;color:var(--gold);text-decoration:none;font-weight:600;border:1px solid rgba(200,169,110,0.4);padding:12px 28px;border-radius:2px;display:inline-block;">← Voltar ao catálogo</a>'}
       </div>`;
     return;
   }

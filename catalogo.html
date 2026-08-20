@@ -1902,9 +1902,12 @@ const ENGAGEMENT_API    = 'https://rstreet-backend.onrender.com/api/engajamento'
 let allProducts = [];
 let allProductVariants = [];
 let filtered = [];
+let catalogLoadError = false;
 let catalogMediaState = {};
 let showcaseMediaState = {};
 let refreshTimer = null;
+let catalogRetryTimer = null;
+let themeRetryTimer = null;
 let isRefreshingProducts = false;
 let pendingProductsRefresh = false;
 let lastProductsRefreshAt = 0;
@@ -1965,17 +1968,16 @@ function getCatalogDataSignature(products = allProducts, variants = allProductVa
   });
 }
 
-async function loadProducts(silent = false) {
+async function loadProducts(silent = false, retryAttempt = 0) {
   if (isRefreshingProducts) {
     pendingProductsRefresh = true;
     return;
   }
   isRefreshingProducts = true;
   let unchanged = false;
-  // Se não tem credenciais salvas, cai nos dados de exemplo
+  // Sem credenciais, não mostramos dados fictícios em produção.
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.info('Supabase não configurado — abrindo admin.html para configurar.');
-    allProducts = getDemoProducts();
+    catalogLoadError = allProducts.length === 0;
     updateMaxPrice(silent);
     updateCategoryCounts();
     if (!checkCatalogUrlParams()) applyFilters();
@@ -1996,15 +1998,22 @@ async function loadProducts(silent = false) {
     if (!res.ok) throw new Error('Erro ' + res.status);
     allProducts = await res.json();
     await loadProductVariants();
+    catalogLoadError = false;
+    clearTimeout(catalogRetryTimer);
     const nextSignature = getCatalogDataSignature();
     unchanged = silent && nextSignature === catalogDataSignature;
     catalogDataSignature = nextSignature;
     syncCartWithStock();
     lastProductsRefreshAt = Date.now();
   } catch (err) {
-    console.warn('Falha ao buscar do Supabase, usando dados de exemplo:', err.message);
-    allProducts = getDemoProducts();
-    allProductVariants = [];
+    console.warn('Falha ao buscar produtos do Supabase:', err.message);
+    // Mantém os dados reais já exibidos. Nunca substitua a loja por produtos de exemplo.
+    catalogLoadError = allProducts.length === 0;
+    if (retryAttempt < 3) {
+      clearTimeout(catalogRetryTimer);
+      const delay = 800 * (retryAttempt + 1);
+      catalogRetryTimer = setTimeout(() => loadProducts(false, retryAttempt + 1), delay);
+    }
   } finally {
     isRefreshingProducts = false;
   }
@@ -2063,10 +2072,11 @@ async function loadProductVariants() {
         'Cache-Control': 'no-cache'
       }
     });
-    allProductVariants = res.ok ? await res.json() : [];
+    if (!res.ok) throw new Error('Erro ' + res.status);
+    allProductVariants = await res.json();
   } catch (err) {
     console.warn('Falha ao buscar variações do catálogo:', err.message);
-    allProductVariants = [];
+    // Mantém variações já carregadas, para não esconder cores e tamanhos numa oscilação.
   }
 }
 
@@ -2266,7 +2276,7 @@ function updateCampaignFilterBar() {
   }
 }
 
-async function loadActiveCatalogTheme() {
+async function loadActiveCatalogTheme(retryAttempt = 0) {
   try {
     const params = new URLSearchParams(window.location.search);
     const campaignSlug = params.get('campanha');
@@ -2278,7 +2288,7 @@ async function loadActiveCatalogTheme() {
         'Content-Type': 'application/json'
       }
     });
-    if (!res.ok) return;
+    if (!res.ok) throw new Error('Erro ' + res.status);
     const themes = (await res.json() || [])
       .filter(item => item.local_exibicao === 'catalogo' || item.local_exibicao === 'ambos');
     allCatalogThemes = themes;
@@ -2290,11 +2300,16 @@ async function loadActiveCatalogTheme() {
     catalogThemeIndex = Math.max(0, themes.findIndex(item => Number(item.id) === Number((currentCampaignTheme || activeCatalogTheme)?.id)));
     const themeToShow = currentCampaignTheme || activeCatalogTheme;
     if (themeToShow) applyCatalogThemeBanner(themeToShow, Boolean(currentCampaignTheme));
+    clearTimeout(themeRetryTimer);
     renderCatalogMenuCampaigns();
     updateCampaignFilterBar();
     startCatalogThemeCarousel();
   } catch (err) {
     console.warn('Falha ao buscar tema do catálogo:', err.message);
+    if (retryAttempt < 3) {
+      clearTimeout(themeRetryTimer);
+      themeRetryTimer = setTimeout(() => loadActiveCatalogTheme(retryAttempt + 1), 800 * (retryAttempt + 1));
+    }
   }
 }
 
@@ -3216,6 +3231,17 @@ function renderPage() {
   const start = (currentPage - 1) * PER_PAGE;
   const page = filtered.slice(start, start + PER_PAGE);
 
+  if (catalogLoadError && allProducts.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">!</div>
+        <div class="empty-state-title">Não foi possível carregar o catálogo</div>
+        <div class="empty-state-sub">Verifique sua conexão e tente novamente em alguns instantes.</div>
+        <button type="button" class="campaign-filter-clear" style="margin-top:18px" onclick="retryCatalogLoad()">Tentar novamente</button>
+      </div>`;
+    return;
+  }
+
   if (page.length === 0) {
     const emptyTitle = currentCampaignTheme ? 'Nenhum produto nesta campanha' : 'Nenhum produto encontrado';
     const emptySub = currentCampaignTheme
@@ -3234,6 +3260,14 @@ function renderPage() {
   grid.innerHTML = page.map(p => renderCard(p)).join('');
   prepareCatalogVideos(grid);
   enableWheelScrollForColorRails();
+}
+
+function retryCatalogLoad() {
+  clearTimeout(catalogRetryTimer);
+  clearTimeout(themeRetryTimer);
+  catalogLoadError = false;
+  loadActiveCatalogTheme();
+  loadProducts();
 }
 
 function enableWheelScrollForColorRails(root = document) {

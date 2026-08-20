@@ -1151,6 +1151,8 @@ function verificarLogin() {
 
 let allProducts = [];
 let allVariants = [];
+let adminLoadError = false;
+let adminRetryTimer = null;
 let editingId = null;
 let currentSizes = [];
 let currentVariants = [];
@@ -2076,16 +2078,24 @@ async function saveProductVariants(productId, variants) {
   });
 }
 
-async function loadProducts() {
+async function loadProducts(retryAttempt = 0) {
   try {
     const data = await sbFetch('/produtos?select=*&order=criado_em.desc');
     allProducts = data || [];
     await loadAllVariantsForDashboard();
+    adminLoadError = false;
+    clearTimeout(adminRetryTimer);
     toast('Produtos carregados do banco de dados.', 'success');
-  } catch {
-    allProducts = getDemo();
-    allVariants = [];
-    toast('Usando dados de exemplo. Configure o Supabase na aba Config.', 'info');
+  } catch (err) {
+    console.warn('Falha ao buscar produtos do Supabase:', err.message);
+    // Mantem os dados reais ja exibidos e nunca troca o painel por dados ficticios.
+    adminLoadError = allProducts.length === 0;
+    if (retryAttempt < 3) {
+      clearTimeout(adminRetryTimer);
+      adminRetryTimer = setTimeout(() => loadProducts(retryAttempt + 1), 800 * (retryAttempt + 1));
+    } else if (adminLoadError) {
+      toast('Não foi possível carregar os produtos. Tente atualizar novamente.', 'error');
+    }
   }
   updateStats();
   renderRecentTable();
@@ -2096,8 +2106,9 @@ async function loadProducts() {
 async function loadAllVariantsForDashboard() {
   try {
     allVariants = await supabaseProductRequest('/produto_variantes?select=*&ativo=eq.true&order=estoque.asc') || [];
-  } catch {
-    allVariants = [];
+  } catch (err) {
+    console.warn('Falha ao buscar variações do Supabase:', err.message);
+    // Mantem as variacoes ja carregadas para nao distorcer os indicadores do painel.
   }
 }
 
@@ -2177,7 +2188,7 @@ function renderAdminTable() {
 
   document.getElementById('adminTableBody').innerHTML = list.length
     ? list.map(p => buildRow(p)).join('')
-    : `<tr><td colspan="7" class="table-empty"><div class="table-empty-icon">📭</div>Nenhum produto encontrado.</td></tr>`;
+    : `<tr><td colspan="7" class="table-empty"><div class="table-empty-icon">${adminLoadError ? '!' : '📭'}</div>${adminLoadError ? 'Não foi possível carregar os produtos. Use Atualizar para tentar novamente.' : 'Nenhum produto encontrado.'}</td></tr>`;
 }
 
 function normalizeSearchText(value) {
