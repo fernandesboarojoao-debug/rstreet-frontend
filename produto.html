@@ -904,24 +904,32 @@ function changeImg(url, el) {
 }
 
 function getSizeChart(product) {
-  const text = `${product?.categoria || ''} ${product?.nome || ''} ${product?.descricao || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  if (text.includes('tenis') || text.includes('chinelo') || text.includes('sandalia') || text.includes('sapato') || text.includes('calcado') || text.includes('sapateni') || text.includes('bota') || text.includes('slide')) {
-    return { title: 'Tabela de medidas - Calçados', src: 'tabela-medidas-tenis.jpeg' };
-  }
-  if (text.includes('calca') || text.includes('jeans') || text.includes('bermuda') || text.includes('short') || text.includes('shorts') || text.includes('sarja') || text.includes('cargo')) {
+  const normalizeChartText = value => String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const categoryAndName = normalizeChartText(`${product?.categoria || ''} ${product?.nome || ''}`);
+  const description = normalizeChartText(product?.descricao);
+  const pantsTerms = ['calca', 'jeans', 'bermuda', 'short', 'shorts', 'sarja', 'cargo'];
+  const footwearTerms = ['tenis', 'chinelo', 'sandalia', 'sapato', 'calcado', 'sapateni', 'bota', 'slide'];
+  const topTerms = ['camisa', 'camiseta', 'polo', 'moletom', 'moleton', 'blusa', 'blusao', 'frio', 'regata', 'jaqueta', 'casaco', 'sueter'];
+  const containsAny = (text, terms) => terms.some(term => text.includes(term));
+
+  // Categoria e nome são fontes confiáveis; a descrição fica apenas como último recurso.
+  if (containsAny(categoryAndName, pantsTerms)) {
     return { title: 'Tabela de medidas - Calça', src: 'tabela-medidas-calca.jpg' };
   }
-  if (text.includes('camisa') || text.includes('camiseta') || text.includes('polo') || text.includes('moletom') || text.includes('moleton') || text.includes('blusa') || text.includes('blusao') || text.includes('frio') || text.includes('regata') || text.includes('jaqueta') || text.includes('casaco') || text.includes('sueter')) {
-    return { title: 'Tabela de medidas - Parte superior', src: 'tabela-medidas-camisa.jpg' };
-  }
-  const sizes = getProductChartSizes(product);
-  if (sizes.some(size => ['37', '39', '41', '43'].includes(size))) {
+  if (containsAny(categoryAndName, footwearTerms)) {
     return { title: 'Tabela de medidas - Calçados', src: 'tabela-medidas-tenis.jpeg' };
   }
+  if (containsAny(categoryAndName, topTerms)) {
+    return { title: 'Tabela de medidas - Parte superior', src: 'tabela-medidas-camisa.jpg' };
+  }
+  if (containsAny(description, pantsTerms)) return { title: 'Tabela de medidas - Calça', src: 'tabela-medidas-calca.jpg' };
+  if (containsAny(description, footwearTerms)) return { title: 'Tabela de medidas - Calçados', src: 'tabela-medidas-tenis.jpeg' };
+  if (containsAny(description, topTerms)) return { title: 'Tabela de medidas - Parte superior', src: 'tabela-medidas-camisa.jpg' };
+  const sizes = getProductChartSizes(product);
   if (sizes.some(size => ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XGG', 'EXG', 'EG'].includes(size))) {
     return { title: 'Tabela de medidas - Parte superior', src: 'tabela-medidas-camisa.jpg' };
   }
-  if (sizes.some(size => ['36', '38', '40', '42', '44', '46', '48', '50'].includes(size))) {
+  if (sizes.some(size => /^([3-4][0-9]|50)$/.test(size))) {
     return { title: 'Tabela de medidas - Calça', src: 'tabela-medidas-calca.jpg' };
   }
   return null;
