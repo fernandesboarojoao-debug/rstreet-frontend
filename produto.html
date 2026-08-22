@@ -920,7 +920,19 @@ function changeImg(url, el) {
 }
 
 function getSizeChart(product) {
-  const text = `${product?.categoria || ''} ${product?.nome || ''} ${product?.descricao || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const normalizeChartText = value => String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const category = normalizeChartText(product?.categoria);
+  // A categoria cadastrada pela loja tem prioridade sobre palavras soltas na descricao.
+  if (category.includes('calca') || category.includes('bermuda') || category.includes('short')) {
+    return { title: 'Tabela de medidas - Calça', src: 'tabela-medidas-calca.jpg' };
+  }
+  if (category.includes('tenis') || category.includes('chinelo') || category.includes('sandalia') || category.includes('sapato') || category.includes('calcado') || category.includes('sapateni') || category.includes('bota') || category.includes('slide')) {
+    return { title: 'Tabela de medidas - Calçados', src: 'tabela-medidas-tenis.jpeg' };
+  }
+  if (category.includes('camisa') || category.includes('camiseta') || category.includes('polo') || category.includes('moletom') || category.includes('moleton') || category.includes('blusa') || category.includes('regata') || category.includes('jaqueta') || category.includes('casaco') || category.includes('sueter')) {
+    return { title: 'Tabela de medidas - Parte superior', src: 'tabela-medidas-camisa.jpg' };
+  }
+  const text = normalizeChartText(`${product?.nome || ''} ${product?.descricao || ''}`);
   if (text.includes('tenis') || text.includes('chinelo') || text.includes('sandalia') || text.includes('sapato') || text.includes('calcado') || text.includes('sapateni') || text.includes('bota') || text.includes('slide')) {
     return { title: 'Tabela de medidas - Calçados', src: 'tabela-medidas-tenis.jpeg' };
   }
