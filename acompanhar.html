@@ -101,6 +101,17 @@ function escapeHtml(value) {
   })[char]);
 }
 
+function safeHttpUrl(value) {
+  const clean = String(value || '').trim();
+  if (!clean) return '';
+  try {
+    const url = new URL(clean);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
 function fmtMoney(value) {
   return 'R$ ' + Number(value || 0).toFixed(2).replace('.', ',');
 }
@@ -153,13 +164,14 @@ async function consultarPedido() {
     const p = data.pedido;
     const itens = data.itens || [];
     const updates = data.atualizacoes || [];
+    const trackingUrl = safeHttpUrl(p.rastreio_url);
     resultado.innerHTML = `
       <div class="row"><span>Pedido</span><strong>#${escapeHtml(p.id)}</strong></div>
       <div class="row"><span>Status do pagamento</span><strong>${escapeHtml(PAGAMENTO_LABEL[p.status] || p.status)}</strong></div>
       <div class="row"><span>Status do envio</span><strong>${escapeHtml(ENVIO_LABEL[p.envio_status] || 'Aguardando envio')}</strong></div>
       <div class="row"><span>Total</span><strong>${fmtMoney(p.total)}</strong></div>
       ${p.codigo_rastreio ? `<div class="row"><span>Rastreio</span><strong>${escapeHtml(p.codigo_rastreio)}</strong></div>` : ''}
-      ${p.rastreio_url ? `<a class="track" href="${escapeHtml(p.rastreio_url)}" target="_blank">Abrir rastreio</a>` : ''}
+      ${trackingUrl ? `<a class="track" href="${escapeHtml(trackingUrl)}" target="_blank" rel="noopener noreferrer">Abrir rastreio</a>` : ''}
        <div class="items">
         <strong>Itens</strong><br>
         ${itens.map(i => `${escapeHtml(i.quantidade)}x ${escapeHtml(i.nome_produto)}${i.cor ? ' - '+escapeHtml(i.cor) : ''}${i.tamanho ? ' / '+escapeHtml(i.tamanho) : ''}`).join('<br>') || 'Itens indisponíveis'}

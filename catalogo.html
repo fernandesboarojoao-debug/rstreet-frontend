@@ -1928,6 +1928,16 @@ let currentMobileCatalogMode = 'all';
 let currentPage = 1;
 let bestSellerProductIds = [];
 let suppressCatalogUrlUpdate = false;
+
+function isPublicCatalogTheme(theme) {
+  const status = String(theme?.status || '').toLowerCase();
+  if (status === 'ativo') return true;
+  if (status !== 'programado') return false;
+  const now = Date.now();
+  const start = theme?.inicio ? new Date(theme.inicio).getTime() : null;
+  const end = theme?.fim ? new Date(theme.fim).getTime() : null;
+  return (!Number.isFinite(start) || start <= now) && (!Number.isFinite(end) || end >= now);
+}
 const PER_PAGE = 12;
 
 // ─────────────────────────────────────────────
@@ -2290,6 +2300,7 @@ async function loadActiveCatalogTheme(retryAttempt = 0) {
     });
     if (!res.ok) throw new Error('Erro ' + res.status);
     const themes = (await res.json() || [])
+      .filter(isPublicCatalogTheme)
       .filter(item => item.local_exibicao === 'catalogo' || item.local_exibicao === 'ambos');
     allCatalogThemes = themes;
     activeCatalogTheme = themes[0] || null;
@@ -2667,7 +2678,7 @@ function updateCatalogActiveArea() {
     trail.innerHTML = chips.map(chip => `
       <span class="catalog-active-chip" title="${escapeAttr(chip.title || chip.label)}">
         <span>${escapeHtml(chip.label)}</span>
-        <button type="button" onclick="clearCatalogFilter('${chip.type}')" aria-label="Remover ${escapeAttr(chip.label)}">×</button>
+        <button type="button" onclick="clearCatalogFilter(${jsStringAttr(chip.type)})" aria-label="Remover ${escapeAttr(chip.label)}">×</button>
       </span>
     `).join('');
   }
@@ -3004,12 +3015,12 @@ function renderCategoryButton(category, target = 'sidebar') {
     ? value === 'todos'
     : (value !== 'todos' && categoryMatches(value, currentCategory));
   if (target === 'menu') {
-    return `<button class="catalog-mobile-menu-chip ${active ? 'active' : ''}" onclick="setCategoryFromMenu('${escapeAttr(value)}', this)">${escapeHtml(label)}</button>`;
+    return `<button class="catalog-mobile-menu-chip ${active ? 'active' : ''}" onclick="setCategoryFromMenu(${jsStringAttr(value)}, this)">${escapeHtml(label)}</button>`;
   }
   if (target === 'mobile') {
-    return `<button class="filter-btn ${active ? 'active' : ''}" onclick="setCategoryFilterMobile('${escapeAttr(value)}', this)">${escapeHtml(label)}</button>`;
+    return `<button class="filter-btn ${active ? 'active' : ''}" onclick="setCategoryFilterMobile(${jsStringAttr(value)}, this)">${escapeHtml(label)}</button>`;
   }
-  return `<div class="sidebar-option ${active ? 'active' : ''}" onclick="setCategoryFilter('${escapeAttr(value)}', this)">
+  return `<div class="sidebar-option ${active ? 'active' : ''}" onclick="setCategoryFilter(${jsStringAttr(value)}, this)">
     <span class="sidebar-option-label">${escapeHtml(label)}</span>
     <span class="sidebar-option-count">${count}</span>
   </div>`;
@@ -3043,10 +3054,10 @@ function renderCollectionCategoryMenu(mode, targetId) {
   const categories = getAvailableCategoriesForMode(mode);
   const total = categories.reduce((sum, item) => sum + Number(item.count || 0), 0);
   const allActive = currentMobileCatalogMode === mode && currentCategory === 'todos';
-  const allButton = `<button class="catalog-mobile-menu-chip ${allActive ? 'active' : ''}" onclick="setCollectionCategoryFromMenu('${mode}','todos', this)">Todos${total ? ` (${total})` : ''}</button>`;
+  const allButton = `<button class="catalog-mobile-menu-chip ${allActive ? 'active' : ''}" onclick="setCollectionCategoryFromMenu(${jsStringAttr(mode)}, 'todos', this)">Todos${total ? ` (${total})` : ''}</button>`;
   const items = categories.map(category => {
     const active = currentMobileCatalogMode === mode && currentCategory !== 'todos' && categoryMatches(category.value, currentCategory);
-    return `<button class="catalog-mobile-menu-chip ${active ? 'active' : ''}" onclick="setCollectionCategoryFromMenu('${mode}','${escapeAttr(category.value)}', this)">${escapeHtml(category.label)}${category.count ? ` (${category.count})` : ''}</button>`;
+    return `<button class="catalog-mobile-menu-chip ${active ? 'active' : ''}" onclick="setCollectionCategoryFromMenu(${jsStringAttr(mode)}, ${jsStringAttr(category.value)}, this)">${escapeHtml(category.label)}${category.count ? ` (${category.count})` : ''}</button>`;
   }).join('');
   target.innerHTML = categories.length
     ? allButton + items
@@ -3131,7 +3142,7 @@ function updateSmartFilterOptions() {
     ...colorItems.map(item => {
       const active = sameCatalogText(item.label, currentColor);
       const dot = `<span class="catalog-smart-swatch-dot" style="background:${escapeAttr(item.hex)}"></span>`;
-      return `<button type="button" class="catalog-smart-swatch ${active ? 'active' : ''}" onclick="setColorFilter('${escapeAttr(item.label)}')">${dot}${escapeHtml(item.label)}</button>`;
+      return `<button type="button" class="catalog-smart-swatch ${active ? 'active' : ''}" onclick="setColorFilter(${jsStringAttr(item.label)})">${dot}${escapeHtml(item.label)}</button>`;
     })
   ].join('') || '<span class="catalog-smart-empty">Nenhuma cor disponível.</span>';
   colorWrap.innerHTML = colorHtml;
@@ -3142,7 +3153,7 @@ function updateSmartFilterOptions() {
     ? '<span class="catalog-smart-empty">Escolha uma categoria para ver os tamanhos certos.</span>'
     : ([
       `<button type="button" class="catalog-smart-swatch ${currentSize === 'todos' ? 'active' : ''}" onclick="setSizeFilter('todos')">Todos</button>`,
-      ...sizeItems.map(size => `<button type="button" class="catalog-smart-swatch ${sameCatalogText(size, currentSize) ? 'active' : ''}" onclick="setSizeFilter('${escapeAttr(size)}')">${escapeHtml(size)}</button>`)
+      ...sizeItems.map(size => `<button type="button" class="catalog-smart-swatch ${sameCatalogText(size, currentSize) ? 'active' : ''}" onclick="setSizeFilter(${jsStringAttr(size)})">${escapeHtml(size)}</button>`)
     ].join('') || '<span class="catalog-smart-empty">Nenhum tamanho disponível.</span>');
   sizeWrap.innerHTML = sizeHtml;
   if (mobileSizeWrap) mobileSizeWrap.innerHTML = sizeHtml;
@@ -3292,6 +3303,7 @@ function enableWheelScroll(el) {
 }
 
 function renderCard(p) {
+  const productId = Number(p.id) || 0;
   const allColorGroups = getCatalogColorGroups(p.id);
   const state = catalogMediaState[p.id] || {};
   const searchText = normalizeSearchText(document.getElementById('searchInput')?.value || '');
@@ -3311,7 +3323,7 @@ function renderCard(p) {
   const badges = renderCatalogBadges(p, initialPrice, initialStock);
 
   const sizes = sortCatalogSizes(p.tamanhos || []).map(s =>
-    `<span class="size-tag available">${s}</span>`
+    `<span class="size-tag available">${escapeHtml(s)}</span>`
   ).join('');
 
   const oldPrice = renderCatalogOldPrice(initialPrice.preco_antigo);
@@ -3319,39 +3331,39 @@ function renderCard(p) {
 
   const imgContent = initialMedia
     ? renderCatalogMedia(p, initialMedia)
-    : `<div class="product-img-placeholder">👕<span>${p.marca}</span></div>`;
+    : `<div class="product-img-placeholder">👕<span>${escapeHtml(p.marca || 'R Street')}</span></div>`;
 
   const wppMsg = encodeURIComponent(`Olá! Tenho interesse no produto: *${p.nome}* (Ref: ${p.referencia || p.id}) - Valor: R$ ${p.preco.toFixed(2).replace('.',',')}`);
 
   return `
-  <div class="product-card" data-product-id="${p.id}" data-selected-color="${escapeAttr(initialColor)}" data-media-index="${initialIndex}" onclick="openCatalogProduct(${p.id})" style="cursor:pointer">
+  <div class="product-card" data-product-id="${productId}" data-selected-color="${escapeAttr(initialColor)}" data-media-index="${initialIndex}" onclick="openCatalogProduct(${productId})" style="cursor:pointer">
     <div class="product-img-wrap">
-      <div class="catalog-media-slot" id="catalog-media-${p.id}">
+      <div class="catalog-media-slot" id="catalog-media-${productId}">
         ${imgContent}
       </div>
-      ${initialMediaList.length > 1 ? renderCatalogMediaArrows(p.id) : ''}
+      ${initialMediaList.length > 1 ? renderCatalogMediaArrows(productId) : ''}
       ${renderCatalogColorSwatches(p, colorGroups)}
-      <div id="catalog-badges-${p.id}">${badges}</div>
+      <div id="catalog-badges-${productId}">${badges}</div>
       <div class="product-actions">
         <a class="action-btn" href="${initialUrl}" data-product-link title="Ver detalhes" onclick="event.stopPropagation()">🔍</a>
         <a class="action-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp">💬</a>
       </div>
     </div>
     <div class="product-body">
-      <div class="product-brand">${p.marca}</div>
-      <div class="product-name">${p.nome}</div>
-      <div class="product-ref">Ref: ${p.referencia || '#' + p.id}</div>
+      <div class="product-brand">${escapeHtml(p.marca || '')}</div>
+      <div class="product-name">${escapeHtml(p.nome || '')}</div>
+      <div class="product-ref">Ref: ${escapeHtml(p.referencia || '#' + productId)}</div>
       <div class="product-sizes">${sizes}</div>
       <div class="product-footer">
         <div>
-          <div id="catalog-old-price-${p.id}">${oldPrice}</div>
-          <div class="product-price" id="catalog-price-${p.id}">R$ ${formatCatalogPrice(initialPrice.preco)}</div>
-          <div class="product-installment" id="catalog-installment-${p.id}">${renderInstallmentText(initialPrice.preco)}</div>
-          <div class="product-pix-price" id="catalog-pix-${p.id}">At&eacute; 5% off no Pix</div>
+          <div id="catalog-old-price-${productId}">${oldPrice}</div>
+          <div class="product-price" id="catalog-price-${productId}">R$ ${formatCatalogPrice(initialPrice.preco)}</div>
+          <div class="product-installment" id="catalog-installment-${productId}">${renderInstallmentText(initialPrice.preco)}</div>
+          <div class="product-pix-price" id="catalog-pix-${productId}">At&eacute; 5% off no Pix</div>
           ${stockInfo}
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-          <button class="btn-cart" onclick="event.stopPropagation(); openCatalogProduct(${p.id})" id="cart-btn-${p.id}" ${initialStock <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${initialStock <= 0 ? 'Esgotado' : 'Escolher'}</button>
+          <button class="btn-cart" onclick="event.stopPropagation(); openCatalogProduct(${productId})" id="cart-btn-${productId}" ${initialStock <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${initialStock <= 0 ? 'Esgotado' : 'Escolher'}</button>
           <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
         </div>
       </div>
@@ -3398,7 +3410,7 @@ function renderShowcaseCard(product, badge = '', preferSale = false, showcaseKey
   const price = getCatalogGroupPrice(activeGroup, product);
   const oldPrice = Number(price.preco_antigo || 0);
   return `
-    <div class="showcase-card" data-showcase-key="${escapeAttr(showcaseKey)}" data-product-id="${product.id}" data-selected-color="${escapeAttr(color)}" data-media-index="${mediaIndex}" onclick="openShowcaseProduct('${escapeAttr(showcaseKey)}')">
+    <div class="showcase-card" data-showcase-key="${escapeAttr(showcaseKey)}" data-product-id="${Number(product.id) || 0}" data-selected-color="${escapeAttr(color)}" data-media-index="${mediaIndex}" onclick="openShowcaseProduct(${jsStringAttr(showcaseKey)})">
       <div class="showcase-card-media">
         <div class="showcase-media-slot" id="showcase-media-${escapeAttr(showcaseKey)}">
           ${activeMedia ? renderShowcaseMedia(product, activeMedia) : `<div class="product-img-placeholder">${escapeHtml(product.marca || 'R Street')}</div>`}
@@ -3428,8 +3440,8 @@ function renderShowcaseMedia(product, media) {
 
 function renderShowcaseMediaArrows(showcaseKey) {
   return `
-    <button type="button" class="catalog-media-arrow prev" aria-label="Midia anterior" onclick="moveShowcaseMedia(event, '${escapeAttr(showcaseKey)}', -1)">&#8249;</button>
-    <button type="button" class="catalog-media-arrow next" aria-label="Proxima midia" onclick="moveShowcaseMedia(event, '${escapeAttr(showcaseKey)}', 1)">&#8250;</button>`;
+    <button type="button" class="catalog-media-arrow prev" aria-label="Midia anterior" onclick="moveShowcaseMedia(event, ${jsStringAttr(showcaseKey)}, -1)">&#8249;</button>
+    <button type="button" class="catalog-media-arrow next" aria-label="Proxima midia" onclick="moveShowcaseMedia(event, ${jsStringAttr(showcaseKey)}, 1)">&#8250;</button>`;
 }
 
 function renderShowcaseColorSwatches(product, groups, selectedColor = '', showcaseKey = '') {
@@ -3442,7 +3454,7 @@ function renderShowcaseColorSwatches(product, groups, selectedColor = '', showca
         style="background:${escapeAttr(fallbackColor)}"
         title="${escapeAttr(group.cor)}"
         aria-label="Ver cor ${escapeAttr(group.cor)}"
-        onclick="selectShowcaseColor(event, '${escapeAttr(showcaseKey)}', '${escapeAttr(group.cor)}')">${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(group.cor)}" loading="lazy">` : ''}</button>`;
+        onclick="selectShowcaseColor(event, ${jsStringAttr(showcaseKey)}, ${jsStringAttr(group.cor)})">${image ? `<img src="${escapeAttr(image)}" alt="${escapeAttr(group.cor)}" loading="lazy">` : ''}</button>`;
     }).join('')}
   </div>`;
 }
@@ -3888,7 +3900,7 @@ function renderCatalogColorSwatches(product, groups) {
         style="background:${escapeAttr(fallbackColor)}"
         title="${escapeAttr(group.cor)}"
         aria-label="Ver cor ${escapeAttr(group.cor)}"
-        onclick="selectCatalogColor(event, ${product.id}, '${escapeAttr(group.cor)}', '${escapeAttr(image)}')">${swatchContent}</button>`;
+        onclick="selectCatalogColor(event, ${Number(product.id) || 0}, ${jsStringAttr(group.cor)}, ${jsStringAttr(image)})">${swatchContent}</button>`;
     }).join('')}
   </div>`;
 }
@@ -4056,6 +4068,10 @@ function escapeHtml(value) {
 
 function escapeAttr(value) {
   return escapeHtml(value).replace(/\\/g, '\\\\');
+}
+
+function jsStringAttr(value) {
+  return escapeHtml(JSON.stringify(String(value ?? '')));
 }
 
 function addToCart(id) {

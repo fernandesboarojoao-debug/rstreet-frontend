@@ -315,6 +315,16 @@ function updateCartBadge() {
 }
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/\\/g, '\\\\');
+}
+
 async function loadLatestProducts() {
   try {
     const [prodRes, varRes] = await Promise.all([
@@ -438,15 +448,15 @@ function render() {
   list.innerHTML = cart.map((item, idx) => `
     <div class="cart-item" id="item-${idx}">
       <div class="item-img">
-        ${item.imagem ? `<img src="${item.imagem}" alt="${item.nome}">` : '👕'}
+        ${item.imagem ? `<img src="${escapeAttr(item.imagem)}" alt="${escapeAttr(item.nome || 'Produto')}">` : '👕'}
       </div>
       <div class="item-info">
-        <div class="item-brand">${item.marca}</div>
-        <div class="item-name">${item.nome}</div>
+        <div class="item-brand">${escapeHtml(item.marca || 'R Street')}</div>
+        <div class="item-name">${escapeHtml(item.nome || 'Produto')}</div>
         <div class="item-meta">
-          ${item.cor ? `<span>Cor: ${item.cor}</span>` : ''}
-          ${item.tamanho ? `<span>Tamanho: ${item.tamanho}</span>` : ''}
-          <span>Ref: ${item.referencia || '#'+item.id}</span>
+          ${item.cor ? `<span>Cor: ${escapeHtml(item.cor)}</span>` : ''}
+          ${item.tamanho ? `<span>Tamanho: ${escapeHtml(item.tamanho)}</span>` : ''}
+          <span>Ref: ${escapeHtml(item.referencia || '#'+item.id)}</span>
         </div>
         <div class="item-price">${fmt(item.preco * item.qty)}</div>
         ${item.qty > 1 ? `<div style="font-size:12px;color:var(--gray-400);margin-top:2px">${fmt(item.preco)} cada</div>` : ''}
@@ -518,7 +528,11 @@ function clearCart() {
 function toast(msg) {
   const el = document.createElement('div');
   el.className = 'toast';
-  el.innerHTML = `<span>🗑</span><span>${msg}</span>`;
+  const icon = document.createElement('span');
+  const text = document.createElement('span');
+  icon.textContent = '🗑';
+  text.textContent = String(msg || '');
+  el.append(icon, text);
   document.getElementById('toastWrap').appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }

@@ -285,7 +285,7 @@ function escapeAttr(value) {
 function safeImageUrl(value) {
   const url = String(value || '').trim();
   if (!url) return '';
-  if (/^(https?:|data:image\/)/i.test(url)) return url;
+  if (/^https?:\/\//i.test(url) || /^data:image\/(?:jpeg|png|webp|gif);base64,/i.test(url)) return url;
   return '';
 }
 

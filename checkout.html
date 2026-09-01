@@ -515,6 +515,32 @@ function getCart() { return JSON.parse(localStorage.getItem('rstreet_cart') || '
 function saveCart(cart) { localStorage.setItem('rstreet_cart', JSON.stringify(cart)); }
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/\\/g, '\\\\');
+}
+
+function jsStringAttr(value) {
+  return escapeHtml(JSON.stringify(String(value ?? '')));
+}
+
+function safeMercadoPagoUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    const host = url.hostname.toLowerCase();
+    const isMercadoPago = host === 'mercadopago.com' || host.endsWith('.mercadopago.com') ||
+      host === 'mercadopago.com.br' || host.endsWith('.mercadopago.com.br');
+    return url.protocol === 'https:' && isMercadoPago ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
 function getPixDiscount(subtotal) {
   return Math.round(Math.max(0, Number(subtotal || 0)) * PIX_DISCOUNT_RATE * 100) / 100;
 }
@@ -620,12 +646,12 @@ function renderSummary() {
   document.getElementById('osSummaryItems').innerHTML = cart.map(item => `
     <div class="os-item">
       <div class="os-item-img">
-        ${item.imagem ? `<img src="${item.imagem}" alt="${item.nome}">` : '👕'}
+        ${item.imagem ? `<img src="${escapeAttr(item.imagem)}" alt="${escapeAttr(item.nome || 'Produto')}">` : '👕'}
       </div>
       <div class="os-item-info">
-        <div class="os-item-name">${item.nome}</div>
-        ${item.cor ? `<div class="os-item-meta">Cor: ${item.cor}</div>` : ''}
-        <div class="os-item-meta">${item.marca} · Qtd: ${item.qty}${item.tamanho ? ' · ' + item.tamanho : ''}</div>
+        <div class="os-item-name">${escapeHtml(item.nome || 'Produto')}</div>
+        ${item.cor ? `<div class="os-item-meta">Cor: ${escapeHtml(item.cor)}</div>` : ''}
+        <div class="os-item-meta">${escapeHtml(item.marca || 'R Street')} · Qtd: ${Math.max(1, Number(item.qty) || 1)}${item.tamanho ? ' · ' + escapeHtml(item.tamanho) : ''}</div>
       </div>
       <div class="os-item-price">${fmt(item.preco * item.qty)}</div>
     </div>
@@ -691,19 +717,21 @@ function calcularFretesPorEndereco(cidade, estado) {
 }
 
 function renderFreteOptions(opcoes) {
-  document.getElementById('freteOptions').innerHTML = opcoes.map((op, i) => `
-    <label class="frete-option" onclick="selectFrete(this, ${op.valor.toFixed(2)}, '${op.nome.replace(/'/g, "\\'")}')">
-      <input type="radio" name="frete" value="${op.valor.toFixed(2)}">
+  document.getElementById('freteOptions').innerHTML = opcoes.map(op => {
+    const valor = Math.max(0, Number(op.valor) || 0);
+    return `
+    <label class="frete-option" onclick="selectFrete(this, ${valor.toFixed(2)}, ${jsStringAttr(op.nome)})">
+      <input type="radio" name="frete" value="${valor.toFixed(2)}">
       <div class="frete-option-label">
-        <span>${op.icon}</span>
+        <span>${escapeHtml(op.icon || '')}</span>
         <div>
-          <div>${op.nome}</div>
-          <div class="frete-option-days">${op.prazo}</div>
+          <div>${escapeHtml(op.nome || 'Entrega')}</div>
+          <div class="frete-option-days">${escapeHtml(op.prazo || '')}</div>
         </div>
       </div>
-      <div class="frete-option-price"${op.valor === 0 ? ' style="color:var(--green)"' : ''}>${op.valor === 0 ? 'Grátis' : fmt(op.valor)}</div>
+      <div class="frete-option-price"${valor === 0 ? ' style="color:var(--green)"' : ''}>${valor === 0 ? 'Grátis' : fmt(valor)}</div>
     </label>
-  `).join('');
+  `}).join('');
 }
 
 async function buscarCEP() {
@@ -851,8 +879,10 @@ async function finalizarCompra() {
     // Salva pedido no localStorage para a página de confirmação
     localStorage.setItem('rstreet_checkout_cart_backup', JSON.stringify(cart));
     localStorage.setItem('rstreet_pedido', JSON.stringify({ ...pedido, pedido_id: data.pedido_id }));
-    // Redireciona para o Mercado Pago
-    window.location.href = data.init_point;
+    // Redireciona somente para o checkout oficial do Mercado Pago.
+    const paymentUrl = safeMercadoPagoUrl(data.init_point);
+    if (!paymentUrl) throw new Error('O link seguro de pagamento não foi recebido');
+    window.location.href = paymentUrl;
   } catch (err) {
     showAlert('Erro ao processar pedido: ' + err.message + '. Tente novamente ou entre em contato via WhatsApp.', 'error');
     btn.classList.remove('loading');
@@ -862,8 +892,16 @@ async function finalizarCompra() {
 
 // ─── ALERT ──────────────────────────────────
 function showAlert(msg, type) {
-  document.getElementById('alertArea').innerHTML =
-    `<div class="alert alert-${type}"><span>${type==='error'?'❌':'💡'}</span><span>${msg}</span></div>`;
+  const area = document.getElementById('alertArea');
+  const alert = document.createElement('div');
+  const icon = document.createElement('span');
+  const text = document.createElement('span');
+  const safeType = type === 'error' ? 'error' : 'info';
+  alert.className = `alert alert-${safeType}`;
+  icon.textContent = safeType === 'error' ? '❌' : '💡';
+  text.textContent = String(msg || '');
+  alert.append(icon, text);
+  area.replaceChildren(alert);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function clearAlert() { document.getElementById('alertArea').innerHTML = ''; }

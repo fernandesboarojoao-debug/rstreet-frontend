@@ -1997,6 +1997,16 @@
     }
   }
 
+  function isPublicSiteTheme(theme) {
+    const status = String(theme?.status || '').toLowerCase();
+    if (status === 'ativo') return true;
+    if (status !== 'programado') return false;
+    const now = Date.now();
+    const start = theme?.inicio ? new Date(theme.inicio).getTime() : null;
+    const end = theme?.fim ? new Date(theme.fim).getTime() : null;
+    return (!Number.isFinite(start) || start <= now) && (!Number.isFinite(end) || end >= now);
+  }
+
   async function loadActiveSiteTheme() {
     try {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/temas_site?select=*&order=criado_em.desc`, {
@@ -2005,6 +2015,7 @@
       if (!res.ok) return;
       const themes = await res.json();
       const theme = (Array.isArray(themes) ? themes : [])
+        .filter(isPublicSiteTheme)
         .find(item => item.local_exibicao === 'home' || item.local_exibicao === 'ambos');
       applySiteTheme(theme);
     } catch {}

@@ -747,12 +747,12 @@ function renderProduct() {
 
   const mainMedia = activeMedia
     ? renderMainMedia(activeMedia, p.nome)
-    : `<div class="gallery-placeholder">👕<span>${p.marca || 'R Street'}</span></div>`;
+    : `<div class="gallery-placeholder">👕<span>${escapeHtml(p.marca || 'R Street')}</span></div>`;
 
   const thumbs = medias.length > 1 ? `
     <div class="gallery-thumbs">
       ${medias.map((media, i) => `
-        <div class="thumb ${i===activeMediaIndex?'active':''}" onclick="changeMedia('${escapeAttr(media.url)}', '${media.type}', this)">
+        <div class="thumb ${i===activeMediaIndex?'active':''}" onclick="changeMedia(${jsStringAttr(media.url)}, ${jsStringAttr(media.type)}, this)">
           ${renderThumbMedia(media, i)}
         </div>`).join('')}
     </div>` : '';
@@ -766,8 +766,8 @@ function renderProduct() {
 
   const colors = hasVariants ? getVariantColors().map(c => {
     const data = getColorData(c);
-    return `<button class="color-btn ${selectedColor === c ? 'selected' : ''}" onclick="selectColor('${escapeAttr(c)}')" title="${escapeAttr(c)}" aria-label="Cor ${escapeAttr(c)}">
-      <span class="color-thumb">${data.thumbnail ? `<img src="${escapeAttr(data.thumbnail)}" alt="${escapeAttr(c)}">` : `<span class="color-swatch" style="background:${data.cor_hex || getColorValue(c)}"></span>`}</span>
+    return `<button class="color-btn ${selectedColor === c ? 'selected' : ''}" onclick="selectColor(${jsStringAttr(c)})" title="${escapeAttr(c)}" aria-label="Cor ${escapeAttr(c)}">
+      <span class="color-thumb">${data.thumbnail ? `<img src="${escapeAttr(data.thumbnail)}" alt="${escapeAttr(c)}">` : `<span class="color-swatch" style="background:${escapeAttr(data.cor_hex || getColorValue(c))}"></span>`}</span>
       <span class="color-name">${escapeHtml(c)}</span>
     </button>`;
   }).join('') : '';
@@ -775,9 +775,9 @@ function renderProduct() {
   const sizes = hasVariants ? getVariantSizes().map(s => {
     const variant = getVariantFor(selectedColor, s);
     const disabled = !variant || variant.estoque <= 0;
-    return `<button class="size-btn ${selectedSize === s ? 'selected' : ''}" onclick="selectSize('${escapeAttr(s)}', this)" ${disabled ? 'disabled' : ''}>${escapeHtml(s)}</button>`;
+    return `<button class="size-btn ${selectedSize === s ? 'selected' : ''}" onclick="selectSize(${jsStringAttr(s)}, this)" ${disabled ? 'disabled' : ''}>${escapeHtml(s)}</button>`;
   }).join('') : sortSizes(p.tamanhos || []).map(s =>
-    `<button class="size-btn" onclick="selectSize('${escapeAttr(s)}', this)">${escapeHtml(s)}</button>`).join('');
+    `<button class="size-btn" onclick="selectSize(${jsStringAttr(s)}, this)">${escapeHtml(s)}</button>`).join('');
 
   const addText = addDisabled
     ? (hasVariants ? 'Escolha cor e tamanho' : 'Produto esgotado')
@@ -787,9 +787,9 @@ function renderProduct() {
     <div class="product-page">
       <div class="gallery">
         <div class="product-mobile-head">
-          <div class="product-brand-tag">${p.marca || 'R Street'}</div>
-          <h1 class="product-name">${p.nome}</h1>
-          <div class="product-ref">Ref: ${p.referencia || '#'+p.id}${p.categoria ? ' · '+p.categoria : ''}</div>
+          <div class="product-brand-tag">${escapeHtml(p.marca || 'R Street')}</div>
+          <h1 class="product-name">${escapeHtml(p.nome)}</h1>
+          <div class="product-ref">Ref: ${escapeHtml(p.referencia || '#'+p.id)}${p.categoria ? ' · '+escapeHtml(p.categoria) : ''}</div>
         </div>
         <div class="gallery-main">
           ${mainMedia}
@@ -801,9 +801,9 @@ function renderProduct() {
       </div>
       <div class="product-info">
         <div class="product-info-head">
-        <div class="product-brand-tag">${p.marca || 'R Street'}</div>
-        <h1 class="product-name">${p.nome}</h1>
-        <div class="product-ref">Ref: ${p.referencia || '#'+p.id}${p.categoria ? ' · '+p.categoria : ''}</div>
+        <div class="product-brand-tag">${escapeHtml(p.marca || 'R Street')}</div>
+        <h1 class="product-name">${escapeHtml(p.nome)}</h1>
+        <div class="product-ref">Ref: ${escapeHtml(p.referencia || '#'+p.id)}${p.categoria ? ' · '+escapeHtml(p.categoria) : ''}</div>
 
         </div>
 
@@ -866,9 +866,9 @@ function renderProduct() {
         ${renderProductAccordions(p)}
 
         <div class="details-list">
-          ${p.marca ? `<div class="detail-item"><span class="detail-key">Marca</span><span class="detail-val">${p.marca}</span></div>` : ''}
-          ${p.categoria ? `<div class="detail-item"><span class="detail-key">Categoria</span><span class="detail-val">${p.categoria}</span></div>` : ''}
-          ${p.referencia ? `<div class="detail-item"><span class="detail-key">Referência</span><span class="detail-val">${p.referencia}</span></div>` : ''}
+          ${p.marca ? `<div class="detail-item"><span class="detail-key">Marca</span><span class="detail-val">${escapeHtml(p.marca)}</span></div>` : ''}
+          ${p.categoria ? `<div class="detail-item"><span class="detail-key">Categoria</span><span class="detail-val">${escapeHtml(p.categoria)}</span></div>` : ''}
+          ${p.referencia ? `<div class="detail-item"><span class="detail-key">Referência</span><span class="detail-val">${escapeHtml(p.referencia)}</span></div>` : ''}
           ${(p.tamanhos||[]).length ? `<div class="detail-item"><span class="detail-key">Tamanhos</span><span class="detail-val">${sortSizes(p.tamanhos).join(' · ')}</span></div>` : ''}
         </div>
 
@@ -965,7 +965,7 @@ function getProductChartSizes(product) {
 function renderSizeChartButton(product) {
   const chart = getSizeChart(product);
   if (!chart) return '';
-  return `<button type="button" class="size-chart-trigger" onclick="openSizeChart('${escapeAttr(chart.title)}', '${escapeAttr(chart.src)}')">
+  return `<button type="button" class="size-chart-trigger" onclick="openSizeChart(${jsStringAttr(chart.title)}, ${jsStringAttr(chart.src)})">
     <span><strong>Tabela de medidas</strong><br>Confira as medidas antes de escolher o tamanho</span>
     <span>Ver tabela</span>
   </button>`;
@@ -1325,6 +1325,10 @@ function escapeAttr(value) {
   return escapeHtml(value).replace(/\\/g, '\\\\');
 }
 
+function jsStringAttr(value) {
+  return escapeHtml(JSON.stringify(String(value ?? '')));
+}
+
 function getColorValue(cor) {
   const key = String(cor || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const colors = {
@@ -1374,11 +1378,12 @@ function renderRelated() {
   if (title) title.textContent = sameBrand.length ? `Mais da ${product.marca}` : 'Você também pode gostar';
   document.getElementById('relatedGrid').innerHTML = rel.map(p => {
     const imgs = Array.isArray(p.imagens) && p.imagens.length ? p.imagens : p.imagem_url ? [p.imagem_url] : [];
-    return `<a class="related-card" href="produto.html?id=${p.id}">
-      <div class="related-img">${imgs.length ? `<img src="${imgs[0]}" alt="${p.nome}">` : '👕'}</div>
+    const relatedId = Number(p.id) || 0;
+    return `<a class="related-card" href="produto.html?id=${relatedId}">
+      <div class="related-img">${imgs.length ? `<img src="${escapeAttr(imgs[0])}" alt="${escapeAttr(p.nome)}">` : '👕'}</div>
       <div class="related-body">
-        <div class="related-brand">${p.marca}</div>
-        <div class="related-name">${p.nome}</div>
+        <div class="related-brand">${escapeHtml(p.marca)}</div>
+        <div class="related-name">${escapeHtml(p.nome)}</div>
         <div class="related-price">R$ ${fmt(p.preco)}</div>
         <div class="related-installment">${renderInstallmentText(p.preco)}</div>
         <div class="related-pix">At&eacute; 5% off no Pix</div>
@@ -1654,7 +1659,9 @@ function copyLink() {
 function toast(msg) {
   const el = document.createElement('div');
   el.className = 'toast';
-  el.innerHTML = `<span>${msg}</span>`;
+  const text = document.createElement('span');
+  text.textContent = String(msg || '');
+  el.appendChild(text);
   document.getElementById('toastWrap').appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }
