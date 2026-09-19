@@ -1138,6 +1138,8 @@ let adminRetryTimer = null;
 let editingId = null;
 let currentSizes = [];
 let currentVariants = [];
+let variantsLoaded = true;
+let variantLoadVersion = 0;
 let selectedVariantColorKey = null;
 let importRows = [];
 let homeHighlightsState = [];
@@ -1528,6 +1530,7 @@ function jsStringAttr(value) {
 function normalizeVariant(item) {
   return {
     id: item.id || null,
+    estoque_original: item.estoque_original ?? item.estoque,
     cor: String(item.cor || '').trim(),
     tamanho: String(item.tamanho || '').trim(),
     estoque: Math.max(0, parseInt(item.estoque, 10) || 0),
@@ -1573,13 +1576,18 @@ function applyVariantsToProductPayload(payload, variants) {
 }
 
 async function loadProductVariantsIntoModal(productId) {
+  const loadVersion = ++variantLoadVersion;
+  variantsLoaded = false;
   const grid = document.getElementById('variantGrid');
   if (grid) grid.innerHTML = '<div class="variant-empty">Carregando combinacoes...</div>';
   try {
     const data = await productVariantsRequest(productId);
+    if (loadVersion !== variantLoadVersion || editingId !== productId) return;
     currentVariants = (data || []).map(normalizeVariant);
+    variantsLoaded = true;
     renderVariantGrid();
   } catch {
+    if (loadVersion !== variantLoadVersion || editingId !== productId) return;
     currentVariants = [];
     renderVariantGrid();
     toast('Não foi possível carregar as combinações de cor e tamanho.', 'error');
@@ -2244,6 +2252,8 @@ function buildRow(p, simple = false) {
 // MODAL PRODUTO
 // ─────────────────────────────────────────────────────
 function openProductModal(id = null) {
+  variantLoadVersion++;
+  variantsLoaded = !id;
   editingId = id;
   currentSizes = [];
   currentVariants = [];
@@ -2295,6 +2305,7 @@ function openProductModal(id = null) {
 }
 
 function closeProductModal() {
+  variantLoadVersion++;
   document.getElementById('productModal').classList.remove('open');
   const tabs = document.getElementById('productColorTabs');
   if (tabs) tabs.innerHTML = '';
@@ -2357,6 +2368,7 @@ function removeSize(s) {
 }
 
 async function saveProduct() {
+  if (!variantsLoaded) return toast('Aguarde o carregamento das variações ou reabra o produto antes de salvar.', 'error');
   const nome = document.getElementById('f-nome').value.trim();
   const marca = document.getElementById('f-marca').value;
   const preco = parseFloat(document.getElementById('f-preco').value);

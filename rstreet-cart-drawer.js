@@ -4,6 +4,7 @@
   const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';
   let stockReady = false;
   let stockRefreshPromise = null;
+  let returnFocus = null;
 
   function money(value) {
     return 'R$ ' + Number(value || 0).toFixed(2).replace('.', ',');
@@ -74,7 +75,8 @@
 
     const cart = getCart();
     updateBadges(cart);
-    countEl.textContent = `${getCartCount(cart)} item(ns)`;
+    const count = getCartCount(cart);
+    countEl.textContent = `${count} ${count === 1 ? 'item' : 'itens'}`;
     subtotalEl.textContent = money(cart.reduce((sum, item) => sum + Number(item.preco || 0) * Number(item.qty || 0), 0));
     if (checkoutEl) {
       checkoutEl.classList.toggle('is-checking', !stockReady || !cart.length);
@@ -136,9 +138,11 @@
     showDrawerNotice.timer = setTimeout(() => el.classList.remove('show'), 2600);
   }
 
-  async function refreshCartStock() {
+  async function refreshCartStock(attempt = 0) {
     if (stockRefreshPromise) return stockRefreshPromise;
     const cart = getCart();
+    const snapshot = JSON.stringify(cart);
+    let retry = false;
     if (!cart.length) {
       stockReady = true;
       return;
@@ -151,11 +155,18 @@
         const ids = productIds.join(',');
         const headers = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
         const [prodRes, varRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/produtos?id=in.(${ids})&select=id,estoque,ativo`, { headers }),
+          fetch(`${SUPABASE_URL}/rest/v1/produtos?id=in.(${ids})&select=id,estoque,ativo,preco`, { headers }),
           fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?produto_id=in.(${ids})&select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, { headers })
         ]);
         if (!prodRes.ok || !varRes.ok) throw new Error('Falha ao consultar estoque.');
         const [products, variants] = await Promise.all([prodRes.json(), varRes.json()]);
+        if (JSON.stringify(getCart()) !== snapshot) {
+          stockReady = false;
+          retry = attempt < 2;
+          renderDrawer();
+          if (!retry) showDrawerNotice('O carrinho mudou. Abra novamente para confirmar os itens.');
+          return;
+        }
         const notices = [];
         const consolidados = new Map();
 
@@ -174,6 +185,7 @@
           }
 
           let estoque = Math.max(0, Number(product.estoque) || 0);
+          item = { ...item, preco: Number(product.preco) };
           const hasVariants = variants.some(v => Number(v.produto_id) === Number(item.id) && v.ativo !== false);
           if (hasVariants && !item.produto_variante_id) {
             notices.push(`${item.nome || 'Produto'} precisa de cor e tamanho e foi removido.`);
@@ -182,7 +194,7 @@
 
           if (item.produto_variante_id) {
             const variant = variants.find(v => Number(v.id) === Number(item.produto_variante_id));
-            if (!variant || variant.ativo === false || Number(variant.estoque) <= 0) {
+            if (!variant || Number(variant.produto_id) !== Number(item.id) || variant.ativo === false || Number(variant.estoque) <= 0) {
               notices.push(`${item.nome || 'Produto'} esgotou e foi removido.`);
               return null;
             }
@@ -212,6 +224,7 @@
         showDrawerNotice('Não foi possível confirmar o estoque agora. Revise o carrinho antes de finalizar.');
       } finally {
         stockRefreshPromise = null;
+        if (retry) return refreshCartStock(attempt + 1);
       }
     })();
 
@@ -220,6 +233,7 @@
 
   function openDrawer(event) {
     if (event) event.preventDefault();
+    if (!document.body.classList.contains('rstreet-cart-open')) returnFocus = document.activeElement;
     if (typeof window.closeCatalogMenu === 'function') window.closeCatalogMenu();
     if (typeof window.closeSiteMenu === 'function') window.closeSiteMenu();
     stockReady = false;
@@ -229,11 +243,22 @@
     // Without this, the first opening can skip the slide transition.
     if (drawer) void drawer.offsetWidth;
     document.body.classList.add('rstreet-cart-open');
+    drawer.inert = false;
+    drawer.setAttribute('aria-hidden', 'false');
+    drawer.querySelector('[aria-label="Fechar carrinho"]').focus();
     refreshCartStock();
   }
 
   function closeDrawer() {
     document.body.classList.remove('rstreet-cart-open');
+    const drawer = document.getElementById('rstreetCartDrawer');
+    const focusTarget = returnFocus?.isConnected && !returnFocus.disabled && !drawer?.contains(returnFocus)
+      ? returnFocus : document.querySelector('#navCartBtn, [data-cart-drawer-trigger]');
+    focusTarget?.focus();
+    if (drawer) {
+      drawer.inert = true;
+      drawer.setAttribute('aria-hidden', 'true');
+    }
   }
 
   function ensureDrawer() {
@@ -242,7 +267,7 @@
     injectStyles();
     document.body.insertAdjacentHTML('beforeend', `
       <div class="rstreet-cart-backdrop" onclick="window.RStreetCartDrawer.close()"></div>
-      <aside class="rstreet-cart-drawer" id="rstreetCartDrawer" aria-label="Carrinho">
+      <aside class="rstreet-cart-drawer" id="rstreetCartDrawer" role="dialog" aria-modal="true" aria-hidden="true" inert aria-label="Carrinho">
         <div class="rstreet-cart-head">
           <div>
             <strong>Meu carrinho</strong>
@@ -250,7 +275,7 @@
           </div>
           <button type="button" onclick="window.RStreetCartDrawer.close()" aria-label="Fechar carrinho">x</button>
         </div>
-        <div class="rstreet-cart-notice" id="rstreetCartDrawerNotice"></div>
+        <div class="rstreet-cart-notice" id="rstreetCartDrawerNotice" role="status"></div>
         <div class="rstreet-cart-body" id="rstreetCartDrawerBody"></div>
         <div class="rstreet-cart-foot">
           <div class="rstreet-cart-subtotal">
@@ -274,6 +299,9 @@
       .rstreet-cart-drawer{position:fixed;top:0;right:0;width:min(430px,92vw);height:100vh;background:#101010;border-left:1px solid rgba(200,169,110,.24);z-index:1200;transform:translateX(105%);transition:transform .26s ease;box-shadow:-24px 0 60px rgba(0,0,0,.42);display:flex;flex-direction:column;color:#fff}
       body.rstreet-cart-open .rstreet-cart-backdrop{opacity:1;pointer-events:auto}
       body.rstreet-cart-open .rstreet-cart-drawer{transform:translateX(0)}
+      body.rstreet-cart-open{overflow:hidden}
+      .rstreet-cart-drawer{height:100dvh}
+      .rstreet-cart-info{min-width:0;overflow-wrap:anywhere}
       .rstreet-cart-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px;border-bottom:1px solid rgba(255,255,255,.08)}
       .rstreet-cart-head strong{display:block;font-family:'Bebas Neue',Impact,sans-serif;font-size:34px;letter-spacing:1px;text-transform:uppercase}
       .rstreet-cart-head span{display:block;color:#999;font-size:12px;margin-top:2px}
@@ -295,6 +323,7 @@
       .rstreet-cart-controls button:disabled{opacity:.35;cursor:not-allowed}
       .rstreet-cart-controls .is-remove{margin-left:8px;padding:0 10px;color:#bbb;text-transform:uppercase;font-size:10px;letter-spacing:1px}
       .rstreet-cart-foot{border-top:1px solid rgba(255,255,255,.08);padding:16px;display:grid;gap:10px;background:#0c0c0c}
+      .rstreet-cart-foot{padding-bottom:max(16px,env(safe-area-inset-bottom))}
       .rstreet-cart-subtotal{display:flex;align-items:center;justify-content:space-between;gap:16px;color:#aaa;font-size:13px;margin-bottom:4px}
       .rstreet-cart-subtotal strong{color:#c8a96e;font-family:'Bebas Neue',Impact,sans-serif;font-size:30px}
       .rstreet-cart-primary,.rstreet-cart-secondary{min-height:46px;display:flex;align-items:center;justify-content:center;text-decoration:none;text-transform:uppercase;letter-spacing:1px;font-weight:900;font-size:12px;border-radius:3px}
@@ -326,6 +355,20 @@
   };
 
   document.addEventListener('DOMContentLoaded', bindTriggers);
+  document.addEventListener('keydown', event => {
+    if (!document.body.classList.contains('rstreet-cart-open')) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeDrawer(); return; }
+    if (event.key !== 'Tab') return;
+    const drawer = document.getElementById('rstreetCartDrawer');
+    const controls = [...drawer.querySelectorAll('button:not(:disabled), a[href]:not([aria-disabled="true"])')];
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (!drawer.contains(document.activeElement) || (event.shiftKey && document.activeElement === first)) {
+      event.preventDefault(); (event.shiftKey ? last : first)?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault(); first?.focus();
+    }
+  });
   window.addEventListener('storage', event => {
     if (event.key === CART_KEY) {
       stockReady = false;

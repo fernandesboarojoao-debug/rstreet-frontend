@@ -224,6 +224,9 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.footer-copy').forEach(el => {
+      el.textContent = el.textContent.replace(/©\s*\d{4}/, `© ${new Date().getFullYear()}`);
+    });
     addWhatsAppFloatingButton();
     window.RStreetTrack.pageView();
     document.body.addEventListener('click', event => {

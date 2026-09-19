@@ -528,6 +528,11 @@ let selectedMediaType = null;
 let openProductAccordionKey = null;
 let productViewTrackedKey = '';
 let productReviews = [];
+let reviewsTotal = 0;
+let reviewsAverage = 0;
+let reviewsPage = 1;
+let reviewsLoading = false;
+let reviewsError = false;
 let reviewFormOpen = false;
 let selectedReviewRating = 0;
 let showAllProductReviews = false;
@@ -761,7 +766,7 @@ function renderProduct() {
 
   const stockClass = currentStock === 0 ? 'out' : currentStock <= 5 ? 'low' : 'ok';
   const stockText = currentStock === 0 ? 'Esgotado'
-    : currentStock <= 5 ? `Últimas ${currentStock} unidades`
+    : currentStock === 1 ? 'Última unidade' : currentStock <= 5 ? `Últimas ${currentStock} unidades`
     : `Em estoque (${currentStock} unidades)`;
 
   const colors = hasVariants ? getVariantColors().map(c => {
@@ -1392,15 +1397,27 @@ function renderRelated() {
   }).join('');
 }
 
-async function loadProductReviews() {
+async function loadProductReviews(page = 1) {
   const target = document.getElementById('productReviews');
-  if (!target || !product?.id) return;
-  target.innerHTML = '<div class="product-reviews-box"><div class="review-empty">Carregando avaliações...</div></div>';
+  if (!target || !product?.id || reviewsLoading) return;
+  reviewsLoading = true;
+  reviewsError = false;
+  if (!target.children.length) target.innerHTML = '<div class="product-reviews-box"><div class="review-empty">Carregando avaliações...</div></div>';
   try {
-    const response = await fetch(`${BACKEND_BASE}/engajamento/avaliacoes/produto/${encodeURIComponent(product.id)}`);
-    productReviews = response.ok ? await response.json() : [];
+    const response = await fetch(`${BACKEND_BASE}/engajamento/avaliacoes/produto/${encodeURIComponent(product.id)}?pagina=${page}`);
+    if (!response.ok) throw new Error('Avaliações indisponíveis');
+    const data = await response.json();
+    const rows = Array.isArray(data) ? data : data.avaliacoes;
+    if (!Array.isArray(rows)) throw new Error('Resposta inválida');
+    productReviews = page === 1 ? rows : [...productReviews, ...rows.filter(row => !productReviews.some(old => old.id === row.id))];
+    reviewsTotal = Array.isArray(data) ? data.length : Number(data.total);
+    reviewsAverage = Array.isArray(data) ? data.reduce((sum, row) => sum + Number(row.nota), 0) / (data.length || 1) : Number(data.media);
+    reviewsPage = page;
+    showAllProductReviews = page > 1;
   } catch {
-    productReviews = [];
+    reviewsError = true;
+  } finally {
+    reviewsLoading = false;
   }
   renderProductReviews();
 }
@@ -1413,8 +1430,9 @@ function reviewStars(rating) {
 function renderProductReviews() {
   const target = document.getElementById('productReviews');
   if (!target || !product) return;
-  const count = productReviews.length;
-  const average = count ? productReviews.reduce((sum, item) => sum + Number(item.nota || 0), 0) / count : 0;
+  const draft = Object.fromEntries(['reviewOrder', 'reviewEmail', 'reviewComment'].map(id => [id, document.getElementById(id)?.value || '']));
+  const count = reviewsTotal;
+  const average = reviewsAverage;
   const visibleReviews = showAllProductReviews ? productReviews : productReviews.slice(0, 6);
   const list = count
     ? `<div class="review-list">${visibleReviews.map(item => `
@@ -1422,7 +1440,7 @@ function renderProductReviews() {
         <div class="review-card-top"><span class="review-name">${escapeHtml(item.nome_cliente || 'Cliente R Street')}</span><span class="review-stars" aria-label="${Number(item.nota || 0)} de 5 estrelas">${reviewStars(item.nota)}</span></div>
         <p class="review-comment">${escapeHtml(item.comentario)}</p>
       </article>`).join('')}</div>`
-    : '<div class="review-empty">Ainda não há avaliações publicadas para este produto. Comprou? Conte como foi sua experiência.</div>';
+    : reviewsError ? '' : '<div class="review-empty">Ainda não há avaliações publicadas para este produto. Comprou? Conte como foi sua experiência.</div>';
   const form = reviewFormOpen ? renderReviewForm() : '';
   target.innerHTML = `
     <div class="product-reviews-box">
@@ -1431,10 +1449,12 @@ function renderProductReviews() {
         ${count ? `<div class="review-average"><strong>${average.toFixed(1).replace('.', ',')}</strong><span>${count} ${count === 1 ? 'avaliação' : 'avaliações'}</span></div>` : '<button class="review-action" type="button" onclick="toggleReviewForm()">Avaliar compra</button>'}
       </div>
       ${list}
-      ${count > 6 ? `<button class="btn-secondary-act" type="button" style="margin-top:14px" onclick="toggleAllProductReviews()">${showAllProductReviews ? 'Mostrar menos avaliações' : `Ver todas as ${count} avaliações`}</button>` : ''}
+      ${reviewsError ? '<p role="status">Não foi possível carregar as avaliações agora. <button type="button" class="review-action" onclick="loadProductReviews()">Tentar novamente</button></p>' : ''}
+      ${count > 6 ? `<button class="btn-secondary-act" type="button" style="margin-top:14px" onclick="toggleAllProductReviews()">${productReviews.length < count || !showAllProductReviews ? 'Carregar mais avaliações' : 'Mostrar menos avaliações'}</button>` : ''}
       ${count ? `<div style="margin-top:14px"><button class="review-action" type="button" onclick="toggleReviewForm()">Avaliar compra</button></div>` : ''}
       ${form}
     </div>`;
+  if (reviewFormOpen) Object.entries(draft).forEach(([id, value]) => { const field = document.getElementById(id); if (field) field.value = value; });
 }
 
 function renderReviewForm() {
@@ -1456,9 +1476,17 @@ function toggleReviewForm() {
   renderProductReviews();
 }
 
-function toggleAllProductReviews() {
-  showAllProductReviews = !showAllProductReviews;
-  renderProductReviews();
+async function toggleAllProductReviews() {
+  if (reviewsLoading) return;
+  if (!showAllProductReviews && productReviews.length > 6) {
+    showAllProductReviews = true;
+    renderProductReviews();
+  } else if (productReviews.length < reviewsTotal) {
+    await loadProductReviews(reviewsPage + 1);
+  } else {
+    showAllProductReviews = false;
+    renderProductReviews();
+  }
 }
 
 function setReviewRating(value) {
@@ -1601,8 +1629,10 @@ function syncCartWithStock() {
   const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
   let changed = false;
   const next = cart.map(item => {
-    const productRow = allProducts.find(p => p.id === item.id) || (product && product.id === item.id ? product : null);
-    if (!productRow || productRow.ativo === false) {
+    // Related products are a partial list. Only validate this page's full product.
+    if (!product || Number(product.id) !== Number(item.id)) return item;
+    const productRow = product;
+    if (productRow.ativo === false) {
       changed = true;
       return null;
     }

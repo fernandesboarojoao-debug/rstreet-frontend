@@ -46,7 +46,7 @@ function getVariantImages(variant) {
 }
 
 function categoryLabel(product) {
-  const text = String(product.categoria || product.nome || '').toLowerCase();
+  const text = String(product.categoria || product.nome || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   if (text.includes('tenis') || text.includes('chinelo') || text.includes('calçado') || text.includes('calcado')) return 'Apparel & Accessories > Shoes';
   if (text.includes('calca') || text.includes('bermuda') || text.includes('short')) return 'Apparel & Accessories > Clothing > Pants';
   if (text.includes('camiseta') || text.includes('camisa') || text.includes('polo') || text.includes('regata') || text.includes('moletom') || text.includes('blusa')) return 'Apparel & Accessories > Clothing > Shirts & Tops';
@@ -134,8 +134,9 @@ module.exports = async function handler(req, res) {
     res.status(200).send(createFeedXml(products, variants));
   } catch (error) {
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
-    res.status(200).send(createFeedXml([], []));
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Retry-After', '300');
+    res.status(503).send('<?xml version="1.0" encoding="UTF-8"?><error>Temporarily unavailable</error>');
   }
 };
 

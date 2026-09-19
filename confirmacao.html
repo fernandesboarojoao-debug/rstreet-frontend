@@ -389,6 +389,9 @@ function normalizeBackendPedido(pedido, itens) {
       estado: pedido.endereco_estado,
     },
     itens: (itens || []).map(item => ({
+      id: item.produto_id,
+      produto_id: item.produto_id,
+      produto_variante_id: item.produto_variante_id || null,
       nome: item.nome_produto,
       quantidade: Number(item.quantidade) || 1,
       preco_unitario: Number(item.preco_unitario) || 0,

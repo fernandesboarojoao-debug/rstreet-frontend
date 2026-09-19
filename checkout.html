@@ -121,6 +121,9 @@
     text-align:center; cursor:pointer; transition:all 0.2s; background:var(--gray-800);
   }
   .pay-method:hover, .pay-method.selected { border-color:var(--gold); background:var(--gold-bg); }
+  .pay-method { font:inherit; min-width:0; }
+  .pay-method > span { display:block; }
+  .pay-method:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
   .pay-method-icon { font-size:28px; margin-bottom:6px; }
   .pay-method-label { font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--gray-200); }
   .pay-method-sub { font-size:10px; color:var(--green); font-weight:700; margin-top:4px; }
@@ -300,7 +303,7 @@
       <div class="form-card-title"><span class="form-card-icon">📍</span> Endereço de Entrega</div>
       <div class="form-grid">
         <div class="form-group">
-          <label>CEP *</label>
+          <label for="f-cep">CEP *</label>
           <div class="frete-calc">
             <input type="text" id="f-cep" placeholder="00000-000" oninput="maskCEP(this)" maxlength="9">
             <button class="btn-calcular" onclick="buscarCEP()">Buscar</button>
@@ -385,28 +388,20 @@
         <span>Horário</span>
         <span>Horário de atendimento: segunda a sexta das 9h às 18h e sábado das 9h às 13h. Domingo fechado.</span>
       </div>
-      <div class="payment-methods">
-        <div class="pay-method selected" onclick="selectPayment(this, 'credit_card')">
-          <div class="pay-method-icon">💳</div>
-          <div class="pay-method-label">Cartão de Crédito</div>
-        </div>
-        <div class="pay-method" onclick="selectPayment(this, 'debit_card')">
-          <div class="pay-method-icon">🏦</div>
-          <div class="pay-method-label">Débito</div>
-        </div>
-        <div class="pay-method" onclick="selectPayment(this, 'pix')">
-          <div class="pay-method-icon">⚡</div>
-          <div class="pay-method-label">PIX</div>
-          <div class="pay-method-sub">at&eacute; 5% off</div>
-        </div>
-        <div class="pay-method" onclick="selectPayment(this, 'bolbradesco')">
-          <div class="pay-method-icon">📄</div>
-          <div class="pay-method-label">Boleto</div>
-        </div>
-        <div class="pay-method" onclick="selectPayment(this, 'account_money')">
-          <div class="pay-method-icon">💰</div>
-          <div class="pay-method-label">Conta MP</div>
-        </div>
+      <div class="payment-methods" role="group" aria-label="Forma de pagamento">
+        <button type="button" class="pay-method selected" aria-pressed="true" onclick="selectPayment(this, 'credit_card')">
+          <span class="pay-method-icon" aria-hidden="true">💳</span>
+          <span class="pay-method-label">Cartão de Crédito</span>
+        </button>
+        <button type="button" class="pay-method" aria-pressed="false" onclick="selectPayment(this, 'debit_card')">
+          <span class="pay-method-icon" aria-hidden="true">🏦</span>
+          <span class="pay-method-label">Débito</span>
+        </button>
+        <button type="button" class="pay-method" aria-pressed="false" onclick="selectPayment(this, 'pix')">
+          <span class="pay-method-icon" aria-hidden="true">⚡</span>
+          <span class="pay-method-label">PIX</span>
+          <span class="pay-method-sub">at&eacute; 5% off</span>
+        </button>
       </div>
     </div>
   </div>
@@ -542,18 +537,21 @@ function safeMercadoPagoUrl(value) {
 }
 
 function getPixDiscount(subtotal) {
-  return Math.round(Math.max(0, Number(subtotal || 0)) * PIX_DISCOUNT_RATE * 100) / 100;
+  const totalComDesconto = getCart().reduce((sum, item) => sum
+    + Math.round(Number(item.preco) * (1 - PIX_DISCOUNT_RATE) * 100) * Number(item.qty), 0) / 100;
+  return Math.max(0, Math.round((subtotal - totalComDesconto) * 100) / 100);
 }
 
 async function validarCarrinhoAtual() {
   const cart = getCart();
+  const snapshot = JSON.stringify(cart);
   if (!cart.length) return { ok: false, message: 'Carrinho vazio.' };
 
   let products;
   let variants;
   try {
     const [prodRes, varRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo`, {
+      fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo,preco`, {
         headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
       }),
       fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, {
@@ -569,6 +567,10 @@ async function validarCarrinhoAtual() {
     };
   }
 
+  if (JSON.stringify(getCart()) !== snapshot) {
+    renderSummary();
+    return { ok: false, message: 'Seu carrinho mudou em outra aba. Confira os itens e tente novamente.' };
+  }
   const messages = [];
   let changed = false;
 
@@ -585,6 +587,7 @@ async function validarCarrinhoAtual() {
   });
 
   const next = [...consolidados.values()].map(item => {
+    const original = JSON.stringify(item);
     const product = products.find(p => Number(p.id) === Number(item.id));
     if (!product || product.ativo === false) {
       changed = true;
@@ -593,6 +596,7 @@ async function validarCarrinhoAtual() {
     }
 
     let estoque = Math.max(0, Number(product.estoque) || 0);
+    item = { ...item, preco: Number(product.preco) };
     const productHasVariants = variants.some(v => Number(v.produto_id) === Number(item.id) && v.ativo !== false);
     if (productHasVariants && !item.produto_variante_id) {
       changed = true;
@@ -601,7 +605,7 @@ async function validarCarrinhoAtual() {
     }
     if (item.produto_variante_id) {
       const variant = variants.find(v => Number(v.id) === Number(item.produto_variante_id));
-      if (!variant || variant.ativo === false || Number(variant.estoque) <= 0) {
+      if (!variant || Number(variant.produto_id) !== Number(item.id) || variant.ativo === false || Number(variant.estoque) <= 0) {
         changed = true;
         messages.push(`${item.nome}${item.cor ? ' - '+item.cor : ''}${item.tamanho ? ' / '+item.tamanho : ''} esgotou ou não está mais disponível e foi removido do carrinho.`);
         return null;
@@ -622,6 +626,10 @@ async function validarCarrinhoAtual() {
     if (qty !== item.qty || item.estoque !== estoque) {
       changed = true;
       if (qty !== item.qty) messages.push(`A quantidade de ${item.nome} foi ajustada para ${qty}.`);
+    }
+    if (original !== JSON.stringify(item)) {
+      changed = true;
+      messages.push('Os dados ou o preço de um produto foram atualizados.');
     }
     return { ...item, qty, estoque };
   }).filter(Boolean);
@@ -740,7 +748,9 @@ async function buscarCEP() {
   resetFrete();
   try {
     const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    if (!res.ok) throw new Error('CEP indisponível');
     const d = await res.json();
+    if (document.getElementById('f-cep').value.replace(/\D/g,'') !== cep) return;
     if (d.erro) return showAlert('CEP não encontrado.', 'error');
     document.getElementById('f-rua').value = d.logradouro || '';
     document.getElementById('f-bairro').value = d.bairro || '';
@@ -750,15 +760,25 @@ async function buscarCEP() {
     renderFreteOptions(calcularFretesPorEndereco(d.localidade, d.uf));
     document.getElementById('freteOptions').classList.add('show');
   } catch {
+    if (document.getElementById('f-cep').value.replace(/\D/g,'') !== cep) return;
     showAlert('Erro ao buscar CEP. Preencha o endereço manualmente.', 'error');
-    renderFreteOptions(FRETE_REGRAS.nacional);
-    document.getElementById('freteOptions').classList.add('show');
+    atualizarFreteManual();
   }
+}
+
+function atualizarFreteManual() {
+  resetFrete();
+  const cidade = document.getElementById('f-cidade').value.trim();
+  const estado = document.getElementById('f-estado').value.trim().toUpperCase();
+  if (!cidade || !/^[A-Z]{2}$/.test(estado)) return;
+  renderFreteOptions(calcularFretesPorEndereco(cidade, estado));
+  document.getElementById('freteOptions').classList.add('show');
 }
 
 // ─── PAYMENT ────────────────────────────────
 function selectPayment(el, method) {
-  document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('selected'));
+  document.querySelectorAll('.pay-method').forEach(m => { m.classList.remove('selected'); m.setAttribute('aria-pressed', 'false'); });
+  el.setAttribute('aria-pressed', 'true');
   el.classList.add('selected');
   paymentMethod = method;
   updateTotals();
@@ -907,6 +927,12 @@ function showAlert(msg, type) {
 function clearAlert() { document.getElementById('alertArea').innerHTML = ''; }
 
 // ─── INIT ───────────────────────────────────
+document.querySelectorAll('input[id]').forEach(input => {
+  const label = input.previousElementSibling;
+  if (label?.tagName === 'LABEL') label.htmlFor = input.id;
+});
+['f-cidade', 'f-estado'].forEach(id => document.getElementById(id).addEventListener('input', atualizarFreteManual));
+document.getElementById('f-cep').addEventListener('input', resetFrete);
 updateStoreHoursAlert();
 renderSummary();
 </script>

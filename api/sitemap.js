@@ -84,8 +84,9 @@ module.exports = async function handler(req, res) {
     res.status(200).send(createSitemapXml(products));
   } catch (error) {
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
-    res.status(200).send(createSitemapXml([]));
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Retry-After', '300');
+    res.status(503).send('<?xml version="1.0" encoding="UTF-8"?><error>Temporarily unavailable</error>');
   }
 };
 
