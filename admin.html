@@ -501,8 +501,8 @@
     <button class="nav-item" onclick="showTab('avaliacoes')"><span class="nav-icon">★</span> Avaliações <span id="badge-avaliacoes" style="margin-left:auto;background:var(--gold);color:#111;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;display:none">0</span></button>
     <button class="nav-item" onclick="showTab('metricas')"><span class="nav-icon">↗</span> Métricas</button>
     <div class="nav-section-title">Loja</div>
-    <a class="nav-item" href="catalogo.html" target="_blank"><span class="nav-icon">🛍</span> Ver Catálogo</a>
-    <a class="nav-item" href="sobre.html" target="_blank"><span class="nav-icon">🌐</span> Ver Loja/Sobre</a>
+    <a class="nav-item" href="catalogo.html" target="_blank" rel="noopener noreferrer"><span class="nav-icon">🛍</span> Ver Catálogo</a>
+    <a class="nav-item" href="sobre.html" target="_blank" rel="noopener noreferrer"><span class="nav-icon">🌐</span> Ver Loja/Sobre</a>
     <div class="nav-section-title">Config</div>
     <button class="nav-item" onclick="showTab('temas')"><span class="nav-icon">★</span> Temas do Site</button>
     <button class="nav-item" onclick="showTab('config')"><span class="nav-icon">⚙️</span> Configurações</button>
@@ -1220,6 +1220,49 @@ function getStoredMediaUrl(url) {
   return clean && !clean.toLowerCase().startsWith('data:') ? clean : '';
 }
 
+function optimizeImageForUpload(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = async () => {
+      try {
+        const maxDimension = 1800;
+        const naturalWidth = img.naturalWidth || img.width;
+        const naturalHeight = img.naturalHeight || img.height;
+        const scale = Math.min(1, maxDimension / Math.max(naturalWidth, naturalHeight));
+        if (scale === 1 && file.size <= 350 * 1024 && !isAvifFile(file)) {
+          URL.revokeObjectURL(objectUrl);
+          resolve({ dataUrl: await readFileAsDataUrl(file), name: file.name, type: file.type || 'image/jpeg' });
+          return;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(naturalHeight * scale));
+        const ctx = canvas.getContext('2d', { alpha: true });
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        let dataUrl = canvas.toDataURL('image/webp', 0.86);
+        let type = 'image/webp';
+        let extension = 'webp';
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+          type = 'image/jpeg';
+          extension = 'jpg';
+        }
+        URL.revokeObjectURL(objectUrl);
+        resolve({ dataUrl, name: replaceFileExtension(file.name, extension), type });
+      } catch (err) {
+        URL.revokeObjectURL(objectUrl);
+        reject(err);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Não foi possível processar "' + file.name + '". Tente outra imagem.'));
+    };
+    img.src = objectUrl;
+  });
+}
+
 function isDataMediaUrl(url) {
   return String(url || '').trim().toLowerCase().startsWith('data:');
 }
@@ -1265,7 +1308,7 @@ function syncImageUrlFieldWithPreview() {
 }
 
 async function prepareMediaForUpload(file, kind) {
-  if (kind === 'image' && isAvifFile(file)) return convertAvifToJpegDataUrl(file);
+  if (kind === 'image') return optimizeImageForUpload(file);
   const dataUrl = await readFileAsDataUrl(file);
   return {
     dataUrl,
@@ -1293,7 +1336,7 @@ async function handlePhotoSelect(e) {
       uploadedPhotos.push(media);
       dedupeUploadedPhotos();
       renderPhotoPreview();
-      if (isAvifFile(file)) toast(`"${file.name}" convertido para JPG.`, 'info');
+      if (isAvifFile(file)) toast(`"${file.name}" convertido para WEBP.`, 'info');
     } catch (err) {
       toast(err.message, 'error');
     }
@@ -2455,7 +2498,11 @@ async function deleteProduct(id) {
   if (!confirm('Excluir este produto? Esta ação não pode ser desfeita.')) return;
   try {
     await sbFetch(`/produtos?id=eq.${id}`, { method: 'DELETE' });
-  } catch {}
+  } catch (err) {
+    console.error('Erro ao excluir produto:', err);
+    toast('Não foi possível excluir o produto. Nada foi alterado.', 'error');
+    return;
+  }
   allProducts = allProducts.filter(p => p.id !== id);
   notifyCatalogChanged();
   updateStats(); renderRecentTable(); renderAdminTable();
@@ -2468,7 +2515,11 @@ async function toggleProductStatus(id) {
   const newStatus = !p.ativo;
   try {
     await sbFetch(`/produtos?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ ativo: newStatus }) });
-  } catch {}
+  } catch (err) {
+    console.error('Erro ao alterar produto:', err);
+    toast('Não foi possível alterar o produto. Tente novamente.', 'error');
+    return;
+  }
   p.ativo = newStatus;
   notifyCatalogChanged();
   updateStats(); renderAdminTable();
@@ -2574,10 +2625,8 @@ async function confirmImport() {
         allProducts.unshift(Array.isArray(res) ? res[0] : { ...payload, id: Date.now() + i });
         success++;
       }
-    } catch {
-      const existing = allProducts.find(p => p.referencia && p.referencia === payload.referencia);
-      if (existing) { Object.assign(existing, payload); updated++; }
-      else { allProducts.unshift({ ...payload, id: Date.now() + i }); success++; }
+    } catch (err) {
+      console.error('Erro ao importar ' + payload.nome + ':', err);
       errors++;
     }
 
@@ -2588,9 +2637,10 @@ async function confirmImport() {
   document.getElementById('importPreview').style.display = 'none';
   importRows = [];
 
-  updateStats(); renderRecentTable(); renderAdminTable();
-  notifyCatalogChanged();
-  toast(`Importação concluída: ${success} novos, ${updated} atualizados${errors ? `, ${errors} offline` : ''}.`, 'success');
+  if (success || updated) notifyCatalogChanged();
+  await loadProducts();
+  const summary = `Importação concluída: ${success} novos, ${updated} atualizados`;
+  toast(errors ? `${summary} e ${errors} com erro. Os itens com erro não foram salvos.` : `${summary}.`, errors ? 'error' : 'success');
 }
 
 function cancelImport() {

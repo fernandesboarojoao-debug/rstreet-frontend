@@ -185,7 +185,7 @@
         bottom: calc(22px + env(safe-area-inset-bottom, 0px));
         z-index: 900;
         display: block;
-        width: 74px;
+        width: 64px;
         height: auto;
         padding: 0;
         background: transparent;
@@ -207,7 +207,7 @@
         .rstreet-whatsapp-float {
           right: 14px;
           bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-          width: 62px;
+          width: 54px;
         }
       }`;
     document.head.appendChild(style);
@@ -219,7 +219,7 @@
     link.target = '_blank';
     link.rel = 'noopener';
     link.setAttribute('aria-label', 'Falar com a R Street no WhatsApp');
-    link.innerHTML = '<img class="rstreet-whatsapp-float-img" src="whatsapp-floating.png" alt="">';
+    link.innerHTML = '<img class="rstreet-whatsapp-float-img" src="whatsapp-floating.webp" alt="">';
     document.body.appendChild(link);
   }
 

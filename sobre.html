@@ -284,7 +284,7 @@
     position: absolute; inset: 0;
     background:
       linear-gradient(135deg, rgba(10,10,10,0.9) 0%, rgba(10,10,10,0.4) 60%, rgba(10,10,10,0.8) 100%),
-      url('hero-pc.png') center/cover no-repeat;
+      url('hero-pc.webp') center/cover no-repeat;
     transform: scale(1.05);
     transition: transform 8s ease;
     will-change: transform;
@@ -1389,7 +1389,7 @@
       height: 1px;
     }
     .exp-icon { width: 30px; font-size: 22px; text-align: center; }
-    .exp-num { width: 48px; font-size: 30px; }
+    .exp-num { width: auto; min-width: 72px; font-size: 26px; }
     .exp-label { font-size: 10px; letter-spacing: 1.3px; }
     .about-visual { height: 320px; max-width: 420px; margin: 0 auto; }
     .about-img-main { width: 76%; height: 68%; top: 0; right: 0; background-size: cover; background-position: center; }
@@ -1441,7 +1441,7 @@
       <a class="site-mobile-menu-link" href="#contato" onclick="closeSiteMenu()">Contato</a>
       <a class="site-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
       <a class="site-mobile-menu-link" href="politica.html">Política e privacidade</a>
-      <a class="site-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+      <a class="site-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </div>
   </div>
 </div>
@@ -1726,17 +1726,17 @@
   <div class="experience-item">
     <div class="exp-icon">👕</div>
     <div class="exp-num">6</div>
-    <div class="exp-label">Marcas Premium</div>
+    <div class="exp-label">Marcas Selecionadas</div>
   </div>
   <div class="experience-item">
     <div class="exp-icon">📦</div>
-    <div class="exp-num">100+</div>
-    <div class="exp-label">Produtos</div>
+    <div class="exp-num">Online</div>
+    <div class="exp-label">Compra Segura</div>
   </div>
   <div class="experience-item">
     <div class="exp-icon">❤️</div>
-    <div class="exp-num">7</div>
-    <div class="exp-label">Clientes Satisfeitos</div>
+    <div class="exp-num">Grátis</div>
+    <div class="exp-label">Retirada na Loja</div>
   </div>
 </div>
 
@@ -1813,7 +1813,7 @@
       </div>
     </div>
     <div style="margin-top: 36px;">
-      <a href="https://wa.me/5519993111599" class="btn-primary" target="_blank">
+      <a href="https://wa.me/5519993111599" class="btn-primary" target="_blank" rel="noopener noreferrer">
         Falar no WhatsApp
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       </a>
@@ -1834,7 +1834,7 @@
   <p class="cta-banner-sub reveal">Confira nosso catálogo completo e encontre a peça perfeita para o seu estilo.</p>
   <div class="cta-banner-buttons reveal">
     <a href="catalogo.html" class="btn-primary">Acessar Catálogo</a>
-    <a href="https://wa.me/5519993111599" class="btn-secondary" target="_blank">Falar Conosco</a>
+    <a href="https://wa.me/5519993111599" class="btn-secondary" target="_blank" rel="noopener noreferrer">Falar Conosco</a>
   </div>
 </div>
 
@@ -1845,9 +1845,9 @@
       <div class="footer-logo">R<span>.</span>Street</div>
       <p class="footer-desc">Moda masculina com estilo, qualidade e personalidade. As melhores marcas do Brasil em São José do Rio Pardo.</p>
       <div class="footer-social">
-        <a href="https://wa.me/5519993111599" class="social-btn" target="_blank" title="WhatsApp">💬</a>
-        <a href="https://www.instagram.com/rstreet_modamasculina/" class="social-btn" target="_blank" rel="noopener" title="Instagram">📸</a>
-        <a href="https://www.facebook.com/Rstreetoficial/" class="social-btn" target="_blank" rel="noopener" title="Facebook">👍</a>
+        <a href="https://wa.me/5519993111599" class="social-btn" target="_blank" rel="noopener noreferrer" title="WhatsApp">💬</a>
+        <a href="https://www.instagram.com/rstreet_modamasculina/" class="social-btn" target="_blank" rel="noopener noreferrer" title="Instagram">📸</a>
+        <a href="https://www.facebook.com/Rstreetoficial/" class="social-btn" target="_blank" rel="noopener noreferrer" title="Facebook">👍</a>
       </div>
     </div>
     <div>
@@ -1859,7 +1859,6 @@
         <li><a href="catalogo.html">Catálogo</a></li>
         <li><a href="acompanhar.html">Acompanhar Pedido</a></li>
         <li><a href="politica.html">Trocas e Privacidade</a></li>
-        <li><a href="admin.html">Admin</a></li>
       </ul>
     </div>
     <div>
@@ -2188,6 +2187,7 @@
         e.target.querySelectorAll('.exp-num').forEach(el => {
           const text = el.textContent;
           const num = parseFloat(text);
+          if (!Number.isFinite(num)) return;
           const suffix = text.replace(/[\d.]/g, '');
           animateCounter(el, num, suffix);
         });

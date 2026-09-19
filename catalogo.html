@@ -280,7 +280,7 @@
   .catalog-header {
     background:
       linear-gradient(90deg, rgba(10,10,10,0.18) 0%, rgba(10,10,10,0.08) 48%, rgba(10,10,10,0.04) 100%),
-      url('hero-catalogo-pc.png') center 42% / cover no-repeat;
+      url('hero-catalogo-pc.webp') center 42% / cover no-repeat;
     min-height: 520px;
     padding: 96px 60px 58px;
     position: relative;
@@ -1398,7 +1398,7 @@
   <ul class="nav-links">
     <li><a href="sobre.html">Sobre</a></li>
     <li><a href="catalogo.html" class="active">Catálogo</a></li>
-    <li><a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a></li>
+    <li><a href="https://wa.me/5519993111599" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
   </ul>
   <div class="nav-actions">
     <a href="acompanhar.html" class="nav-action">Acompanhar Pedido</a>
@@ -1454,7 +1454,7 @@
       <div class="catalog-menu-section-body catalog-mobile-menu-grid is-list">
         <a class="catalog-mobile-menu-link" href="sobre.html">Sobre a R Street</a>
         <a class="catalog-mobile-menu-link" href="politica.html">Política e privacidade</a>
-        <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+        <a class="catalog-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank" rel="noopener noreferrer">WhatsApp</a>
       </div>
     </details>
 
@@ -1470,7 +1470,7 @@
 <div class="toolbar">
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="handleCatalogSearchInput()">
+    <input type="text" id="searchInput" aria-label="Buscar no catálogo" placeholder="Buscar produto, marca, cor, tamanho ou ref..." oninput="handleCatalogSearchInput()">
   </div>
   <div class="filter-group" id="brandFilters">
     <button class="filter-btn active" onclick="setBrandFilter('todos', this)">Todos</button>
@@ -1481,14 +1481,14 @@
     <button class="filter-btn" onclick="setBrandFilter('Ogochi', this)">Ogochi</button>
     <button class="filter-btn" onclick="setBrandFilter('Freeway', this)">Freeway</button>
   </div>
-  <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+  <select class="sort-select" id="sortSelect" aria-label="Ordenar produtos" onchange="applyFilters()">
     <option value="default">Ordenar por</option>
     <option value="preco_asc">Menor Preço</option>
     <option value="preco_desc">Maior Preço</option>
     <option value="nome">Nome A-Z</option>
     <option value="novos">Mais Novos</option>
   </select>
-  <div class="result-count">Mostrando <span id="resultCount">0</span> produtos</div>
+  <div class="result-count" aria-live="polite"><span id="resultLoading">Carregando produtos...</span><span id="resultReady" hidden>Mostrando <span id="resultCount">0</span> produtos</span></div>
   <!-- Botão filtrar só aparece no celular -->
   <button class="filter-mobile-btn" id="filterMobileBtn" onclick="toggleMobileFilters()">⚙️ Filtrar</button>
 </div>
@@ -1855,7 +1855,7 @@
         <div class="price-range-labels">
           R$ 0 — <span id="priceLabel">R$ 1000</span>
         </div>
-        <input type="range" id="priceRange" min="0" max="1000" value="1000" step="10" oninput="updatePrice(this.value)">
+        <input type="range" id="priceRange" aria-label="Preço máximo" min="0" max="1000" value="1000" step="10" oninput="updatePrice(this.value)">
       </div>
     </div>
   </aside>
@@ -1880,8 +1880,9 @@
   <div class="footer-copy">© 2024 R Street Moda Masculina · São José do Rio Pardo - SP</div>
   <div class="footer-links-sm">
     <a href="sobre.html">Sobre</a>
-    <a href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
-    <a href="admin.html">Admin</a>
+    <a href="acompanhar.html">Acompanhar pedido</a>
+    <a href="politica.html">Trocas e privacidade</a>
+    <a href="https://wa.me/5519993111599" target="_blank" rel="noopener noreferrer">WhatsApp</a>
   </div>
 </footer>
 
@@ -2752,6 +2753,8 @@ function applyFilters() {
 
   updateDynamicCategoryFilters();
   document.getElementById('resultCount').textContent = filtered.length;
+  document.getElementById('resultLoading')?.setAttribute('hidden', '');
+  document.getElementById('resultReady')?.removeAttribute('hidden');
   updateMobileCatalogHub();
   updateCatalogActiveArea();
   updateSmartFilterOptions();
@@ -3346,7 +3349,7 @@ function renderCard(p) {
       <div id="catalog-badges-${productId}">${badges}</div>
       <div class="product-actions">
         <a class="action-btn" href="${initialUrl}" data-product-link title="Ver detalhes" onclick="event.stopPropagation()">🔍</a>
-        <a class="action-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" onclick="event.stopPropagation()" title="WhatsApp">💬</a>
+        <a class="action-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="WhatsApp">💬</a>
       </div>
     </div>
     <div class="product-body">
@@ -3364,7 +3367,7 @@ function renderCard(p) {
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
           <button class="btn-cart" onclick="event.stopPropagation(); openCatalogProduct(${productId})" id="cart-btn-${productId}" ${initialStock <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${initialStock <= 0 ? 'Esgotado' : 'Escolher'}</button>
-          <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
+          <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
         </div>
       </div>
     </div>
@@ -4342,9 +4345,13 @@ function updateCartNav() {
 }
 updateCartNav();
 async function initCatalogPage() {
-  await loadActiveCatalogTheme();
-  await loadProducts();
-  await loadBestSellerProducts();
+  await Promise.all([
+    loadActiveCatalogTheme(),
+    loadProducts(),
+    loadBestSellerProducts(),
+  ]);
+  checkCatalogUrlParams();
+  applyFilters();
   updateCatalogShowcases();
 }
 initCatalogPage();
@@ -4364,7 +4371,7 @@ document.addEventListener('visibilitychange', () => {
 });
 setInterval(() => {
   if (!document.hidden) refreshProducts();
-}, 20000);
+}, 60000);
 </script>
 <script src="rstreet-cart-drawer.js"></script>
 </body>

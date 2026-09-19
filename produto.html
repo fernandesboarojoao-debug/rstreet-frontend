@@ -444,7 +444,7 @@
     <div class="site-mobile-menu-links">
       <a class="site-mobile-menu-link" href="acompanhar.html">Acompanhar pedido</a>
       <a class="site-mobile-menu-link" href="politica.html">Política e privacidade</a>
-      <a class="site-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank">WhatsApp</a>
+      <a class="site-mobile-menu-link" href="https://wa.me/5519993111599" target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </div>
   </div>
 </div>
@@ -807,7 +807,7 @@ function renderProduct() {
       <div class="product-info">
         <div class="product-info-head">
         <div class="product-brand-tag">${escapeHtml(p.marca || 'R Street')}</div>
-        <h1 class="product-name">${escapeHtml(p.nome)}</h1>
+        <div class="product-name" role="heading" aria-level="2">${escapeHtml(p.nome)}</div>
         <div class="product-ref">Ref: ${escapeHtml(p.referencia || '#'+p.id)}${p.categoria ? ' · '+escapeHtml(p.categoria) : ''}</div>
 
         </div>
@@ -856,7 +856,7 @@ function renderProduct() {
             style="background:var(--gold);color:var(--black);border:none;font-size:15px;font-weight:700;letter-spacing:1px;padding:16px 28px;border-radius:3px;cursor:${addDisabled ? 'not-allowed' : 'pointer'};transition:all 0.25s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;${addDisabled ? 'opacity:0.45;' : ''}">
             <span style="font-size:20px">🛒</span> ${addText}
           </button>
-          <a id="wppBtn" href="${buildWppLink()}" target="_blank" class="btn-wpp">
+          <a id="wppBtn" href="${buildWppLink()}" target="_blank" rel="noopener noreferrer" class="btn-wpp">
             <span style="font-size:20px">💬</span> Pedir pelo WhatsApp
           </a>
           <button class="btn-secondary-act" onclick="copyLink()">🔗 Copiar link do produto</button>
@@ -879,7 +879,7 @@ function renderProduct() {
 
         <div class="share-row">
           <span class="share-label">Compartilhar</span>
-          <a class="share-btn" href="https://wa.me/?text=${encodeURIComponent('Olha esse produto da R Street: '+window.location.href)}" target="_blank">💬</a>
+          <a class="share-btn" href="https://wa.me/?text=${encodeURIComponent('Olha esse produto da R Street: '+window.location.href)}" target="_blank" rel="noopener noreferrer">💬</a>
           <button class="share-btn" onclick="copyLink()">🔗</button>
         </div>
       </div>

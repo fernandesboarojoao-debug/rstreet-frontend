@@ -18,6 +18,7 @@
     --border:rgba(255,255,255,0.07); --green:#4caf50; --red:#e63946;
   }
   * { margin:0; padding:0; box-sizing:border-box; }
+  .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
   html, body { max-width:100%; overflow-x:hidden; }
   body { background:var(--black); color:var(--white); font-family:'Inter',sans-serif; min-height:100vh; }
 
@@ -270,6 +271,7 @@
   </div>
 </div>
 
+<h1 class="sr-only">Finalizar compra na R Street</h1>
 <div class="checkout-layout">
   <!-- FORM -->
   <div>
@@ -509,6 +511,31 @@ const FRETE_REGRAS = {
 function getCart() { return JSON.parse(localStorage.getItem('rstreet_cart') || '[]'); }
 function saveCart(cart) { localStorage.setItem('rstreet_cart', JSON.stringify(cart)); }
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+
+function createCheckoutToken() {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+    const random = Math.floor(Math.random() * 16);
+    const value = char === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+}
+
+function getCheckoutAttemptToken(cart) {
+  const signature = JSON.stringify(cart.map(item => ({
+    id: Number(item.id),
+    variante: Number(item.produto_variante_id) || null,
+    quantidade: Number(item.qty) || 1,
+    preco: Number(item.preco),
+  })).sort((a, b) => a.id - b.id || Number(a.variante || 0) - Number(b.variante || 0)));
+  try {
+    const current = JSON.parse(sessionStorage.getItem('rstreet_checkout_attempt') || 'null');
+    if (current?.signature === signature && /^[0-9a-f-]{36}$/i.test(current.token || '')) return current.token;
+  } catch {}
+  const token = createCheckoutToken();
+  sessionStorage.setItem('rstreet_checkout_attempt', JSON.stringify({ signature, token }));
+  return token;
+}
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -886,6 +913,7 @@ async function finalizarCompra() {
     frete: { valor: freteVal, tipo: freteLabel },
     total,
     metodo_pagamento: paymentMethod,
+    checkout_token: getCheckoutAttemptToken(cart),
   };
 
   try {
@@ -896,9 +924,9 @@ async function finalizarCompra() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.erro || 'Erro ao criar pagamento');
-    // Salva pedido no localStorage para a página de confirmação
+    // Mantém os dados pessoais somente nesta aba até o retorno do pagamento.
     localStorage.setItem('rstreet_checkout_cart_backup', JSON.stringify(cart));
-    localStorage.setItem('rstreet_pedido', JSON.stringify({ ...pedido, pedido_id: data.pedido_id }));
+    sessionStorage.setItem('rstreet_pedido', JSON.stringify({ ...pedido, pedido_id: data.pedido_id }));
     // Redireciona somente para o checkout oficial do Mercado Pago.
     const paymentUrl = safeMercadoPagoUrl(data.init_point);
     if (!paymentUrl) throw new Error('O link seguro de pagamento não foi recebido');

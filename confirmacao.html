@@ -227,7 +227,7 @@
       <div class="next-title">Próximos Passos</div>
       <div class="next-step">
         <div class="next-step-num">1</div>
-        <div class="next-step-text"><strong>Confirmação por e-mail</strong><br>Você receberá um e-mail com os detalhes do seu pedido em instantes.</div>
+        <div class="next-step-text"><strong>Acompanhe seu pedido</strong><br>Use o número do pedido na página “Acompanhar pedido” para consultar cada atualização.</div>
       </div>
       <div class="next-step">
         <div class="next-step-num">2</div>
@@ -255,8 +255,9 @@
 
     <div class="actions-card">
       <a href="catalogo.html" class="btn-gold">🛍 Continuar Comprando</a>
-      <a href="https://wa.me/5519993111599" target="_blank" class="btn-wpp">💬 Dúvidas? WhatsApp</a>
-      <a href="index.html" class="btn-outline">← Voltar ao Site</a>
+      <a href="acompanhar.html" class="btn-outline">Acompanhar pedido</a>
+      <a href="https://wa.me/5519993111599" target="_blank" rel="noopener noreferrer" class="btn-wpp">💬 Dúvidas? WhatsApp</a>
+      <a href="catalogo.html" class="btn-outline">← Voltar ao catálogo</a>
     </div>
   </div>
 </div>
@@ -270,6 +271,10 @@
 const BACKEND_BASE = 'https://rstreet-backend.onrender.com/api';
 
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+function readStoredJson(storage, key, fallback) {
+  try { return JSON.parse(storage.getItem(key) || JSON.stringify(fallback)); }
+  catch { storage.removeItem(key); return fallback; }
+}
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => ({
     '&': '&amp;',
@@ -434,13 +439,17 @@ function restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus) {
   if (finalStatus === 'approved' || finalStatus === 'stock_issue') {
     localStorage.removeItem('rstreet_cart');
     localStorage.removeItem('rstreet_checkout_cart_backup');
+    sessionStorage.removeItem('rstreet_checkout_attempt');
     return;
   }
 
-  const cartAtual = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
-  const backup = JSON.parse(localStorage.getItem('rstreet_checkout_cart_backup') || '[]');
+  const cartAtual = readStoredJson(localStorage, 'rstreet_cart', []);
+  const backup = readStoredJson(localStorage, 'rstreet_checkout_cart_backup', []);
   if (!cartAtual.length && backup.length) {
     localStorage.setItem('rstreet_cart', JSON.stringify(backup));
+  }
+  if (['cancelled', 'rejected'].includes(finalStatus)) {
+    sessionStorage.removeItem('rstreet_checkout_attempt');
   }
 }
 
@@ -460,7 +469,7 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   const statusUrl = params.get('collection_status') || params.get('status') || 'pending';
   const status = statusFromUrl(statusUrl);
-  const pedidoLocal = JSON.parse(localStorage.getItem('rstreet_pedido') || 'null');
+  const pedidoLocal = readStoredJson(sessionStorage, 'rstreet_pedido', null);
   const pedidoId = params.get('pedido_id') || params.get('external_reference') || pedidoLocal?.pedido_id || '';
   const paymentId = params.get('payment_id') || params.get('collection_id') || params.get('id') || '';
   let finalStatus = status;
@@ -521,8 +530,8 @@ async function init() {
 
   restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus);
   if (finalStatus === 'approved' && pedido) {
-    localStorage.setItem('rstreet_pedido', JSON.stringify(pedido));
     trackApprovedPurchase(pedido);
+    sessionStorage.removeItem('rstreet_pedido');
   }
 }
 

@@ -50,6 +50,23 @@ test('checkout does not overwrite a cart changed during its request', async () =
   assert.equal(cart[0].qty, 2);
 });
 
+test('checkout reuses one UUID only while the cart is unchanged', () => {
+  const storage = new Map();
+  let uuidCalls = 0;
+  const scope = load('checkout.html', 'function createCheckoutToken()', '\nfunction escapeHtml', {
+    window: { crypto: { randomUUID: () => '123e4567-e89b-42d3-a456-42661417400' + (++uuidCalls - 1) } },
+    sessionStorage: {
+      getItem: key => storage.get(key) || null,
+      setItem: (key, value) => storage.set(key, value),
+    },
+  });
+  const first = scope.getCheckoutAttemptToken([{ ...item }]);
+  const repeated = scope.getCheckoutAttemptToken([{ ...item }]);
+  const changed = scope.getCheckoutAttemptToken([{ ...item, qty: 2 }]);
+  assert.equal(first, repeated);
+  assert.notEqual(first, changed);
+});
+
 test('cart saves price-only changes and validates variant ownership', () => {
   let cart = [clone(item)];
   const scope = load('carrinho.html', 'function syncCartWithStock()', '\n// ─── RENDER', {
@@ -83,8 +100,19 @@ test('drawer refresh retries newer cart instead of erasing another tab item', as
 test('Merchant categories normalize accents', () => {
   const { createFeedXml } = require('../api/merchant-feed.js');
   for (const [categoria, expected] of [['Tênis', 'Shoes'], ['Calça', 'Pants']]) {
-    assert.match(createFeedXml([{ id: 1, categoria, nome: 'Teste', preco: 10 }], []), new RegExp(expected));
+    const xml = createFeedXml([{ id: 1, categoria, nome: 'Teste', preco: 10 }], []);
+    assert.match(xml, new RegExp(expected));
+    assert.match(xml, /<g:gender>male<\/g:gender>/);
+    assert.match(xml, /<g:age_group>adult<\/g:age_group>/);
+    assert.match(xml, /<g:product_type>/);
   }
+});
+
+test('Merchant feed represents discounts as sale prices', () => {
+  const { createFeedXml } = require('../api/merchant-feed.js');
+  const xml = createFeedXml([{ id: 1, categoria: 'Camisa', nome: 'Teste', preco: 80, preco_antigo: 100 }], []);
+  assert.match(xml, /<g:price>100\.00 BRL<\/g:price>/);
+  assert.match(xml, /<g:sale_price>80\.00 BRL<\/g:sale_price>/);
 });
 
 test('admin ignores late variant responses after switching or closing a product', async () => {

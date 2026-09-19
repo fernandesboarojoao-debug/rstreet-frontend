@@ -60,12 +60,19 @@ function descriptionFor(product) {
   return `${product.nome} na R Street Moda Masculina. Consulte cores, tamanhos e estoque no site.`;
 }
 
+function ageGroup(product) {
+  const text = `${product.categoria || ''} ${product.nome || ''} ${product.descricao || ''}`
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return /infantil|juvenil|crianca|kids?/.test(text) ? 'kids' : 'adult';
+}
+
 function createItem(product, variant, productImages) {
   const variantImages = variant ? getVariantImages(variant) : [];
   const image = variantImages[0] || productImages[0] || `${SITE_URL}/rstreet-social-image.jpg`;
   const color = String(variant?.cor || '').trim();
   const size = String(variant?.tamanho || '').trim();
   const itemPrice = price(variant?.preco ?? product.preco);
+  const oldPrice = price(variant?.preco_antigo ?? product.preco_antigo);
   const stock = variant ? price(variant.estoque) : price(product.estoque);
   const id = variant ? `${product.id}-${slug(color)}-${slug(size)}` : String(product.id);
   const link = `${SITE_URL}/produto.html?id=${encodeURIComponent(product.id)}${color ? `&cor=${encodeURIComponent(color)}` : ''}`;
@@ -79,10 +86,14 @@ function createItem(product, variant, productImages) {
     `      <g:link>${xmlEscape(link)}</g:link>`,
     `      <g:image_link>${xmlEscape(image)}</g:image_link>`,
     `      <g:availability>${stock > 0 ? 'in_stock' : 'out_of_stock'}</g:availability>`,
-    `      <g:price>${itemPrice.toFixed(2)} BRL</g:price>`,
+    `      <g:price>${(oldPrice > itemPrice ? oldPrice : itemPrice).toFixed(2)} BRL</g:price>`,
+    oldPrice > itemPrice ? `      <g:sale_price>${itemPrice.toFixed(2)} BRL</g:sale_price>` : '',
     `      <g:brand>${xmlEscape(product.marca || 'R Street')}</g:brand>`,
     '      <g:condition>new</g:condition>',
     `      <g:google_product_category>${xmlEscape(categoryLabel(product))}</g:google_product_category>`,
+    `      <g:product_type>${xmlEscape('Moda masculina > ' + (product.categoria || 'Outros'))}</g:product_type>`,
+    '      <g:gender>male</g:gender>',
+    `      <g:age_group>${ageGroup(product)}</g:age_group>`,
     color ? `      <g:color>${xmlEscape(color)}</g:color>` : '',
     size ? `      <g:size>${xmlEscape(size)}</g:size>` : '',
     '    </item>'
