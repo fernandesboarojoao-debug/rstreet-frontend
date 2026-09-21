@@ -5,6 +5,8 @@
     currency: 'BRL',
     engagementApi: 'https://rstreet-backend.onrender.com/api/engajamento/metricas'
   };
+  const pendingAnalytics = [];
+  let analyticsReady = false;
 
   function getSessionId() {
     const key = 'rstreet_metrics_session';
@@ -47,26 +49,35 @@
     document.head.appendChild(script);
   }
 
-  if (hasValue(CONFIG.gaMeasurementId)) {
-    window.dataLayer = window.dataLayer || [];
-    window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-    loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(CONFIG.gaMeasurementId)}`);
-    window.gtag('js', new Date());
-    window.gtag('config', CONFIG.gaMeasurementId);
-  }
+  async function initializeAnalytics() {
+    try {
+      const response = await fetch('/api/public-config', { headers: { Accept: 'application/json' } });
+      if (response.ok) Object.assign(CONFIG, await response.json());
+    } catch {}
 
-  if (hasValue(CONFIG.metaPixelId)) {
-    window.fbq = window.fbq || function () {
-      window.fbq.callMethod ? window.fbq.callMethod.apply(window.fbq, arguments) : window.fbq.queue.push(arguments);
-    };
-    if (!window._fbq) window._fbq = window.fbq;
-    window.fbq.push = window.fbq;
-    window.fbq.loaded = true;
-    window.fbq.version = '2.0';
-    window.fbq.queue = window.fbq.queue || [];
-    loadScript('https://connect.facebook.net/en_US/fbevents.js');
-    window.fbq('init', CONFIG.metaPixelId);
-    window.fbq('track', 'PageView');
+    if (hasValue(CONFIG.gaMeasurementId)) {
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+      loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(CONFIG.gaMeasurementId)}`);
+      window.gtag('js', new Date());
+      window.gtag('config', CONFIG.gaMeasurementId, { send_page_view: false });
+    }
+
+    if (hasValue(CONFIG.metaPixelId)) {
+      window.fbq = window.fbq || function () {
+        window.fbq.callMethod ? window.fbq.callMethod.apply(window.fbq, arguments) : window.fbq.queue.push(arguments);
+      };
+      if (!window._fbq) window._fbq = window.fbq;
+      window.fbq.push = window.fbq;
+      window.fbq.loaded = true;
+      window.fbq.version = '2.0';
+      window.fbq.queue = window.fbq.queue || [];
+      loadScript('https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', CONFIG.metaPixelId);
+    }
+
+    analyticsReady = true;
+    pendingAnalytics.splice(0).forEach(call => call());
   }
 
   function number(value) {
@@ -87,11 +98,17 @@
   }
 
   function gaEvent(name, params) {
-    if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+    const run = () => {
+      if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+    };
+    if (analyticsReady) run(); else pendingAnalytics.push(run);
   }
 
   function metaEvent(name, params) {
-    if (typeof window.fbq === 'function') window.fbq('track', name, params || {});
+    const run = () => {
+      if (typeof window.fbq === 'function') window.fbq('track', name, params || {});
+    };
+    if (analyticsReady) run(); else pendingAnalytics.push(run);
   }
 
   window.RStreetTrack = {
@@ -234,4 +251,6 @@
       if (link) window.RStreetTrack.contactWhatsApp(link.textContent || link.href);
     });
   });
+
+  void initializeAnalytics();
 })();

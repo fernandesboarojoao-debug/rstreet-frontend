@@ -879,8 +879,8 @@ function renderProduct() {
 
         <div class="share-row">
           <span class="share-label">Compartilhar</span>
-          <a class="share-btn" href="https://wa.me/?text=${encodeURIComponent('Olha esse produto da R Street: '+window.location.href)}" target="_blank" rel="noopener noreferrer">💬</a>
-          <button class="share-btn" onclick="copyLink()">🔗</button>
+          <a class="share-btn" href="https://wa.me/?text=${encodeURIComponent('Olha esse produto da R Street: ' + getShareUrl())}" target="_blank" rel="noopener noreferrer" aria-label="Compartilhar produto pelo WhatsApp">💬</a>
+          <button class="share-btn" onclick="copyLink()" aria-label="Copiar link do produto">🔗</button>
         </div>
       </div>
     </div>`;
@@ -1330,6 +1330,12 @@ function escapeAttr(value) {
   return escapeHtml(value).replace(/\\/g, '\\\\');
 }
 
+function getShareUrl() {
+  if (!product?.id) return window.location.href;
+  const color = selectedColor ? `&cor=${encodeURIComponent(selectedColor)}` : '';
+  return `https://www.rstreet.com.br/api/product-share?id=${encodeURIComponent(product.id)}${color}`;
+}
+
 function jsStringAttr(value) {
   return escapeHtml(JSON.stringify(String(value ?? '')));
 }
@@ -1681,7 +1687,7 @@ function getPixPrice(value) {
 }
 
 function copyLink() {
-  navigator.clipboard.writeText(window.location.href)
+  navigator.clipboard.writeText(getShareUrl())
     .then(() => toast('✅ Link copiado!'))
     .catch(() => toast('❌ Não foi possível copiar.'));
 }

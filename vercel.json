@@ -27,6 +27,10 @@
     {
       "source": "/merchant-feed.xml",
       "destination": "/api/merchant-feed"
+    },
+    {
+      "source": "/produto/:id",
+      "destination": "/api/product-share?id=:id"
     }
   ]
 }

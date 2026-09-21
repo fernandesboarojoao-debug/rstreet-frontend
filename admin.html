@@ -423,7 +423,7 @@
   .login-logo {
     font-family:'Bebas Neue',sans-serif; font-size:32px;
     letter-spacing:6px; color:var(--white); text-align:center;
-    margin-bottom:6px;
+    margin:0 0 6px;
   }
   .login-logo span { color:var(--gold); }
   .login-sub {
@@ -468,26 +468,27 @@
 <body>
 
 <!-- TELA DE LOGIN -->
-<div class="login-screen" id="loginScreen">
+<div class="login-screen" id="loginScreen" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
   <div class="login-box" id="loginBox">
-    <div class="login-logo">R<span>.</span>Street</div>
+    <h1 class="login-logo" id="loginTitle">R<span>.</span>Street</h1>
     <div class="login-sub">Painel Administrativo</div>
-    <label class="login-label">Senha de acesso</label>
+    <label class="login-label" for="loginInput">Senha de acesso</label>
     <input
       class="login-input"
       type="password"
       id="loginInput"
+      autocomplete="current-password"
       placeholder="••••••••••••••"
       onkeydown="if(event.key==='Enter') fazerLogin()"
       autofocus
     >
     <button class="login-btn" onclick="fazerLogin()" id="loginBtn">Entrar</button>
-    <div class="login-error" id="loginError">❌ Senha incorreta. Tente novamente.</div>
+    <div class="login-error" id="loginError" role="alert" aria-live="polite">❌ Senha incorreta. Tente novamente.</div>
   </div>
 </div>
 
 <!-- SIDEBAR -->
-<aside class="sidebar">
+<aside class="sidebar" id="adminSidebar" aria-hidden="true" inert>
   <div class="sidebar-logo">
     <div class="logo-text">R<span>.</span>Street</div>
     <div class="logo-sub">Painel Admin</div>
@@ -519,7 +520,7 @@
 </aside>
 
 <!-- MAIN -->
-<div class="main">
+<div class="main" id="adminMain" aria-hidden="true" inert>
 
   <!-- TOPBAR -->
   <div class="topbar">
@@ -896,6 +897,7 @@
         <div class="stat-card"><div class="stat-label">Adições ao carrinho</div><div class="stat-num" id="metric-carts">0</div></div>
         <div class="stat-card"><div class="stat-label">Inícios de checkout</div><div class="stat-num" id="metric-checkouts">0</div></div>
         <div class="stat-card"><div class="stat-label">Compras confirmadas</div><div class="stat-num" id="metric-purchases">0</div></div>
+        <div class="stat-card"><div class="stat-label">Faturamento confirmado</div><div class="stat-num" id="metric-revenue">R$ 0,00</div></div>
         <div class="stat-card"><div class="stat-label">Cliques no WhatsApp</div><div class="stat-num" id="metric-whatsapp">0</div></div>
       </div>
       <div class="section-header" style="margin-top:8px"><div class="section-title" style="font-size:26px">Produtos com mais interesse</div></div>
@@ -1048,8 +1050,8 @@
 <!-- TOAST -->
 <div class="toast-wrap" id="toastWrap"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" integrity="sha512-dfX5uYVXzyU8+KHqj8bjo7UkOdg18PaOtpa48djpNbZHwExddghZ+ZmzWT06R5v6NSk3ZUfsH6FNEDepLx9hPQ==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous"></script>
 <script>
 // ═══════════════════════════════════════════════
 //  CONFIGURAÇÃO — edite aqui com seus dados
@@ -1077,6 +1079,18 @@ function authHeaders(extra = {}) {
   };
 }
 
+function unlockAdminInterface() {
+  const login = document.getElementById('loginScreen');
+  const sidebar = document.getElementById('adminSidebar');
+  const main = document.getElementById('adminMain');
+  login.style.display = 'none';
+  login.setAttribute('aria-hidden', 'true');
+  [sidebar, main].forEach(element => {
+    element.removeAttribute('inert');
+    element.removeAttribute('aria-hidden');
+  });
+}
+
 async function fazerLogin() {
   const senha = document.getElementById('loginInput').value;
   const erro  = document.getElementById('loginError');
@@ -1102,7 +1116,7 @@ async function fazerLogin() {
       const expira = Number(data.expires_at) || (Date.now() + 2 * 60 * 60 * 1000);
       sessionStorage.setItem('rstreet_auth', expira);
       sessionStorage.setItem('rstreet_admin_token', data.token);
-      document.getElementById('loginScreen').style.display = 'none';
+      unlockAdminInterface();
       loadProducts();
     } else {
       erro.classList.add('show');
@@ -1123,7 +1137,7 @@ async function fazerLogin() {
 function verificarLogin() {
   const expira = parseInt(sessionStorage.getItem('rstreet_auth') || '0');
   if (Date.now() < expira && getAdminToken()) {
-    document.getElementById('loginScreen').style.display = 'none';
+    unlockAdminInterface();
     loadProducts();
   } else {
     sessionStorage.removeItem('rstreet_auth');
@@ -3331,6 +3345,7 @@ async function loadMetricas() {
     document.getElementById('metric-carts').textContent = totals.add_to_cart || 0;
     document.getElementById('metric-checkouts').textContent = totals.begin_checkout || 0;
     document.getElementById('metric-purchases').textContent = totals.purchase || 0;
+    document.getElementById('metric-revenue').textContent = Number(data.receita || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
     document.getElementById('metric-whatsapp').textContent = totals.whatsapp || 0;
     const products = data.produtos || [];
     body.innerHTML = products.length ? products.map(item => `<tr><td>${escapeAdminHtml(item.nome)}</td><td>${escapeAdminHtml(item.marca || '-')}</td><td>${item.visualizacoes || 0}</td><td>${item.carrinhos || 0}</td><td>${item.checkouts || 0}</td><td>${item.compras || 0}</td></tr>`).join('') : '<tr><td colspan="6" class="table-empty">Ainda não há dados suficientes. As métricas começam a aparecer após o deploy.</td></tr>';
