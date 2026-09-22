@@ -61,10 +61,14 @@ test('checkout reuses one UUID only while the cart is unchanged', () => {
     },
   });
   const first = scope.getCheckoutAttemptToken([{ ...item }]);
+  assert.equal(scope.wasCheckoutAttemptSubmitted([{ ...item }]), false);
+  scope.markCheckoutAttemptSubmitted([{ ...item }]);
+  assert.equal(scope.wasCheckoutAttemptSubmitted([{ ...item }]), true);
   const repeated = scope.getCheckoutAttemptToken([{ ...item }]);
   const changed = scope.getCheckoutAttemptToken([{ ...item, qty: 2 }]);
   assert.equal(first, repeated);
   assert.notEqual(first, changed);
+  assert.equal(scope.wasCheckoutAttemptSubmitted([{ ...item, qty: 2 }]), false);
 });
 
 test('cart saves price-only changes and validates variant ownership', () => {
