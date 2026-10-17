@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script src="rstreet-checkout-state.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carrinho | R Street Moda Masculina</title>
@@ -369,6 +370,8 @@ function syncCartWithStock() {
   });
 
   const next = [...consolidados.values()].map(item => {
+    const held = window.RStreetCheckoutState?.preserve(item);
+    if (held) return held;
     const original = JSON.stringify(item);
     const product = latestProducts.find(p => Number(p.id) === Number(item.id));
     if (!product) {

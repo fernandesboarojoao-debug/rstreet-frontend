@@ -7,7 +7,7 @@ const vm = require('node:vm');
 function load(file, start, end, context = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
   const code = source.slice(source.indexOf(start), source.indexOf(end, source.indexOf(start) + start.length));
-  const scope = vm.createContext(context);
+  const scope = vm.createContext({ window: {}, ...context });
   vm.runInContext(code, scope);
   return scope;
 }

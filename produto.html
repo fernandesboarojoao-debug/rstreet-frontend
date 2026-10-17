@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script src="rstreet-checkout-state.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Produto R Street | Moda Masculina Streetwear</title>
@@ -1635,6 +1636,8 @@ function syncCartWithStock() {
   const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
   let changed = false;
   const next = cart.map(item => {
+    const held = window.RStreetCheckoutState?.preserve(item);
+    if (held) return held;
     // Related products are a partial list. Only validate this page's full product.
     if (!product || Number(product.id) !== Number(item.id)) return item;
     const productRow = product;

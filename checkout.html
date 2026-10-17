@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script src="rstreet-checkout-state.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout | R Street Moda Masculina</title>
@@ -527,6 +528,7 @@ function checkoutCartSignature(cart) {
     variante: Number(item.produto_variante_id) || null,
     quantidade: Number(item.qty) || 1,
     preco: Number(item.preco),
+    linha: item.checkoutLineId || null,
   })).sort((a, b) => a.id - b.id || Number(a.variante || 0) - Number(b.variante || 0)));
 }
 
@@ -535,6 +537,8 @@ function currentCheckoutAttempt(cart) {
     const current = JSON.parse(sessionStorage.getItem('rstreet_checkout_attempt') || 'null');
     if (current?.signature === checkoutCartSignature(cart) && /^[0-9a-f-]{36}$/i.test(current.token || '')) return current;
   } catch {}
+  const shared = window.RStreetCheckoutState?.attemptFor(cart);
+  if (shared) return { signature: checkoutCartSignature(cart), token: shared.token, submitted: true };
   return null;
 }
 
@@ -552,7 +556,10 @@ function wasCheckoutAttemptSubmitted(cart) {
 
 function markCheckoutAttemptSubmitted(cart) {
   const current = currentCheckoutAttempt(cart);
-  if (current) sessionStorage.setItem('rstreet_checkout_attempt', JSON.stringify({ ...current, submitted: true }));
+  if (current) {
+    window.RStreetCheckoutState?.remember(current.token, cart);
+    sessionStorage.setItem('rstreet_checkout_attempt', JSON.stringify({ ...current, signature: checkoutCartSignature(cart), submitted: true }));
+  }
 }
 
 function escapeHtml(value) {
@@ -632,6 +639,8 @@ async function validarCarrinhoAtual() {
   });
 
   const next = [...consolidados.values()].map(item => {
+    const held = window.RStreetCheckoutState?.preserve(item);
+    if (held) return held;
     const original = JSON.stringify(item);
     const product = products.find(p => Number(p.id) === Number(item.id));
     if (!product || product.ativo === false) {
@@ -879,20 +888,18 @@ function validate() {
 
 // ─── FINALIZAR ──────────────────────────────
 async function finalizarCompra() {
-  if (!validate()) return;
-
   const btn = document.getElementById('btnFinalizar');
+  if (btn.disabled || !validate()) return;
   btn.classList.add('loading');
   btn.disabled = true;
   clearAlert();
 
+  try {
   const validacaoCarrinho = wasCheckoutAttemptSubmitted(getCart())
     ? { ok: true }
     : await validarCarrinhoAtual();
   if (!validacaoCarrinho.ok) {
     showAlert(validacaoCarrinho.message, 'error');
-    btn.classList.remove('loading');
-    btn.disabled = false;
     return;
   }
 
@@ -936,7 +943,6 @@ async function finalizarCompra() {
     checkout_token: getCheckoutAttemptToken(cart),
   };
 
-  try {
     markCheckoutAttemptSubmitted(cart);
     const res = await fetch(`${BACKEND_URL}/api/pagamento/criar`, {
       method: 'POST',
@@ -944,9 +950,28 @@ async function finalizarCompra() {
       body: JSON.stringify(pedido),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.erro || 'Erro ao criar pagamento');
+    if (!res.ok) {
+      if (data.code === 'CHECKOUT_CHANGED' || data.code === 'CHECKOUT_PROCESSING') {
+        showAlert(data.erro, 'info');
+        const previousUrl = safeMercadoPagoUrl(data.checkout?.init_point);
+        if (previousUrl) {
+          window.RStreetCheckoutState?.remember(pedido.checkout_token, cart, data.checkout);
+          const link = document.createElement('a');
+          link.href = previousUrl;
+          link.textContent = `Retomar pedido anterior #${data.checkout.pedido_id} (${fmt(data.checkout.total)})`;
+          link.style.cssText = 'display:block;margin:12px 0;color:var(--gold);font-weight:700';
+          document.getElementById('alertArea').append(link);
+        }
+        return;
+      }
+      if (['CHECKOUT_CLOSED', 'CHECKOUT_EXPIRED', 'CHECKOUT_REVALIDATE'].includes(data.code)) {
+        sessionStorage.removeItem('rstreet_checkout_attempt');
+        window.RStreetCheckoutState?.release(pedido.checkout_token);
+      }
+      throw new Error(data.erro || 'Erro ao criar pagamento');
+    }
+    window.RStreetCheckoutState?.remember(pedido.checkout_token, cart, data);
     // Mantém os dados pessoais somente nesta aba até o retorno do pagamento.
-    localStorage.setItem('rstreet_checkout_cart_backup', JSON.stringify(cart));
     sessionStorage.setItem('rstreet_pedido', JSON.stringify({ ...pedido, pedido_id: data.pedido_id }));
     // Redireciona somente para o checkout oficial do Mercado Pago.
     const paymentUrl = safeMercadoPagoUrl(data.init_point);
@@ -954,6 +979,7 @@ async function finalizarCompra() {
     window.location.href = paymentUrl;
   } catch (err) {
     showAlert('Erro ao processar pedido: ' + err.message + '. Tente novamente ou entre em contato via WhatsApp.', 'error');
+  } finally {
     btn.classList.remove('loading');
     btn.disabled = false;
   }

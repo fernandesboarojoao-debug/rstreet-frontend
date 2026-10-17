@@ -178,6 +178,8 @@
         });
 
         const next = [...consolidados.values()].map(item => {
+          const held = window.RStreetCheckoutState?.preserve(item);
+          if (held) return held;
           const product = products.find(p => Number(p.id) === Number(item.id));
           if (!product || product.ativo === false) {
             notices.push(`${item.nome || 'Produto'} não está mais disponível e foi removido.`);

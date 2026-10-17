@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script src="rstreet-checkout-state.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pedido Confirmado | R Street</title>
@@ -350,6 +351,7 @@ function updateStoreHoursStep() {
 
 function statusFromPedido(pedido, fallback) {
   const status = String(pedido?.status || '').toLowerCase();
+  if (status === 'pendente') return 'pending';
   if (status === 'pago' || status === 'approved') return 'approved';
   if (status === 'estoque_indisponivel') return 'stock_issue';
   if (status === 'em_analise' || status === 'in_process') return 'in_process';
@@ -435,22 +437,18 @@ async function loadPedidoFromBackend(pedidoId, paymentId) {
   return null;
 }
 
-function restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus) {
+async function restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus, pedido, pedidoLocal) {
   if (finalStatus === 'approved' || finalStatus === 'stock_issue') {
-    localStorage.removeItem('rstreet_cart');
-    localStorage.removeItem('rstreet_checkout_cart_backup');
-    sessionStorage.removeItem('rstreet_checkout_attempt');
+    const orderId = pedido?.pedido_id || pedido?.id;
+    const localMatches = String(pedidoLocal?.pedido_id || '') === String(orderId);
+    const token = localMatches ? pedidoLocal?.checkout_token : null;
+    await window.RStreetCheckoutState?.complete(orderId, token);
+    const attempt = readStoredJson(sessionStorage, 'rstreet_checkout_attempt', null);
+    if (token && attempt?.token === token) sessionStorage.removeItem('rstreet_checkout_attempt');
     return;
   }
-
-  const cartAtual = readStoredJson(localStorage, 'rstreet_cart', []);
-  const backup = readStoredJson(localStorage, 'rstreet_checkout_cart_backup', []);
-  if (!cartAtual.length && backup.length) {
-    localStorage.setItem('rstreet_cart', JSON.stringify(backup));
-  }
-  if (['cancelled', 'rejected'].includes(finalStatus)) {
-    sessionStorage.removeItem('rstreet_checkout_attempt');
-  }
+  // Failed payments keep their reserved checkout available for a safe retry.
+  // The backend decides whether it can be resumed or needs a new attempt.
 }
 
 function trackApprovedPurchase(pedido) {
@@ -468,7 +466,8 @@ async function init() {
   // Pega status do Mercado Pago da URL
   const params = new URLSearchParams(window.location.search);
   const statusUrl = params.get('collection_status') || params.get('status') || 'pending';
-  const status = statusFromUrl(statusUrl);
+  const returnStatus = statusFromUrl(statusUrl);
+  const status = returnStatus === 'approved' ? 'pending' : returnStatus;
   const pedidoLocal = readStoredJson(sessionStorage, 'rstreet_pedido', null);
   const pedidoId = params.get('pedido_id') || params.get('external_reference') || pedidoLocal?.pedido_id || '';
   const paymentId = params.get('payment_id') || params.get('collection_id') || params.get('id') || '';
@@ -477,9 +476,9 @@ async function init() {
   // Atualiza header de status
   renderStatus(status, pedidoId);
 
-  // Carrega dados do backend quando voltar do Mercado Pago; localStorage fica como reserva.
+  // Only a verified backend response can confirm payment; URL parameters are untrusted.
   const pedidoBackend = await loadPedidoFromBackend(pedidoId, paymentId);
-  let pedido = pedidoBackend || pedidoLocal;
+  let pedido = pedidoBackend || (String(pedidoLocal?.pedido_id || '') === String(pedidoId) ? pedidoLocal : null);
 
   if (pedido) {
     finalStatus = pedidoBackend ? statusFromPedido(pedidoBackend, status) : status;
@@ -528,10 +527,10 @@ async function init() {
     document.getElementById('cfTotal').textContent = fmt(pedido.total);
   }
 
-  restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus);
-  if (finalStatus === 'approved' && pedido) {
+  if (pedidoBackend) await restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus, pedidoBackend, pedidoLocal);
+  if (finalStatus === 'approved' && pedidoBackend) {
     trackApprovedPurchase(pedido);
-    sessionStorage.removeItem('rstreet_pedido');
+    if (String(pedidoLocal?.pedido_id || '') === String(pedido?.pedido_id || '')) sessionStorage.removeItem('rstreet_pedido');
   }
 }
 

@@ -3541,6 +3541,9 @@ async function verPedido(id) {
 async function atualizarStatus(id) {
   const p = allPedidos.find(x => x.id === id);
   if (!p) return;
+  if (p.mp_preference_id || p.checkout_token) {
+    return toast('O pagamento é atualizado pelo Mercado Pago. Para preparação e entrega, use Atualizar envio.', 'info');
+  }
   const novoStatus = prompt(`Status atual: ${p.status}\n\nDigite o novo status:\n- pago\n- pendente\n- em_analise\n- recusado\n- cancelado`, p.status);
   if (!novoStatus || novoStatus === p.status) return;
   try {
@@ -3549,7 +3552,7 @@ async function atualizarStatus(id) {
     updatePedidosStats();
     renderPedidosTable();
     toast('Status atualizado!', 'success');
-  } catch { toast('Erro ao atualizar status.', 'error'); }
+  } catch (err) { toast(err.message || 'Erro ao atualizar status.', 'error'); }
 }
 
 async function atualizarEnvio(id) {

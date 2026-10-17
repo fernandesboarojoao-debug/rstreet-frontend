@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script src="rstreet-checkout-state.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catálogo R Street | Moda Masculina Selecionada</title>
@@ -791,6 +792,12 @@
   }
   .sidebar-option {
     display: flex;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     align-items: center;
     justify-content: space-between;
     padding: 8px 0;
@@ -799,6 +806,7 @@
     transition: color 0.2s;
   }
   .sidebar-option:hover { color: var(--gold); }
+  .sidebar-option:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
   .sidebar-option.active { color: var(--gold); }
   .sidebar-option-label { font-size: 13px; font-weight: 500; }
   .sidebar-option-count {
@@ -1767,8 +1775,8 @@
       <div style="margin-top:12px">
         <div class="mobile-filters-title">Disponibilidade</div>
         <div class="mobile-filter-row" id="mobileStockFilters">
-          <button class="filter-btn active" onclick="setStockFilterMobile('todos', this)">Todos</button>
-          <button class="filter-btn" onclick="setStockFilterMobile('estoque', this)">Em estoque</button>
+          <button class="filter-btn active" data-stock="todos" aria-pressed="true" onclick="setStockFilterMobile('todos', this)">Todos</button>
+          <button class="filter-btn" data-stock="estoque" aria-pressed="false" onclick="setStockFilterMobile('estoque', this)">Em estoque</button>
         </div>
       </div>
     </div>
@@ -1842,12 +1850,12 @@
     <div class="sidebar-section" id="desktopCampaignSections" style="display:none"></div>
     <div class="sidebar-section">
       <div class="sidebar-title">Disponibilidade</div>
-      <div class="sidebar-option active" onclick="setStockFilter('todos', this)">
+      <button type="button" class="sidebar-option active" data-stock="todos" aria-pressed="true" onclick="setStockFilter('todos', this)">
         <span class="sidebar-option-label">Todos</span>
-      </div>
-      <div class="sidebar-option" onclick="setStockFilter('estoque', this)">
+      </button>
+      <button type="button" class="sidebar-option" data-stock="estoque" aria-pressed="false" onclick="setStockFilter('estoque', this)">
         <span class="sidebar-option-label">Em estoque</span>
-      </div>
+      </button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Faixa de Preço</div>
@@ -2400,6 +2408,14 @@ function setStockFilter(val, el) {
   applyFilters();
 }
 
+function syncStockFilterButtons() {
+  document.querySelectorAll('[data-stock]').forEach(button => {
+    const active = button.dataset.stock === currentStock;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
+
 function setColorFilter(color = 'todos') {
   currentColor = color || 'todos';
   currentPage = 1;
@@ -2422,6 +2438,7 @@ function toggleCatalogSmartFilters(force) {
 }
 
 function updatePrice(val) {
+  currentPage = 1;
   currentMaxPrice = parseInt(val);
   const priceLabel = document.getElementById('priceLabel');
   const mobilePriceLabel = document.getElementById('mobileMenuPriceLabel');
@@ -2699,7 +2716,7 @@ function getCatalogActiveChips() {
   if (currentCategory !== 'todos') chips.push({ type:'category', label:`Categoria: ${getCategoryLabel(currentCategory)}` });
   if (currentColor !== 'todos') chips.push({ type:'color', label:`Cor: ${currentColor}` });
   if (currentSize !== 'todos') chips.push({ type:'size', label:`Tamanho: ${currentSize}` });
-  if (currentStock !== 'todos') chips.push({ type:'stock', label: currentStock === 'disponivel' ? 'Disponíveis' : 'Esgotados' });
+  if (currentStock === 'estoque') chips.push({ type:'stock', label:'Em estoque' });
   return chips;
 }
 
@@ -2738,10 +2755,12 @@ function updateBrandOrbitActive() {
 }
 
 function applyFilters() {
+  syncStockFilterButtons();
   updateCatalogSearchMode();
   updateCatalogShareUrl();
   const sort = document.getElementById('sortSelect').value;
   filtered = getCatalogBaseProducts().filter(productMatchesColorAndSize);
+  currentPage = Math.max(1, Math.min(currentPage, Math.ceil(filtered.length / PER_PAGE) || 1));
 
   const search = normalizeSearchText(document.getElementById('searchInput')?.value || '');
   if (sort === 'default' && search) {
@@ -2766,6 +2785,7 @@ function applyFilters() {
 }
 
 function handleCatalogSearchInput() {
+  currentPage = 1;
   applyFilters();
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3023,10 +3043,10 @@ function renderCategoryButton(category, target = 'sidebar') {
   if (target === 'mobile') {
     return `<button class="filter-btn ${active ? 'active' : ''}" onclick="setCategoryFilterMobile(${jsStringAttr(value)}, this)">${escapeHtml(label)}</button>`;
   }
-  return `<div class="sidebar-option ${active ? 'active' : ''}" onclick="setCategoryFilter(${jsStringAttr(value)}, this)">
+  return `<button type="button" class="sidebar-option ${active ? 'active' : ''}" aria-pressed="${active}" onclick="setCategoryFilter(${jsStringAttr(value)}, this)">
     <span class="sidebar-option-label">${escapeHtml(label)}</span>
     <span class="sidebar-option-count">${count}</span>
-  </div>`;
+  </button>`;
 }
 
 function updateDynamicCategoryFilters() {
@@ -4121,6 +4141,8 @@ function syncCartWithStock() {
   const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
   let changed = false;
   const next = cart.map(item => {
+    const held = window.RStreetCheckoutState?.preserve(item);
+    if (held) return held;
     const product = allProducts.find(p => p.id === item.id);
     if (!product) return item;
     const estoque = Math.max(0, Number(product.estoque) || 0);
