@@ -513,11 +513,17 @@ function setQty(idx, val) {
 }
 
 function removeItem(idx) {
+  const selected = getCart()[idx];
+  if (!selected) return;
   const el = document.getElementById('item-' + idx);
   if (el) el.classList.add('removing');
   setTimeout(() => {
     const cart = getCart();
-    cart.splice(idx, 1);
+    const currentIndex = cart.findIndex(item => Number(item.id) === Number(selected.id)
+      && Number(item.produto_variante_id || 0) === Number(selected.produto_variante_id || 0)
+      && (item.checkoutLineId || null) === (selected.checkoutLineId || null));
+    if (currentIndex < 0) return;
+    cart.splice(currentIndex, 1);
     saveCart(cart);
     render();
     toast('Produto removido do carrinho.');

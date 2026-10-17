@@ -13,7 +13,7 @@ function setup(response, ok = false) {
   const session = new Map();
   const removed = [], alerts = [], requests = [];
   const scope = vm.createContext({
-    URL, BACKEND_URL: 'https://test.invalid', paymentMethod: 'pix', freteVal: 0, freteLabel: 'Entrega local',
+    URL, BACKEND_URL: 'https://test.invalid', paymentMethod: 'pix', freteVal: 0, freteLabel: 'Entrega local', checkoutNeedsCartRefresh: false,
     window: { location: {}, RStreetCheckoutState: { remember() {}, release: token => removed.push(token) } },
     document: {
       getElementById(id) {

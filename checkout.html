@@ -456,6 +456,8 @@ let freteVal = 0;
 let freteLabel = '';
 let paymentMethod = 'credit_card';
 let checkoutTracked = false;
+let checkoutNeedsCartRefresh = false;
+let cepLookupController = null;
 
 const STORE_HOURS_TEXT = 'segunda a sexta das 9h às 18h, sábado das 9h às 13h. Domingo fechado.';
 
@@ -753,6 +755,8 @@ function selectFrete(el, valor, label) {
 }
 
 function resetFrete() {
+  cepLookupController?.abort();
+  cepLookupController = null;
   freteVal = 0;
   freteLabel = '';
   document.getElementById('freteOptions').classList.remove('show');
@@ -800,11 +804,15 @@ async function buscarCEP() {
   const cep = document.getElementById('f-cep').value.replace(/\D/g,'');
   if (cep.length !== 8) return showAlert('Digite um CEP válido.', 'error');
   resetFrete();
+  clearAlert();
+  const controller = new AbortController();
+  cepLookupController = controller;
+  const timeout = setTimeout(() => controller.abort(), 15000);
   try {
-    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`, { signal: controller.signal });
     if (!res.ok) throw new Error('CEP indisponível');
     const d = await res.json();
-    if (document.getElementById('f-cep').value.replace(/\D/g,'') !== cep) return;
+    if (cepLookupController !== controller || document.getElementById('f-cep').value.replace(/\D/g,'') !== cep) return;
     if (d.erro) return showAlert('CEP não encontrado.', 'error');
     document.getElementById('f-rua').value = d.logradouro || '';
     document.getElementById('f-bairro').value = d.bairro || '';
@@ -814,9 +822,12 @@ async function buscarCEP() {
     renderFreteOptions(calcularFretesPorEndereco(d.localidade, d.uf));
     document.getElementById('freteOptions').classList.add('show');
   } catch {
-    if (document.getElementById('f-cep').value.replace(/\D/g,'') !== cep) return;
+    if (cepLookupController !== controller || document.getElementById('f-cep').value.replace(/\D/g,'') !== cep) return;
     showAlert('Erro ao buscar CEP. Preencha o endereço manualmente.', 'error');
     atualizarFreteManual();
+  } finally {
+    clearTimeout(timeout);
+    if (cepLookupController === controller) cepLookupController = null;
   }
 }
 
@@ -893,6 +904,7 @@ async function finalizarCompra() {
   btn.classList.add('loading');
   btn.disabled = true;
   clearAlert();
+  let redirecting = false;
 
   try {
   const validacaoCarrinho = wasCheckoutAttemptSubmitted(getCart())
@@ -976,13 +988,26 @@ async function finalizarCompra() {
     // Redireciona somente para o checkout oficial do Mercado Pago.
     const paymentUrl = safeMercadoPagoUrl(data.init_point);
     if (!paymentUrl) throw new Error('O link seguro de pagamento não foi recebido');
+    redirecting = true;
     window.location.href = paymentUrl;
   } catch (err) {
     showAlert('Erro ao processar pedido: ' + err.message + '. Tente novamente ou entre em contato via WhatsApp.', 'error');
   } finally {
     btn.classList.remove('loading');
     btn.disabled = false;
+    if (!redirecting && checkoutNeedsCartRefresh) handleCheckoutCartStorage({ key: 'rstreet_cart' }, false);
   }
+}
+
+function handleCheckoutCartStorage(event, notify = true) {
+  if (event.key !== 'rstreet_cart' && event.key !== null) return;
+  if (document.getElementById('btnFinalizar').disabled) {
+    checkoutNeedsCartRefresh = true;
+    return;
+  }
+  checkoutNeedsCartRefresh = false;
+  renderSummary();
+  if (notify) showAlert('Seu carrinho foi atualizado em outra aba. Confira os itens e o total antes de continuar.', 'info');
 }
 
 // ─── ALERT ──────────────────────────────────
@@ -1010,6 +1035,7 @@ document.querySelectorAll('input[id]').forEach(input => {
 document.getElementById('f-cep').addEventListener('input', resetFrete);
 updateStoreHoursAlert();
 renderSummary();
+window.addEventListener('storage', handleCheckoutCartStorage);
 </script>
 </body>
 </html>

@@ -44,6 +44,7 @@
   .result.open{display:block}
   .row{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding:10px 0;color:#ddd}
   .row strong{color:var(--gold)}
+  .row > *{min-width:0;overflow-wrap:anywhere}.row strong{text-align:right}.items{overflow-wrap:anywhere}
    .items{margin-top:14px;color:#ddd;line-height:1.8}
    .track{display:inline-block;margin-top:12px;color:var(--gold);text-decoration:none}
    .timeline{margin-top:22px;border-top:1px solid var(--border);padding-top:18px}
@@ -62,15 +63,15 @@
 <main>
   <h1>Acompanhar Pedido</h1>
   <p class="intro">Digite o número do pedido e o e-mail usado na compra para consultar pagamento, envio e rastreio.</p>
-  <div class="box">
+  <form class="box" onsubmit="consultarPedido(event)">
     <label for="pedidoId">Número do pedido</label>
-    <input id="pedidoId" inputmode="numeric" placeholder="Ex: 48">
+    <input id="pedidoId" inputmode="numeric" pattern="[1-9][0-9]*" required placeholder="Ex: 48">
     <label for="pedidoEmail">E-mail da compra</label>
-    <input id="pedidoEmail" type="email" placeholder="seuemail@exemplo.com">
-    <button onclick="consultarPedido()" id="btnConsultar">Consultar pedido</button>
-    <div class="msg" id="msg"></div>
-  </div>
-  <div class="result" id="resultado"></div>
+    <input id="pedidoEmail" type="email" autocomplete="email" required placeholder="seuemail@exemplo.com">
+    <button type="submit" id="btnConsultar">Consultar pedido</button>
+    <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  </form>
+  <div class="result" id="resultado" aria-live="polite"></div>
 </main>
 <script>
 const BACKEND_BASE = 'https://rstreet-backend.onrender.com/api';
@@ -137,10 +138,26 @@ function showError(text) {
   msg.className = 'msg error';
 }
 
-async function consultarPedido() {
+let trackingController = null;
+
+function resetTrackingResult() {
+  trackingController?.abort();
+  trackingController = null;
+  document.getElementById('resultado').className = 'result';
+  document.getElementById('resultado').innerHTML = '';
+  document.getElementById('msg').className = 'msg';
+  document.getElementById('msg').textContent = '';
+  const button = document.getElementById('btnConsultar');
+  button.disabled = false;
+  button.textContent = 'Consultar pedido';
+}
+
+async function consultarPedido(event) {
+  event?.preventDefault();
   const id = document.getElementById('pedidoId').value.trim();
   const email = document.getElementById('pedidoEmail').value.trim();
   const btn = document.getElementById('btnConsultar');
+  if (btn.disabled) return;
   const msg = document.getElementById('msg');
   const resultado = document.getElementById('resultado');
   msg.className = 'msg';
@@ -148,17 +165,24 @@ async function consultarPedido() {
   resultado.className = 'result';
   resultado.innerHTML = '';
 
-  if (!id || !email) return showError('Informe o número do pedido e o e-mail da compra.');
+  if (!/^[1-9]\d*$/.test(id) || !Number.isSafeInteger(Number(id)) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return showError('Informe um número de pedido válido e o e-mail da compra.');
+  }
 
+  const controller = new AbortController();
+  trackingController = controller;
+  const timeout = setTimeout(() => controller.abort(), 20000);
   btn.disabled = true;
   btn.textContent = 'Consultando...';
   try {
     const res = await fetch(`${BACKEND_BASE}/pedidos/acompanhar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, email })
+      body: JSON.stringify({ id, email }),
+      signal: controller.signal,
     });
     const data = await res.json().catch(() => ({}));
+    if (trackingController !== controller || controller.signal.aborted) return;
     if (!res.ok) throw new Error(data.erro || 'Pedido não encontrado.');
 
     const p = data.pedido;
@@ -179,12 +203,19 @@ async function consultarPedido() {
        ${renderTimeline(p, updates)}`;
     resultado.className = 'result open';
   } catch (err) {
-    showError(err.message || 'Não foi possível consultar o pedido.');
+    if (trackingController === controller) showError(controller.signal.aborted
+      ? 'A consulta demorou mais que o esperado. Tente novamente.'
+      : err.message || 'Não foi possível consultar o pedido.');
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Consultar pedido';
+    clearTimeout(timeout);
+    if (trackingController === controller) {
+      trackingController = null;
+      btn.disabled = false;
+      btn.textContent = 'Consultar pedido';
+    }
   }
 }
+['pedidoId', 'pedidoEmail'].forEach(id => document.getElementById(id).addEventListener('input', resetTrackingResult));
 </script>
 </body>
 </html>

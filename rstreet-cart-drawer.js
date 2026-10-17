@@ -371,11 +371,13 @@
       event.preventDefault(); first?.focus();
     }
   });
-  window.addEventListener('storage', event => {
-    if (event.key === CART_KEY) {
+  function handleCartStorage(event) {
+    if (event.key === CART_KEY || event.key === null) {
       stockReady = false;
       updateBadges();
       renderDrawer();
+      if (document.body.classList.contains('rstreet-cart-open')) refreshCartStock();
     }
-  });
+  }
+  window.addEventListener('storage', handleCartStorage);
 })();
