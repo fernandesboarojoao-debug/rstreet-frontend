@@ -27,7 +27,7 @@ test('Pixel requires separate advertising consent and disables automatic collect
   const denied = await tracking('https://www.rstreet.com.br/catalogo.html', false);
   denied.scope.window.RStreetTrack.pageView();
   assert.ok(denied.scripts.every(node => !/facebook/.test(node.src || '')));
-  const allowed = await tracking('https://www.rstreet.com.br/produto.html?id=1336');
+  const allowed = await tracking('https://www.rstreet.com.br/produto.html?id=1336&cor=Preto');
   assert.equal(allowed.scope.window.fbq.disablePushState, true);
   assert.deepEqual(allowed.calls().slice(0, 3), [['set', 'autoConfig', false, '123456789'], ['consent', 'grant'], ['init', '123456789']]);
   allowed.scope.window.RStreetTrack.viewContent({ id: 1336, preco: 159.9, nome: 'Camiseta' });
@@ -44,6 +44,7 @@ test('Pixel stays absent from private pages, searches, unknown parameters and pr
     ['/confirmacao.html?pedido=1&token=private', ''], ['/acompanhar.html', ''], ['/carrinho.html', ''],
     ['/admin.html', ''], ['/catalogo.html?busca=private@example.test', ''],
     ['/produto.html?id=1&token=private', ''], ['/catalogo.html#private', ''],
+    ['/produto.html?id=1&cor=private@example.test', ''],
     ['/catalogo.html', 'https://www.rstreet.com.br/confirmacao.html?token=private'],
     ['/produto.html?id=1', 'https://example.test/?email=private@example.test']
   ];

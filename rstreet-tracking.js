@@ -157,6 +157,7 @@
 
   function metaPageAllowed() {
     const publicPaths = new Set(['/', '/index.html', '/catalogo.html', '/produto.html', '/sobre.html', '/politica.html']);
+    const publicColors = new Set(['preto', 'branco', 'azul', 'azul marinho', 'marinho', 'vermelho', 'vinho', 'verde', 'verde oliva', 'verde menta', 'verde claro', 'cinza', 'rosa', 'rosa claro', 'bege', 'bege amarronzado', 'creme', 'marrom', 'malbec', 'laranja', 'amarelo', 'amarelo sunlight', 'barca', 'ceramica', 'goanna', 'verde folhagem', 'preto com azul bebe']);
     function publicUrl(value, externalReferrer = false) {
       if (!value) return true;
       try {
@@ -164,8 +165,10 @@
         if (!/^https?:$/.test(url.protocol) || url.hash) return false;
         if (externalReferrer && url.origin !== new URL(location.href).origin) return !url.search;
         if (!publicPaths.has(url.pathname)) return false;
-        // Only numeric product IDs may accompany a Pixel URL. Searches and order tokens stay private.
-        return [...url.searchParams].every(([key, val]) => key === 'id' && /^\d{1,10}$/.test(val));
+        // Only public product IDs and known color labels may accompany a Pixel URL.
+        return [...url.searchParams].every(([key, val]) =>
+          (key === 'id' && /^\d{1,10}$/.test(val)) ||
+          (key === 'cor' && publicColors.has(val.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim())));
       } catch { return false; }
     }
     return publicUrl(location.href) && publicUrl(document.referrer, true);
