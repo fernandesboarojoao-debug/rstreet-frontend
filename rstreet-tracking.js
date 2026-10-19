@@ -15,12 +15,28 @@
 
   function consentSignature() { return `${CONFIG.gaMeasurementId}|${CONFIG.metaPixelId}`; }
 
-  function storedConsent() {
+  function parseConsent(raw) {
     try {
-      const saved = JSON.parse(localStorage.getItem('rstreet_privacy_v1'));
-      if (saved?.signature === consentSignature() && Date.now() - saved.updatedAt < 180 * 86400000 && typeof saved.analytics === 'boolean' && typeof saved.marketing === 'boolean') return saved;
+      const saved = JSON.parse(raw);
+      const age = Date.now() - Number(saved?.updatedAt);
+      if (saved?.signature === consentSignature() && Number.isFinite(age) && age >= 0 && age < 180 * 86400000 && typeof saved.analytics === 'boolean' && typeof saved.marketing === 'boolean') return saved;
     } catch {}
     return null;
+  }
+
+  function storedConsent() {
+    try { return parseConsent(localStorage.getItem('rstreet_privacy_v1')); } catch { return null; }
+  }
+
+  function clearOptionalCookies(choice) {
+    if (typeof document.cookie !== 'string') return;
+    const names = document.cookie.split(';').map(cookie => cookie.split('=')[0].trim()).filter(name =>
+      (!choice.analytics && /^_ga(?:_|$)/.test(name)) || (!choice.marketing && /^_fb[pc]$/.test(name)));
+    const host = location.hostname;
+    const domains = ['', ...(host ? [...new Set([host, host.replace(/^www\./, '')])].map(domain => `; Domain=${domain}`) : [])];
+    for (const name of names) for (const domain of domains) {
+      document.cookie = `${name}=; Max-Age=0; Path=/${domain}; SameSite=Lax`;
+    }
   }
 
   function chooseConsent() {
@@ -61,6 +77,7 @@
 
   function applyAnalyticsConsent(choice) {
     consent = choice;
+    clearOptionalCookies(choice);
     window[`ga-disable-${CONFIG.gaMeasurementId}`] = !consent.analytics;
     if (CONFIG.gaMeasurementId && consent.analytics && !gaLoaded) {
       gaLoaded = true;
@@ -75,19 +92,32 @@
     } else if (gaLoaded) {
       window.gtag('consent', 'update', { analytics_storage: consent.analytics ? 'granted' : 'denied' });
     }
-    if (CONFIG.metaPixelId && consent.marketing && !metaLoaded) {
+    const allowMeta = consent.marketing && metaPageAllowed();
+    if (CONFIG.metaPixelId && allowMeta && !metaLoaded) {
       metaLoaded = true;
       window.fbq = window.fbq || function () {
         window.fbq.callMethod ? window.fbq.callMethod.apply(window.fbq, arguments) : window.fbq.queue.push(arguments);
       };
       if (!window._fbq) window._fbq = window.fbq;
       window.fbq.push = window.fbq; window.fbq.loaded = true; window.fbq.version = '2.0'; window.fbq.queue = window.fbq.queue || [];
-      loadScript('https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq.disablePushState = true;
+      window.fbq('set', 'autoConfig', false, CONFIG.metaPixelId);
+      window.fbq('consent', 'grant');
       window.fbq('init', CONFIG.metaPixelId);
+      loadScript('https://connect.facebook.net/en_US/fbevents.js');
     } else if (metaLoaded) {
-      window.fbq('consent', consent.marketing ? 'grant' : 'revoke');
+      window.fbq('consent', allowMeta ? 'grant' : 'revoke');
     }
   }
+
+  function handlePrivacyStorage(event) {
+    if (event.key !== 'rstreet_privacy_v1' && event.key !== null) return;
+    const saved = parseConsent(event.newValue);
+    // A background tab may revoke permission, but never grant new permissions silently.
+    applyAnalyticsConsent({ analytics: consent.analytics && Boolean(saved?.analytics), marketing: consent.marketing && Boolean(saved?.marketing) });
+  }
+
+  if (typeof window.addEventListener === 'function') window.addEventListener('storage', handlePrivacyStorage);
 
   function getSessionId() {
     if (sessionId) return sessionId;
@@ -123,6 +153,22 @@
       const url = new URL(value);
       return `${url.origin}${url.pathname}`;
     } catch { return ''; }
+  }
+
+  function metaPageAllowed() {
+    const publicPaths = new Set(['/', '/index.html', '/catalogo.html', '/produto.html', '/sobre.html', '/politica.html']);
+    function publicUrl(value, externalReferrer = false) {
+      if (!value) return true;
+      try {
+        const url = new URL(value);
+        if (!/^https?:$/.test(url.protocol) || url.hash) return false;
+        if (externalReferrer && url.origin !== new URL(location.href).origin) return !url.search;
+        if (!publicPaths.has(url.pathname)) return false;
+        // Only numeric product IDs may accompany a Pixel URL. Searches and order tokens stay private.
+        return [...url.searchParams].every(([key, val]) => key === 'id' && /^\d{1,10}$/.test(val));
+      } catch { return false; }
+    }
+    return publicUrl(location.href) && publicUrl(document.referrer, true);
   }
 
   function loadScript(src) {
@@ -178,7 +224,15 @@
 
   function metaEvent(name, params) {
     const run = () => {
-      if (consent.marketing && typeof window.fbq === 'function') window.fbq('track', name, params || {});
+      if (!consent.marketing) return;
+      if (!metaPageAllowed()) {
+        if (metaLoaded) window.fbq('consent', 'revoke');
+        return;
+      }
+      if (!metaLoaded) applyAnalyticsConsent(consent);
+      if (typeof window.fbq !== 'function') return;
+      window.fbq('consent', 'grant');
+      window.fbq('track', name, params || {});
     };
     if (analyticsReady) run(); else if (pendingAnalytics.length < 50) pendingAnalytics.push(run);
   }

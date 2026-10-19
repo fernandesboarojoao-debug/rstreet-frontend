@@ -80,6 +80,38 @@ test('optional trackers stay unloaded until permission and stop after revocation
   assert.equal(scope.window.dataLayer.length, before);
 });
 
+test('privacy revocation reaches other tabs without granting new background permissions', () => {
+  const scope = vm.createContext({ consent: { analytics: true, marketing: true }, consentSignature: () => 'G-TEST|12345',
+    applyAnalyticsConsent: value => { scope.consent = value; } });
+  load('rstreet-tracking.js', '  function parseConsent(', '  function storedConsent(', scope);
+  load('rstreet-tracking.js', '  function handlePrivacyStorage(', "  if (typeof window.addEventListener", scope);
+  const raw = choice => JSON.stringify({ ...choice, signature: 'G-TEST|12345', updatedAt: Date.now() });
+  scope.handlePrivacyStorage({ key: 'rstreet_cart', newValue: null });
+  assert.equal(scope.consent.analytics, true);
+  scope.handlePrivacyStorage({ key: 'rstreet_privacy_v1', newValue: raw({ analytics: true, marketing: false }) });
+  assert.equal(scope.consent.analytics, true);
+  assert.equal(scope.consent.marketing, false);
+  scope.handlePrivacyStorage({ key: 'rstreet_privacy_v1', newValue: raw({ analytics: true, marketing: true }) });
+  assert.equal(scope.consent.marketing, false);
+  scope.handlePrivacyStorage({ key: null, newValue: null });
+  assert.equal(scope.consent.analytics, false);
+  assert.equal(scope.consent.marketing, false);
+  assert.equal(scope.parseConsent(JSON.stringify({ analytics: true, marketing: true, signature: 'G-TEST|12345', updatedAt: Date.now() + 86400000 })), null);
+});
+
+test('revocation deletes only optional analytics cookies, not the cart or session', () => {
+  const writes = [];
+  const document = {};
+  Object.defineProperty(document, 'cookie', { get: () => '_ga=one; _ga_TEST=two; _fbp=three; session=private; rstreet_cart=keep', set: value => writes.push(value) });
+  const scope = vm.createContext({ document, location: { hostname: 'www.rstreet.com.br' } });
+  load('rstreet-tracking.js', '  function clearOptionalCookies(', '  function chooseConsent(', scope);
+  scope.clearOptionalCookies({ analytics: false, marketing: true });
+  assert.equal(writes.length, 6);
+  assert.ok(writes.every(value => /^_ga(?:_TEST)?=; Max-Age=0; Path=\//.test(value)));
+  assert.ok(writes.some(value => value.includes('Domain=rstreet.com.br')));
+  assert.ok(writes.every(value => !/session=|rstreet_cart=|_fbp=/.test(value)));
+});
+
 test('metrics period switches cannot show a late result from the previous period', async () => {
   const elements = new Map(), pending = [];
   function element(id) {

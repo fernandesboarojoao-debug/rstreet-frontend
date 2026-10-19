@@ -69,3 +69,19 @@ test('a new search always starts with the first ranked results', () => {
   scope.handleCatalogSearchInput();
   assert.equal(pageAtRender, 1);
 });
+
+test('explicit product types cannot match unrelated products through descriptions or synonyms', () => {
+  const scope = vm.createContext({ allProductVariants: [], getCatalogColorGroups: id => id === 4 ? [{ cor: 'Vinho' }] : [] });
+  load('function normalizeSearchText(value)', 'function updateCatalogSearchMode()', scope);
+  load('function isCatalogSizeSearchTerm(term)', 'function updateCategoryCounts()', scope);
+  const belt = { id: 1, nome: 'Cinto Masculino Freeway', categoria: 'Acessório', descricao: 'Couro para o dia a dia.' };
+  const pants = { id: 2, nome: 'Calça Sarja', categoria: 'Calça', descricao: 'Passantes para cinto. Combina com tênis ou sapato.' };
+  const flipFlop = { id: 3, nome: 'Chinelo Masculino', categoria: 'Calçado', descricao: 'Use para descansar dos tênis.' };
+  const shirt = { id: 4, nome: 'Camiseta Ogochi', categoria: 'Camiseta' };
+  assert.ok(scope.getProductSearchScore(belt, 'cinto') >= 0);
+  assert.equal(scope.getProductSearchScore(pants, 'cinto'), -1);
+  assert.equal(scope.getProductSearchScore(flipFlop, 'tenis'), -1);
+  assert.ok(scope.getProductSearchScore(pants, 'calcas') >= 0);
+  assert.ok(scope.getProductSearchScore(shirt, 'vermelho') >= 0);
+  assert.ok(scope.getProductSearchScore(shirt, 'cami') >= 0);
+});

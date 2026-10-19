@@ -2916,6 +2916,13 @@ const SEARCH_SYNONYM_FAMILIES = [
   ['esporte', 'sport', 'sports', 'academia', 'treino']
 ].map(group => group.map(normalizeSearchText));
 
+const SEARCH_PRODUCT_TYPES = [
+  ['cinto', 'cintos'], ['carteira', 'carteiras'], ['camiseta', 'camisetas', 'tshirt', 'tee'],
+  ['camisa', 'camisas'], ['regata', 'regatas'], ['calca', 'calcas', 'pants'],
+  ['bermuda', 'bermudas', 'short', 'shorts'], ['tenis', 'tennis', 'sapatenis', 'sneaker', 'sneakers', 'sapato', 'sapatos'],
+  ['chinelo', 'chinelos', 'sandalia', 'sandalias', 'slide', 'slides'], ['jaqueta', 'jaquetas'], ['polo', 'polos']
+];
+
 function getColorFamily(value) {
   const text = normalizeSearchText(value);
   if (!text) return null;
@@ -3198,6 +3205,9 @@ function isCatalogSizeSearchTerm(term) {
 function getProductSearchScore(product, search) {
   const terms = normalizeSearchText(search).split(/\s+/).filter(Boolean);
   if (!terms.length) return 0;
+  const identity = normalizeSearchText(`${product?.nome || ''} ${product?.categoria || ''}`).split(/\s+/);
+  const requestedTypes = SEARCH_PRODUCT_TYPES.filter(group => terms.some(term => group.includes(term)));
+  if (requestedTypes.some(group => !identity.some(word => group.includes(word)))) return -1;
 
   const variants = allProductVariants.filter(v =>
     Number(v.produto_id) === Number(product?.id) &&
