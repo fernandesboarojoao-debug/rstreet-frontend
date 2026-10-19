@@ -7,15 +7,95 @@
   };
   const pendingAnalytics = [];
   let analyticsReady = false;
+  let sessionId = '';
+  let consent = { analytics: false, marketing: false };
+  let gaLoaded = false;
+  let metaLoaded = false;
+  let consentPending = null;
+
+  function consentSignature() { return `${CONFIG.gaMeasurementId}|${CONFIG.metaPixelId}`; }
+
+  function storedConsent() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('rstreet_privacy_v1'));
+      if (saved?.signature === consentSignature() && Date.now() - saved.updatedAt < 180 * 86400000 && typeof saved.analytics === 'boolean' && typeof saved.marketing === 'boolean') return saved;
+    } catch {}
+    return null;
+  }
+
+  function chooseConsent() {
+    if (consentPending) return consentPending;
+    consentPending = new Promise(resolve => {
+      const panel = document.createElement('section');
+      panel.setAttribute('role', 'region');
+      panel.setAttribute('aria-label', 'Preferências de privacidade');
+      panel.className = 'rstreet-consent';
+      const services = [CONFIG.gaMeasurementId ? 'Google Analytics' : '', CONFIG.metaPixelId ? 'Meta Pixel' : ''].filter(Boolean).join(' e ');
+      panel.innerHTML = `<strong>Sua privacidade</strong><p>Com sua permissão, usamos ${services} para analisar visitas${CONFIG.metaPixelId ? ', compras e anúncios' : ' e compras'}. Você pode recusar os cookies opcionais.</p><a href="politica.html">Política de privacidade</a><div class="rstreet-consent-actions"><button type="button" data-choice="analytics">Permitir análises</button>${CONFIG.metaPixelId ? '<button type="button" data-choice="all">Análises e anúncios</button>' : ''}<button type="button" data-choice="none">Recusar opcionais</button></div>`;
+      panel.querySelectorAll('[data-choice]').forEach(button => button.addEventListener('click', () => {
+        const choice = { analytics: button.dataset.choice !== 'none', marketing: button.dataset.choice === 'all', signature: consentSignature(), updatedAt: Date.now() };
+        try { localStorage.setItem('rstreet_privacy_v1', JSON.stringify(choice)); } catch {}
+        panel.remove();
+        document.body.classList.remove('rstreet-consent-open');
+        consentPending = null;
+        resolve(choice);
+      }));
+      document.body.classList.add('rstreet-consent-open');
+      document.body.appendChild(panel);
+    });
+    return consentPending;
+  }
+
+  function installPrivacyControls() {
+    const style = document.createElement('style');
+    style.textContent = `.rstreet-consent{position:fixed;left:20px;bottom:20px;width:460px;max-width:calc(100% - 40px);padding:20px;background:#fff;color:#171717;border:1px solid #ccc;border-radius:4px;box-shadow:0 6px 24px #0004;z-index:9800;font:13px/1.5 Arial,sans-serif}.rstreet-consent strong{font-size:17px;color:#171717}.rstreet-consent p{margin:10px 0;color:#333}.rstreet-consent a{color:#554015;text-decoration:underline}.rstreet-consent-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.rstreet-consent-actions button{flex:1;min-width:130px;padding:10px;border:1px solid #666;border-radius:3px;background:#fff;color:#171717;font:700 12px Arial,sans-serif;cursor:pointer}.rstreet-consent-actions button:hover{background:#eee}.rstreet-consent-actions button:focus-visible{outline:2px solid #171717;outline-offset:2px}.rstreet-consent-open .rstreet-whatsapp-float{visibility:hidden}.rstreet-privacy-button{border:0;background:none;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;padding:10px}@media(max-width:640px){.rstreet-consent{left:12px;bottom:12px;max-width:calc(100% - 24px);padding:16px}}`;
+    document.head.appendChild(style);
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'rstreet-privacy-button'; button.textContent = 'Preferências de privacidade';
+    button.addEventListener('click', async () => {
+      applyAnalyticsConsent(await chooseConsent());
+      externalPageView();
+    });
+    (document.querySelector('footer') || document.querySelector('main') || document.body).appendChild(button);
+  }
+
+  function applyAnalyticsConsent(choice) {
+    consent = choice;
+    window[`ga-disable-${CONFIG.gaMeasurementId}`] = !consent.analytics;
+    if (CONFIG.gaMeasurementId && consent.analytics && !gaLoaded) {
+      gaLoaded = true;
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
+      window.gtag('consent', 'default', { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
+      loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(CONFIG.gaMeasurementId)}`);
+      window.gtag('js', new Date());
+      window.gtag('consent', 'update', { analytics_storage: 'granted' });
+      window.gtag('config', CONFIG.gaMeasurementId, { send_page_view: false, allow_google_signals: false, allow_ad_personalization_signals: false,
+        page_location: cleanPageUrl(location.href), page_referrer: cleanPageUrl(document.referrer) });
+    } else if (gaLoaded) {
+      window.gtag('consent', 'update', { analytics_storage: consent.analytics ? 'granted' : 'denied' });
+    }
+    if (CONFIG.metaPixelId && consent.marketing && !metaLoaded) {
+      metaLoaded = true;
+      window.fbq = window.fbq || function () {
+        window.fbq.callMethod ? window.fbq.callMethod.apply(window.fbq, arguments) : window.fbq.queue.push(arguments);
+      };
+      if (!window._fbq) window._fbq = window.fbq;
+      window.fbq.push = window.fbq; window.fbq.loaded = true; window.fbq.version = '2.0'; window.fbq.queue = window.fbq.queue || [];
+      loadScript('https://connect.facebook.net/en_US/fbevents.js');
+      window.fbq('init', CONFIG.metaPixelId);
+    } else if (metaLoaded) {
+      window.fbq('consent', consent.marketing ? 'grant' : 'revoke');
+    }
+  }
 
   function getSessionId() {
+    if (sessionId) return sessionId;
     const key = 'rstreet_metrics_session';
-    let id = sessionStorage.getItem(key);
-    if (!id) {
-      id = `rs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 14)}`;
-      sessionStorage.setItem(key, id);
-    }
-    return id;
+    try { sessionId = sessionStorage.getItem(key) || ''; } catch {}
+    if (!sessionId) sessionId = `rs_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 14)}`;
+    try { sessionStorage.setItem(key, sessionId); } catch {}
+    return sessionId;
   }
 
   function saveMetric(type, data = {}) {
@@ -38,8 +118,11 @@
     }).catch(() => {});
   }
 
-  function hasValue(value) {
-    return typeof value === 'string' && value.trim().length > 4 && !value.includes('COLE_');
+  function cleanPageUrl(value) {
+    try {
+      const url = new URL(value);
+      return `${url.origin}${url.pathname}`;
+    } catch { return ''; }
   }
 
   function loadScript(src) {
@@ -51,29 +134,18 @@
 
   async function initializeAnalytics() {
     try {
-      const response = await fetch('/api/public-config', { headers: { Accept: 'application/json' } });
-      if (response.ok) Object.assign(CONFIG, await response.json());
+      const response = await fetch('/api/public-config', { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+      if (response.ok) {
+        const config = await response.json();
+        if (/^G-[A-Z0-9]+$/.test(config.gaMeasurementId || '')) CONFIG.gaMeasurementId = config.gaMeasurementId;
+        if (/^\d{5,25}$/.test(config.metaPixelId || '')) CONFIG.metaPixelId = config.metaPixelId;
+      }
     } catch {}
 
-    if (hasValue(CONFIG.gaMeasurementId)) {
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-      loadScript(`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(CONFIG.gaMeasurementId)}`);
-      window.gtag('js', new Date());
-      window.gtag('config', CONFIG.gaMeasurementId, { send_page_view: false });
-    }
-
-    if (hasValue(CONFIG.metaPixelId)) {
-      window.fbq = window.fbq || function () {
-        window.fbq.callMethod ? window.fbq.callMethod.apply(window.fbq, arguments) : window.fbq.queue.push(arguments);
-      };
-      if (!window._fbq) window._fbq = window.fbq;
-      window.fbq.push = window.fbq;
-      window.fbq.loaded = true;
-      window.fbq.version = '2.0';
-      window.fbq.queue = window.fbq.queue || [];
-      loadScript('https://connect.facebook.net/en_US/fbevents.js');
-      window.fbq('init', CONFIG.metaPixelId);
+    if (CONFIG.gaMeasurementId || CONFIG.metaPixelId) {
+      if (document.readyState === 'loading') await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
+      installPrivacyControls();
+      applyAnalyticsConsent(storedConsent() || await chooseConsent());
     }
 
     analyticsReady = true;
@@ -99,24 +171,30 @@
 
   function gaEvent(name, params) {
     const run = () => {
-      if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+      if (consent.analytics && typeof window.gtag === 'function') window.gtag('event', name, params || {});
     };
-    if (analyticsReady) run(); else pendingAnalytics.push(run);
+    if (analyticsReady) run(); else if (pendingAnalytics.length < 50) pendingAnalytics.push(run);
   }
 
   function metaEvent(name, params) {
     const run = () => {
-      if (typeof window.fbq === 'function') window.fbq('track', name, params || {});
+      if (consent.marketing && typeof window.fbq === 'function') window.fbq('track', name, params || {});
     };
-    if (analyticsReady) run(); else pendingAnalytics.push(run);
+    if (analyticsReady) run(); else if (pendingAnalytics.length < 50) pendingAnalytics.push(run);
+  }
+
+  function externalPageView() {
+      gaEvent('page_view', {
+        page_location: cleanPageUrl(window.location.href),
+        page_referrer: cleanPageUrl(document.referrer),
+        page_title: document.title
+      });
+      metaEvent('PageView');
   }
 
   window.RStreetTrack = {
     pageView() {
-      gaEvent('page_view', {
-        page_location: window.location.href,
-        page_title: document.title
-      });
+      externalPageView();
       saveMetric('page_view');
     },
     viewContent(product) {
@@ -248,7 +326,7 @@
     window.RStreetTrack.pageView();
     document.body.addEventListener('click', event => {
       const link = event.target.closest('a[href*="wa.me"],a[href*="api.whatsapp.com"]');
-      if (link) window.RStreetTrack.contactWhatsApp(link.textContent || link.href);
+      if (link) window.RStreetTrack.contactWhatsApp(link.getAttribute('aria-label') || link.textContent.trim() || 'WhatsApp');
     });
   });
 

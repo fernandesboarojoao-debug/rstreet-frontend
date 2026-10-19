@@ -27,6 +27,11 @@ test('public analytics config exposes only valid public identifiers', () => {
   const valid = response();
   publicConfig({}, valid);
   assert.deepEqual(valid.data, { gaMeasurementId: 'G-ABC1234', metaPixelId: '123456789' });
+  delete process.env.GA_MEASUREMENT_ID;
+  delete process.env.META_PIXEL_ID;
+  const store = response();
+  publicConfig({}, store);
+  assert.deepEqual(store.data, { gaMeasurementId: 'G-3SYFYVF3DH', metaPixelId: '' });
   if (previousGa === undefined) delete process.env.GA_MEASUREMENT_ID; else process.env.GA_MEASUREMENT_ID = previousGa;
   if (previousMeta === undefined) delete process.env.META_PIXEL_ID; else process.env.META_PIXEL_ID = previousMeta;
 });

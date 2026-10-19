@@ -279,6 +279,9 @@
   .review-card { background:var(--gray-800); border:1px solid var(--border); border-radius:4px; padding:16px; }
   .review-card-top { display:flex; justify-content:space-between; gap:10px; margin-bottom:9px; }
   .review-name { color:var(--white); font-size:13px; font-weight:700; }
+  .review-meta { color:var(--gray-400); font-size:12px; margin-bottom:8px; }
+  .product-review-summary { display:inline-block; color:var(--gold); font-size:13px; margin:0 0 18px; text-underline-offset:4px; }
+  .review-star-picker button:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
   .review-stars { color:var(--gold); font-size:15px; letter-spacing:2px; white-space:nowrap; }
   .review-comment { color:var(--gray-200); font-size:13px; line-height:1.6; white-space:pre-line; }
   .review-empty { background:var(--gray-800); border:1px dashed rgba(200,169,110,.28); border-radius:4px; padding:18px; color:var(--gray-400); font-size:13px; line-height:1.55; }
@@ -717,6 +720,8 @@ function updateProductSeo(p) {
     sku: p.referencia || String(p.id),
     brand: p.marca ? { '@type': 'Brand', name: p.marca } : undefined,
     category: p.categoria || undefined,
+    aggregateRating: reviewsTotal > 0 && Number.isFinite(reviewsAverage) && reviewsAverage >= 1 && reviewsAverage <= 5
+      ? { '@type': 'AggregateRating', ratingValue: reviewsAverage, reviewCount: reviewsTotal, bestRating: 5, worstRating: 1 } : undefined,
     color: selectedColor || undefined,
     offers: {
       '@type': 'Offer',
@@ -796,6 +801,7 @@ function renderProduct() {
           <div class="product-brand-tag">${escapeHtml(p.marca || 'R Street')}</div>
           <h1 class="product-name">${escapeHtml(p.nome)}</h1>
           <div class="product-ref">Ref: ${escapeHtml(p.referencia || '#'+p.id)}${p.categoria ? ' · '+escapeHtml(p.categoria) : ''}</div>
+          <div data-review-summary>${renderReviewSummary()}</div>
         </div>
         <div class="gallery-main">
           ${mainMedia}
@@ -810,6 +816,7 @@ function renderProduct() {
         <div class="product-brand-tag">${escapeHtml(p.marca || 'R Street')}</div>
         <div class="product-name" role="heading" aria-level="2">${escapeHtml(p.nome)}</div>
         <div class="product-ref">Ref: ${escapeHtml(p.referencia || '#'+p.id)}${p.categoria ? ' · '+escapeHtml(p.categoria) : ''}</div>
+        <div data-review-summary>${renderReviewSummary()}</div>
 
         </div>
 
@@ -1411,14 +1418,14 @@ async function loadProductReviews(page = 1) {
   reviewsError = false;
   if (!target.children.length) target.innerHTML = '<div class="product-reviews-box"><div class="review-empty">Carregando avaliações...</div></div>';
   try {
-    const response = await fetch(`${BACKEND_BASE}/engajamento/avaliacoes/produto/${encodeURIComponent(product.id)}?pagina=${page}`);
+    const response = await fetch(`${BACKEND_BASE}/engajamento/avaliacoes/produto/${encodeURIComponent(product.id)}?pagina=${page}`, { signal: AbortSignal.timeout(15000) });
     if (!response.ok) throw new Error('Avaliações indisponíveis');
     const data = await response.json();
     const rows = Array.isArray(data) ? data : data.avaliacoes;
     if (!Array.isArray(rows)) throw new Error('Resposta inválida');
     productReviews = page === 1 ? rows : [...productReviews, ...rows.filter(row => !productReviews.some(old => old.id === row.id))];
-    reviewsTotal = Array.isArray(data) ? data.length : Number(data.total);
-    reviewsAverage = Array.isArray(data) ? data.reduce((sum, row) => sum + Number(row.nota), 0) / (data.length || 1) : Number(data.media);
+    reviewsTotal = Math.max(0, Number(Array.isArray(data) ? data.length : data.total) || 0);
+    reviewsAverage = Math.max(0, Math.min(5, Number(Array.isArray(data) ? data.reduce((sum, row) => sum + Number(row.nota), 0) / (data.length || 1) : data.media) || 0));
     reviewsPage = page;
     showAllProductReviews = page > 1;
   } catch {
@@ -1427,10 +1434,22 @@ async function loadProductReviews(page = 1) {
     reviewsLoading = false;
   }
   renderProductReviews();
+  document.querySelectorAll('[data-review-summary]').forEach(el => { el.innerHTML = renderReviewSummary(); });
+  updateProductSeo(product);
+}
+
+function renderReviewSummary() {
+  return reviewsTotal > 0
+    ? `<a class="product-review-summary" href="#productReviews">★ ${reviewsAverage.toFixed(1).replace('.', ',')} · ${reviewsTotal} ${reviewsTotal === 1 ? 'avaliação' : 'avaliações'}</a>` : '';
+}
+
+function reviewDate(value) {
+  const date = new Date(value);
+  return value && Number.isFinite(date.getTime()) ? date.toLocaleDateString('pt-BR') : '';
 }
 
 function reviewStars(rating) {
-  const value = Math.max(0, Math.min(5, Number(rating) || 0));
+  const value = Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
   return '★'.repeat(value) + '☆'.repeat(5 - value);
 }
 
@@ -1445,6 +1464,7 @@ function renderProductReviews() {
     ? `<div class="review-list">${visibleReviews.map(item => `
       <article class="review-card">
         <div class="review-card-top"><span class="review-name">${escapeHtml(item.nome_cliente || 'Cliente R Street')}</span><span class="review-stars" aria-label="${Number(item.nota || 0)} de 5 estrelas">${reviewStars(item.nota)}</span></div>
+        <div class="review-meta">Compra verificada${reviewDate(item.criado_em) ? ' · ' + reviewDate(item.criado_em) : ''}</div>
         <p class="review-comment">${escapeHtml(item.comentario)}</p>
       </article>`).join('')}</div>`
     : reviewsError ? '' : '<div class="review-empty">Ainda não há avaliações publicadas para este produto. Comprou? Conte como foi sua experiência.</div>';
@@ -1471,7 +1491,7 @@ function renderReviewForm() {
       <div><label for="reviewEmail">E-mail usado na compra</label><input id="reviewEmail" type="email" required placeholder="voce@email.com"></div>
     </div>
     <label style="margin-top:14px">Sua nota</label>
-    <div class="review-star-picker" role="radiogroup" aria-label="Nota da avaliação">${[1,2,3,4,5].map(value => `<button type="button" class="${value <= selectedReviewRating ? 'active' : ''}" onclick="setReviewRating(${value})" aria-label="${value} estrela${value > 1 ? 's' : ''}">★</button>`).join('')}</div>
+    <div class="review-star-picker" role="radiogroup" aria-label="Nota da avaliação" onkeydown="reviewRatingKey(event)">${[1,2,3,4,5].map(value => `<button type="button" role="radio" aria-checked="${value === selectedReviewRating}" tabindex="${value === (selectedReviewRating || 1) ? 0 : -1}" class="${value <= selectedReviewRating ? 'active' : ''}" onclick="setReviewRating(${value})" aria-label="${value} estrela${value > 1 ? 's' : ''}">★</button>`).join('')}</div>
     <label for="reviewComment">Comentário</label><textarea id="reviewComment" minlength="8" maxlength="800" required placeholder="Conte como foi sua compra e o produto."></textarea>
     <div class="review-form-actions"><button type="button" class="btn-secondary-act" onclick="toggleReviewForm()">Cancelar</button><button type="submit" class="review-action">Enviar avaliação</button></div>
   </form>`;
@@ -1481,6 +1501,7 @@ function toggleReviewForm() {
   reviewFormOpen = !reviewFormOpen;
   selectedReviewRating = reviewFormOpen ? selectedReviewRating : 0;
   renderProductReviews();
+  if (reviewFormOpen) document.getElementById('reviewOrder')?.focus();
 }
 
 async function toggleAllProductReviews() {
@@ -1500,13 +1521,25 @@ function setReviewRating(value) {
   selectedReviewRating = value;
   document.querySelectorAll('.review-star-picker button').forEach((button, index) => {
     button.classList.toggle('active', index < value);
+    button.setAttribute('aria-checked', String(index + 1 === value));
+    button.tabIndex = index + 1 === value ? 0 : -1;
   });
+}
+
+function reviewRatingKey(event) {
+  if (!['ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+  event.preventDefault();
+  const forward = ['ArrowRight', 'ArrowUp'].includes(event.key);
+  const value = event.key === 'Home' ? 1 : event.key === 'End' ? 5 : ((selectedReviewRating || 1) - 1 + (forward ? 1 : 4)) % 5 + 1;
+  setReviewRating(value);
+  document.querySelectorAll('.review-star-picker button')[value - 1]?.focus();
 }
 
 async function submitProductReview(event) {
   event.preventDefault();
   if (!selectedReviewRating) return toast('Escolha de 1 a 5 estrelas para avaliar.');
   const button = event.currentTarget.querySelector('[type="submit"]');
+  if (button.disabled) return;
   const payload = {
     pedido_id: document.getElementById('reviewOrder')?.value.trim(),
     email: document.getElementById('reviewEmail')?.value.trim(),
@@ -1518,7 +1551,7 @@ async function submitProductReview(event) {
   button.textContent = 'Enviando...';
   try {
     const response = await fetch(`${BACKEND_BASE}/engajamento/avaliacoes`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(15000)
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.erro || 'Não foi possível enviar sua avaliação.');
@@ -1529,7 +1562,7 @@ async function submitProductReview(event) {
   } catch (error) {
     button.disabled = false;
     button.textContent = 'Enviar avaliação';
-    toast(error.message || 'Não foi possível enviar sua avaliação.');
+    toast(error.name === 'TimeoutError' ? 'O envio demorou. Confira sua conexão e tente novamente; seus dados foram mantidos.' : error.message || 'Não foi possível enviar sua avaliação.');
   }
 }
 

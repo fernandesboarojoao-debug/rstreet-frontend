@@ -1,6 +1,7 @@
 module.exports = function handler(req, res) {
-  const gaMeasurementId = /^G-[A-Z0-9]+$/i.test(String(process.env.GA_MEASUREMENT_ID || ''))
-    ? process.env.GA_MEASUREMENT_ID
+  const configuredGaId = process.env.GA_MEASUREMENT_ID || 'G-3SYFYVF3DH';
+  const gaMeasurementId = /^G-[A-Z0-9]+$/i.test(String(configuredGaId))
+    ? configuredGaId.toUpperCase()
     : '';
   const metaPixelId = /^\d{5,30}$/.test(String(process.env.META_PIXEL_ID || ''))
     ? process.env.META_PIXEL_ID

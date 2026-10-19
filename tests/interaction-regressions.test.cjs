@@ -85,7 +85,7 @@ test('an earlier lookup for the same CEP cannot overwrite the latest address', a
   assert.equal(alerts.length, 0);
 });
 
-function trackingSetup() {
+function trackingSetup(search = '') {
   const elements = new Map();
   const element = id => {
     if (!elements.has(id)) elements.set(id, { value: '', disabled: false, innerHTML: '', textContent: '', addEventListener() {} });
@@ -94,7 +94,7 @@ function trackingSetup() {
   element('pedidoId').value = '42';
   element('pedidoEmail').value = 'teste@example.com';
   const pending = [], timers = [];
-  const scope = vm.createContext({ AbortController, BACKEND_BASE: 'https://test.invalid',
+  const scope = vm.createContext({ AbortController, URLSearchParams, location: { search }, BACKEND_BASE: 'https://test.invalid',
     document: { getElementById: element }, setTimeout: callback => { timers.push(callback); return timers.length; }, clearTimeout() {},
     fetch: (_url, options) => new Promise((resolve, reject) => {
       options.signal.addEventListener('abort', () => reject(new Error('aborted')));
@@ -133,4 +133,10 @@ test('a slow tracking request times out with a useful message and releases the f
   await request;
   assert.match(element('msg').textContent, /demorou/);
   assert.equal(element('btnConsultar').disabled, false);
+});
+
+test('notification order links prefill only valid IDs and never submit customer information', () => {
+  assert.equal(trackingSetup('?pedido=91').element('pedidoId').value, '91');
+  assert.equal(trackingSetup('?pedido=-1').element('pedidoId').value, '42');
+  assert.equal(trackingSetup('?pedido=%3Cscript%3E').element('pedidoId').value, '42');
 });

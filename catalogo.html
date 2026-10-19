@@ -1079,6 +1079,10 @@
     font-family: 'Inter', sans-serif;
   }
   .btn-whatsapp:hover { background: #1db954; transform: scale(1.05); }
+  @media (min-width:769px) {
+    .product-footer .btn-whatsapp { background:transparent; color:var(--gray-400); border:1px solid var(--gray-700); letter-spacing:0; text-transform:none; }
+    .product-footer .btn-whatsapp:hover { color:var(--white); border-color:var(--gold); background:var(--gray-800); transform:none; }
+  }
   .btn-cart {
     background: var(--gold);
     border: none;
@@ -3342,7 +3346,6 @@ function renderCard(p) {
   const initialMedia = initialMediaList[initialIndex] || null;
   const initialPrice = getCatalogGroupPrice(initialGroup, p);
   const initialStock = getCatalogGroupStock(initialGroup, p);
-  const initialUrl = buildProductUrl(p.id, initialColor);
   const badges = renderCatalogBadges(p, initialPrice, initialStock);
 
   const sizes = sortCatalogSizes(p.tamanhos || []).map(s =>
@@ -3356,7 +3359,7 @@ function renderCard(p) {
     ? renderCatalogMedia(p, initialMedia)
     : `<div class="product-img-placeholder">👕<span>${escapeHtml(p.marca || 'R Street')}</span></div>`;
 
-  const wppMsg = encodeURIComponent(`Olá! Tenho interesse no produto: *${p.nome}* (Ref: ${p.referencia || p.id}) - Valor: R$ ${p.preco.toFixed(2).replace('.',',')}`);
+  const wppUrl = catalogWhatsAppUrl(p, initialColor, initialPrice.preco);
 
   return `
   <div class="product-card" data-product-id="${productId}" data-selected-color="${escapeAttr(initialColor)}" data-media-index="${initialIndex}" onclick="openCatalogProduct(${productId})" style="cursor:pointer">
@@ -3367,10 +3370,6 @@ function renderCard(p) {
       ${initialMediaList.length > 1 ? renderCatalogMediaArrows(productId) : ''}
       ${renderCatalogColorSwatches(p, colorGroups)}
       <div id="catalog-badges-${productId}">${badges}</div>
-      <div class="product-actions">
-        <a class="action-btn" href="${initialUrl}" data-product-link title="Ver detalhes" onclick="event.stopPropagation()">🔍</a>
-        <a class="action-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="WhatsApp">💬</a>
-      </div>
     </div>
     <div class="product-body">
       <div class="product-brand">${escapeHtml(p.marca || '')}</div>
@@ -3387,7 +3386,7 @@ function renderCard(p) {
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
           <button class="btn-cart" onclick="event.stopPropagation(); openCatalogProduct(${productId})" id="cart-btn-${productId}" ${initialStock <= 0 ? 'disabled style="opacity:0.45;cursor:not-allowed"' : ''}>${initialStock <= 0 ? 'Esgotado' : 'Escolher'}</button>
-          <a href="https://wa.me/${WHATSAPP_NUMBER}?text=${wppMsg}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" onclick="event.stopPropagation()">💬 Pedir</a>
+          <a href="${escapeAttr(wppUrl)}" target="_blank" rel="noopener noreferrer" class="btn-whatsapp" onclick="event.stopPropagation()">WhatsApp</a>
         </div>
       </div>
     </div>
@@ -3928,6 +3927,11 @@ function renderCatalogColorSwatches(product, groups) {
   </div>`;
 }
 
+function catalogWhatsAppUrl(product, color, price) {
+  const message = `Olá! Tenho interesse no produto: *${product.nome}* (Ref: ${product.referencia || product.id})${color ? ' - Cor: ' + color : ''} - Valor: R$ ${formatCatalogPrice(price)}`;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 function selectCatalogColor(event, productId, color, imageUrl) {
   event.stopPropagation();
   const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
@@ -3936,6 +3940,8 @@ function selectCatalogColor(event, productId, color, imageUrl) {
   const group = getCatalogColorGroups(productId).find(g => sameCatalogText(g.cor, color));
   const price = getCatalogGroupPrice(group, product);
   const stock = getCatalogGroupStock(group, product);
+  const whatsApp = card.querySelector('.btn-whatsapp');
+  if (whatsApp && product) whatsApp.href = catalogWhatsAppUrl(product, color, price.preco);
   card.dataset.selectedColor = color || '';
   card.dataset.mediaIndex = '0';
   catalogMediaState[productId] = { color: color || '', mediaIndex: 0 };

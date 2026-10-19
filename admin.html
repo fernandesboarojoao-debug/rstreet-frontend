@@ -666,6 +666,10 @@
 
     <!-- ─── CONFIG ─── -->
     <div id="tab-config" style="display:none">
+      <section style="padding:0 0 24px;margin-bottom:24px;border-bottom:1px solid var(--border)">
+        <div class="section-header"><h3>Integrações e operação</h3><button type="button" class="btn btn-outline btn-sm" onclick="loadOperacao()">Atualizar status</button></div>
+        <div id="operacaoStatus" role="status">Abra esta tela para conferir as integrações.</div>
+      </section>
       <div class="import-card">
         <h3>⚙️ Conexão protegida</h3>
         <p>A conexão pública do catálogo é configurada no site. As credenciais administrativas ficam somente no servidor e não podem ser alteradas pelo navegador.</p>
@@ -887,9 +891,13 @@
       <div class="section-header">
         <div>
           <div class="section-title">Métricas da loja</div>
-          <div style="margin-top:6px;color:var(--gray1);font-size:13px">Últimos 30 dias. Dados anônimos para entender interesse e jornada de compra.</div>
+          <div style="margin-top:6px;color:var(--gray1);font-size:13px">Interesse no site e vendas com pagamento confirmado.</div>
         </div>
-        <button class="btn btn-outline btn-sm" onclick="loadMetricas()">Atualizar</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <label for="metricsPeriod">Período</label>
+          <select id="metricsPeriod" onchange="loadMetricas()" style="width:auto"><option value="7">7 dias</option><option value="30" selected>30 dias</option><option value="90">90 dias</option></select>
+          <button id="metricsRefresh" class="btn btn-outline btn-sm" onclick="loadMetricas()">Atualizar</button>
+        </div>
       </div>
       <div class="stats-row" style="margin-bottom:24px">
         <div class="stat-card"><div class="stat-label">Visitas</div><div class="stat-num" id="metric-pages">0</div></div>
@@ -898,11 +906,14 @@
         <div class="stat-card"><div class="stat-label">Inícios de checkout</div><div class="stat-num" id="metric-checkouts">0</div></div>
         <div class="stat-card"><div class="stat-label">Compras confirmadas</div><div class="stat-num" id="metric-purchases">0</div></div>
         <div class="stat-card"><div class="stat-label">Faturamento confirmado</div><div class="stat-num" id="metric-revenue">R$ 0,00</div></div>
+        <div class="stat-card"><div class="stat-label">Ticket médio</div><div class="stat-num" id="metric-ticket">R$ 0,00</div></div>
         <div class="stat-card"><div class="stat-label">Cliques no WhatsApp</div><div class="stat-num" id="metric-whatsapp">0</div></div>
       </div>
+      <div id="metricSessions" style="padding:16px 0;line-height:1.8;border-block:1px solid var(--border)"></div>
+      <p id="metricStatus" role="status" style="color:var(--gray1);font-size:12px;margin:12px 0"></p>
       <div class="section-header" style="margin-top:8px"><div class="section-title" style="font-size:26px">Produtos com mais interesse</div></div>
       <div class="table-wrap">
-        <table><thead><tr><th>Produto</th><th>Marca</th><th>Visualizações</th><th>Carrinhos</th><th>Checkouts</th><th>Compras</th></tr></thead>
+        <table><thead><tr><th>Produto</th><th>Marca</th><th>Visualizações</th><th>Carrinhos</th><th>Checkouts</th><th>Peças vendidas</th></tr></thead>
         <tbody id="metricasTableBody"><tr><td colspan="6" class="table-empty">Abra esta tela para carregar as métricas.</td></tr></tbody></table>
       </div>
     </div>
@@ -3254,7 +3265,7 @@ function showTab(name) {
     loadTemasSiteAdmin();
     resetTemaSiteForm();
   }
-  if (name === 'config') loadHomeHighlightsAdmin();
+  if (name === 'config') { loadHomeHighlightsAdmin(); loadOperacao(); }
   if (name === 'avaliacoes') loadAvaliacoes();
   if (name === 'metricas') loadMetricas();
 }
@@ -3331,14 +3342,23 @@ async function setAvaliacaoStatus(id, status) {
   } catch { toast('Não foi possível atualizar a avaliação.', 'error'); }
 }
 
+let metricsRequest = 0;
 async function loadMetricas() {
   const body = document.getElementById('metricasTableBody');
   if (!body) return;
+  const request = ++metricsRequest;
+  const period = document.getElementById('metricsPeriod').value;
+  const status = document.getElementById('metricStatus');
+  document.getElementById('metricsRefresh').disabled = true;
+  document.getElementById('metricSessions').textContent = '';
+  document.querySelectorAll('[id^="metric-"]').forEach(el => { el.textContent = '—'; });
+  status.textContent = 'Carregando...';
   body.innerHTML = '<tr><td colspan="6" class="table-empty">Carregando métricas...</td></tr>';
   try {
-    const res = await fetch(`${API}/metricas`, { headers: authHeaders() });
+    const res = await fetch(`${API}/metricas?dias=${encodeURIComponent(period)}`, { headers: authHeaders(), signal: AbortSignal.timeout(20000) });
     if (!res.ok) throw new Error();
     const data = await res.json();
+    if (request !== metricsRequest) return;
     const totals = data.totais || {};
     document.getElementById('metric-pages').textContent = totals.page_view || 0;
     document.getElementById('metric-products').textContent = totals.view_item || 0;
@@ -3346,12 +3366,80 @@ async function loadMetricas() {
     document.getElementById('metric-checkouts').textContent = totals.begin_checkout || 0;
     document.getElementById('metric-purchases').textContent = totals.purchase || 0;
     document.getElementById('metric-revenue').textContent = Number(data.receita || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+    document.getElementById('metric-ticket').textContent = Number(data.ticket_medio || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
     document.getElementById('metric-whatsapp').textContent = totals.whatsapp || 0;
+    const sessions = data.sessoes || {};
+    const integer = value => Math.max(0, Number(value) || 0).toLocaleString('pt-BR');
+    document.getElementById('metricSessions').textContent = `Sessões: ${integer(sessions.total)} · Com produto visto: ${integer(sessions.com_produto)} · Com carrinho: ${integer(sessions.com_carrinho)} · Com checkout: ${integer(sessions.com_checkout)} · Checkout sem confirmação observada: ${integer(sessions.checkout_sem_confirmacao)}`;
+    status.textContent = `${data.amostra_limitada ? 'Amostra limitada a 20 mil registros por fonte. ' : ''}Jornada estimada por sessão do navegador; não equivale a pedidos abandonados. Vendas e faturamento usam apenas pedidos pagos. Atualizado às ${new Date(data.atualizado_em || Date.now()).toLocaleTimeString('pt-BR')}.`;
     const products = data.produtos || [];
     body.innerHTML = products.length ? products.map(item => `<tr><td>${escapeAdminHtml(item.nome)}</td><td>${escapeAdminHtml(item.marca || '-')}</td><td>${item.visualizacoes || 0}</td><td>${item.carrinhos || 0}</td><td>${item.checkouts || 0}</td><td>${item.compras || 0}</td></tr>`).join('') : '<tr><td colspan="6" class="table-empty">Ainda não há dados suficientes. As métricas começam a aparecer após o deploy.</td></tr>';
   } catch {
+    if (request !== metricsRequest) return;
     body.innerHTML = '<tr><td colspan="6" class="table-empty">Não foi possível carregar as métricas.</td></tr>';
+    status.textContent = 'Dados indisponíveis. Tente atualizar novamente.';
+  } finally {
+    if (request === metricsRequest) document.getElementById('metricsRefresh').disabled = false;
   }
+}
+
+let operationRequest = 0;
+async function loadOperacao() {
+  const target = document.getElementById('operacaoStatus');
+  const request = ++operationRequest;
+  target.textContent = 'Conferindo integrações...';
+  try {
+    const [response, configResponse] = await Promise.all([
+      fetch(`${API}/operacao`, { headers: authHeaders(), signal: AbortSignal.timeout(15000) }),
+      fetch('/api/public-config', { signal: AbortSignal.timeout(15000) }).catch(() => null)
+    ]);
+    if (!response.ok) throw new Error();
+    const data = await response.json();
+    const config = configResponse?.ok ? await configResponse.json() : {};
+    if (request !== operationRequest) return;
+    const rows = [
+      ['Avisos por e-mail', data.email?.configurado ? 'Credenciais configuradas; confira o domínio remetente no Resend.' : 'Pendente: configurar remetente e chave no servidor.'],
+      ['Google Analytics', /^G-[A-Z0-9]+$/.test(config.gaMeasurementId || '') ? 'ID configurado.' : 'ID não configurado no site.'],
+      ['Meta Pixel', /^\d{5,25}$/.test(config.metaPixelId || '') ? 'ID configurado.' : 'ID não configurado no site.'],
+      ['Reserva de estoque online', data.estoque?.reservas_ativas ? 'Ativa durante o pagamento.' : 'Desativada; conferir configuração do servidor.'],
+      ['Clique Fácil', 'Aguardando o formato e os códigos do desenvolvedor. Exportação manual disponível nos pedidos pagos.']
+    ];
+    target.innerHTML = rows.map(([name, message]) => `<div style="padding:12px 0;border-bottom:1px solid var(--border)"><strong>${escapeAdminHtml(name)}</strong><div style="margin-top:4px;color:var(--gray1);font-size:13px">${escapeAdminHtml(message)}</div></div>`).join('');
+  } catch {
+    if (request === operationRequest) target.textContent = 'Não foi possível conferir as integrações. Tente atualizar o status.';
+  }
+}
+
+async function enviarAvisoPedido(id, button) {
+  if (button.disabled) return;
+  button.disabled = true;
+  try {
+    const response = await fetch(`${API}/pedidos/${id}/aviso`, { method: 'POST', headers: authHeaders(), signal: AbortSignal.timeout(40000) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.erro || 'Não foi possível enviar o aviso.');
+    toast(data.mensagem, 'success');
+  } catch (error) { toast(error.message || 'Não foi possível enviar o aviso.', 'error'); }
+  finally { button.disabled = false; }
+}
+
+async function exportarIntegracaoPedido(id, button) {
+  if (button.disabled) return;
+  button.disabled = true;
+  try {
+    const response = await fetch(`${API}/pedidos/${id}/integracao`, { headers: authHeaders(), signal: AbortSignal.timeout(15000) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.erro || 'Não foi possível exportar os itens.');
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `rstreet-pedido-${id}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Arquivo exportado para conferência. A integração automática ainda não está ativa.', 'info');
+  } catch (error) { toast(error.message || 'Não foi possível exportar os itens.', 'error'); }
+  finally { button.disabled = false; }
 }
 
 async function loadPedidos() {
@@ -3370,7 +3458,8 @@ async function loadPedidos() {
 
 function csvCell(value) {
   const text = String(value ?? '').replace(/\r?\n/g, ' ').trim();
-  return `"${text.replace(/"/g, '""')}"`;
+  const safe = /^[=+@\-\t\r]/.test(text) ? `'${text}` : text;
+  return `"${safe.replace(/"/g, '""')}"`;
 }
 
 async function exportPedidosCSV() {
@@ -3528,6 +3617,8 @@ async function verPedido(id) {
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
         <button class="btn btn-outline btn-sm" onclick="atualizarEnvio(${Number(p.id) || 0})">Atualizar envio</button>
         <button class="btn btn-outline btn-sm" onclick="abrirWhatsAppPedido(${Number(p.id) || 0})">WhatsApp do cliente</button>
+        ${['pago','cancelado','reembolsado'].includes(p.status) ? `<button class="btn btn-outline btn-sm" onclick="enviarAvisoPedido(${Number(p.id) || 0}, this)">Tentar envio do aviso</button>` : ''}
+        ${p.status === 'pago' ? `<button class="btn btn-outline btn-sm" onclick="exportarIntegracaoPedido(${Number(p.id) || 0}, this)">Exportar itens (JSON)</button>` : ''}
       </div>
     </div>
     <div style="margin-top:16px;font-size:12px;color:var(--gray1)">
