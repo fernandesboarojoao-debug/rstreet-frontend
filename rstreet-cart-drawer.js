@@ -114,10 +114,10 @@
             <div class="rstreet-cart-meta">${escapeHtml(meta)}</div>
             <div class="rstreet-cart-price">${money(Number(item.preco || 0) * qty)}</div>
             <div class="rstreet-cart-controls">
-              <button type="button" onclick="window.RStreetCartDrawer.changeQty(${index}, -1)" ${qty <= 1 ? 'disabled' : ''}>-</button>
-              <span>${qty}</span>
-              <button type="button" onclick="window.RStreetCartDrawer.changeQty(${index}, 1)" ${qty >= max ? 'disabled' : ''}>+</button>
-              <button type="button" class="is-remove" onclick="window.RStreetCartDrawer.removeItem(${index})">Remover</button>
+              <button type="button" aria-label="Diminuir quantidade de ${escapeHtml(item.nome || 'Produto')}" onclick="window.RStreetCartDrawer.changeQty(${index}, -1)" ${qty <= 1 ? 'disabled' : ''}>-</button>
+              <span aria-label="Quantidade de ${escapeHtml(item.nome || 'Produto')}: ${qty}">${qty}</span>
+              <button type="button" aria-label="Aumentar quantidade de ${escapeHtml(item.nome || 'Produto')}" onclick="window.RStreetCartDrawer.changeQty(${index}, 1)" ${qty >= max ? 'disabled' : ''}>+</button>
+              <button type="button" class="is-remove" aria-label="Remover ${escapeHtml(item.nome || 'Produto')} do carrinho" onclick="window.RStreetCartDrawer.removeItem(${index})">Remover</button>
             </div>
           </div>
         </div>

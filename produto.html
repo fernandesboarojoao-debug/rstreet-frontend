@@ -828,7 +828,7 @@ function renderProduct() {
       <div class="product-info">
         <div class="product-info-head">
         <div class="product-brand-tag">${escapeHtml(p.marca || 'R Street')}</div>
-        <div class="product-name" role="heading" aria-level="2">${escapeHtml(p.nome)}</div>
+        <div class="product-name" role="heading" aria-level="1">${escapeHtml(p.nome)}</div>
         <div class="product-ref">Ref: ${escapeHtml(p.referencia || '#'+p.id)}${p.categoria ? ' · '+escapeHtml(p.categoria) : ''}</div>
         <div data-review-summary>${renderReviewSummary()}</div>
 

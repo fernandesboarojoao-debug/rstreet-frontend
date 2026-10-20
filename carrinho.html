@@ -487,12 +487,12 @@ function render() {
       </div>
       <div class="item-controls">
         <div class="qty-wrap">
-          <button class="qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+          <button type="button" class="qty-btn" aria-label="Diminuir quantidade de ${escapeAttr(item.nome || 'Produto')}" onclick="changeQty(${idx}, -1)">−</button>
           <input class="qty-num" type="number" value="${item.qty}" min="1" max="99"
-            onchange="setQty(${idx}, this.value)" readonly>
-          <button class="qty-btn" onclick="changeQty(${idx}, +1)">+</button>
+            aria-label="Quantidade de ${escapeAttr(item.nome || 'Produto')}" onchange="setQty(${idx}, this.value)" readonly>
+          <button type="button" class="qty-btn" aria-label="Aumentar quantidade de ${escapeAttr(item.nome || 'Produto')}" onclick="changeQty(${idx}, +1)">+</button>
         </div>
-        <button class="remove-btn" onclick="removeItem(${idx})">✕ Remover</button>
+        <button type="button" class="remove-btn" aria-label="Remover ${escapeAttr(item.nome || 'Produto')} do carrinho" onclick="removeItem(${idx})">✕ Remover</button>
       </div>
     </div>
   `).join('');

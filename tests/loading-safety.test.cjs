@@ -136,6 +136,33 @@ test('quantity controls tolerate an item removed in another tab before the actio
   scope.setQty(0, '2');
 });
 
+test('both cart layouts identify quantity controls by product and escape names in accessible labels', () => {
+  for (const file of ['carrinho.html', 'rstreet-cart-drawer.js']) {
+    const elements = new Map();
+    const element = id => {
+      if (!elements.has(id)) elements.set(id, { innerHTML: '', style: {}, classList: { add() {}, remove() {}, toggle() {} }, setAttribute() {}, removeAttribute() {} });
+      return elements.get(id);
+    };
+    const scope = vm.createContext({ stockValidationOk: true, stockReady: true,
+      document: { getElementById: element, querySelector: () => element('checkout') },
+      getCart: () => [{ id: 1, qty: 1, preco: 10, estoque: 2, nome: 'Produto "Teste"' }],
+      updateTotals() {}, updateBadges() {}, getCartCount: () => 1, itemMax: () => 2, fmt: String, money: String });
+    if (file === 'carrinho.html') {
+      load(file, 'function escapeHtml(', 'async function loadLatestProducts()', scope);
+      load(file, 'function render() {', 'function updateTotals(', scope);
+      scope.render();
+    } else {
+      load(file, '  function escapeHtml(', '  function showDrawerNotice(', scope);
+      load(file, '  function renderDrawer()', '  function escapeHtml(', scope);
+      scope.renderDrawer();
+    }
+    const html = element(file === 'carrinho.html' ? 'cartItemsList' : 'rstreetCartDrawerBody').innerHTML;
+    assert.ok(html.includes('aria-label="Aumentar quantidade de Produto &quot;Teste&quot;"'), file);
+    assert.ok(html.includes('aria-label="Diminuir quantidade de Produto &quot;Teste&quot;"'), file);
+    assert.ok(html.includes('aria-label="Remover Produto &quot;Teste&quot; do carrinho"'), file);
+  }
+});
+
 test('catalog data changes only when products and variants both load successfully', async () => {
   const old = [{ id: 1, nome: 'Anterior' }], variants = [{ id: 10, produto_id: 1 }];
   const scope = vm.createContext({ AbortSignal, console: { warn() {} }, SUPABASE_URL: '', SUPABASE_ANON_KEY: 'fixture',
