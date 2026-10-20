@@ -511,7 +511,15 @@ const FRETE_REGRAS = {
 };
 
 // ─── CART ───────────────────────────────────
-function getCart() { return JSON.parse(localStorage.getItem('rstreet_cart') || '[]'); }
+function getCart() {
+  try {
+    const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+    return Array.isArray(cart) ? cart.filter(item => item && typeof item === 'object' &&
+      Number.isSafeInteger(Number(item.id)) && Number(item.id) > 0 &&
+      Number.isSafeInteger(Number(item.qty)) && Number(item.qty) > 0)
+      .map(item => ({ ...item, id: Number(item.id), qty: Number(item.qty) })) : [];
+  } catch { return []; }
+}
 function saveCart(cart) { localStorage.setItem('rstreet_cart', JSON.stringify(cart)); }
 function fmt(v) { return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
 
@@ -606,14 +614,15 @@ async function validarCarrinhoAtual() {
   try {
     const [prodRes, varRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo,preco`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }, signal: AbortSignal.timeout(12000)
       }),
       fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }, signal: AbortSignal.timeout(12000)
       })
     ]);
     if (!prodRes.ok || !varRes.ok) throw new Error('Falha ao consultar estoque.');
     [products, variants] = await Promise.all([prodRes.json(), varRes.json()]);
+    if (!Array.isArray(products) || !Array.isArray(variants)) throw new Error('Resposta de estoque inválida.');
   } catch {
     return {
       ok: false,
@@ -960,6 +969,7 @@ async function finalizarCompra() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(pedido),
+      signal: AbortSignal.timeout(45000),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -991,7 +1001,9 @@ async function finalizarCompra() {
     redirecting = true;
     window.location.href = paymentUrl;
   } catch (err) {
-    showAlert('Erro ao processar pedido: ' + err.message + '. Tente novamente ou entre em contato via WhatsApp.', 'error');
+    showAlert(err.name === 'TimeoutError'
+      ? 'A confirmação demorou mais que o esperado. Não crie outra compra: tente novamente aqui para consultar ou retomar esta mesma tentativa de pagamento.'
+      : 'Erro ao processar pedido: ' + err.message + '. Tente novamente ou entre em contato via WhatsApp.', 'error');
   } finally {
     btn.classList.remove('loading');
     btn.disabled = false;

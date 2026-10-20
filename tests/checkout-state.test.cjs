@@ -101,7 +101,7 @@ test('all stock synchronizers preserve a checkout reservation in another tab', a
     localStorage.setItem('rstreet_cart', JSON.stringify([item]));
     const products = [{ id: 1, estoque: 0, preco: 100, ativo: true }];
     const variants = [{ id: 9, produto_id: 1, estoque: 0, preco: 100, ativo: true }];
-    const scope = vm.createContext({ window, localStorage, product: products[0], productVariants: variants,
+    const scope = vm.createContext({ window, localStorage, AbortSignal, product: products[0], productVariants: variants,
       allProducts: products, latestProducts: products, latestVariants: variants, stockValidationOk: true,
       stockRefreshPromise: null, stockReady: false, SUPABASE_URL: '', SUPABASE_KEY: '',
       getCart: () => cart(localStorage), saveCart: value => localStorage.setItem('rstreet_cart', JSON.stringify(value)),

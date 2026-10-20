@@ -7,7 +7,7 @@ const vm = require('node:vm');
 function load(file, start, end, context = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
   const code = source.slice(source.indexOf(start), source.indexOf(end, source.indexOf(start) + start.length));
-  const scope = vm.createContext({ window: {}, ...context });
+  const scope = vm.createContext({ window: {}, AbortSignal, ...context });
   vm.runInContext(code, scope);
   return scope;
 }
@@ -20,6 +20,7 @@ test('product page preserves cart items outside its related-products window', ()
   let stored = JSON.stringify([{ id: 1, qty: 1, estoque: 3 }]);
   const scope = load('produto.html', 'function syncCartWithStock()', '\nfunction fmt(', {
     product: { id: 21, ativo: true, estoque: 1 }, allProducts: [{ id: 21 }], productVariants: [],
+    getCart: () => JSON.parse(stored),
     localStorage: { getItem: () => stored, setItem: (_, value) => { stored = value; } },
   });
   scope.syncCartWithStock();

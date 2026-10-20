@@ -2011,6 +2011,7 @@ async function loadProducts(silent = false, retryAttempt = 0) {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&order=criado_em.desc`, {
       cache: 'no-store',
+      signal: AbortSignal.timeout(15000),
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
@@ -2019,8 +2020,11 @@ async function loadProducts(silent = false, retryAttempt = 0) {
       }
     });
     if (!res.ok) throw new Error('Erro ' + res.status);
-    allProducts = await res.json();
-    await loadProductVariants();
+    const products = await res.json();
+    if (!Array.isArray(products)) throw new Error('Resposta de produtos inválida.');
+    const variants = await loadProductVariants();
+    allProducts = products;
+    allProductVariants = variants;
     catalogLoadError = false;
     clearTimeout(catalogRetryTimer);
     const nextSignature = getCatalogDataSignature();
@@ -2067,7 +2071,7 @@ async function refreshProducts() {
 
 async function loadBestSellerProducts() {
   try {
-    const response = await fetch(`${ENGAGEMENT_API}/vitrines`, { cache: 'no-store' });
+    const response = await fetch(`${ENGAGEMENT_API}/vitrines`, { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     if (!response.ok) throw new Error(`Erro ${response.status}`);
     const data = await response.json();
     bestSellerProductIds = Array.isArray(data?.mais_vendidos)
@@ -2088,6 +2092,7 @@ async function loadProductVariants() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&ativo=eq.true&order=ordem.asc,cor.asc,tamanho.asc`, {
       cache: 'no-store',
+      signal: AbortSignal.timeout(15000),
       headers: {
         'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
@@ -2096,10 +2101,13 @@ async function loadProductVariants() {
       }
     });
     if (!res.ok) throw new Error('Erro ' + res.status);
-    allProductVariants = await res.json();
+    const variants = await res.json();
+    if (!Array.isArray(variants)) throw new Error('Resposta de variações inválida.');
+    return variants;
   } catch (err) {
     console.warn('Falha ao buscar variações do catálogo:', err.message);
     // Mantém variações já carregadas, para não esconder cores e tamanhos numa oscilação.
+    throw err;
   }
 }
 
@@ -4122,7 +4130,7 @@ function addToCart(id) {
     alert('Produto esgotado.');
     return;
   }
-  const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  const cart = getCart();
   const imgs = Array.isArray(p.imagens) && p.imagens.length ? p.imagens : p.imagem_url ? [p.imagem_url] : [];
   const existing = cart.find(i => i.id === p.id);
   if (existing) {
@@ -4153,8 +4161,18 @@ function addToCart(id) {
   }
 }
 
+function getCart() {
+  try {
+    const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+    return Array.isArray(cart) ? cart.filter(item => item && typeof item === 'object' &&
+      Number.isSafeInteger(Number(item.id)) && Number(item.id) > 0 &&
+      Number.isSafeInteger(Number(item.qty)) && Number(item.qty) > 0)
+      .map(item => ({ ...item, id: Number(item.id), qty: Number(item.qty) })) : [];
+  } catch { return []; }
+}
+
 function syncCartWithStock() {
-  const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  const cart = getCart();
   let changed = false;
   const next = cart.map(item => {
     const held = window.RStreetCheckoutState?.preserve(item);
@@ -4376,7 +4394,7 @@ function applyFiltersMobile() {
 // ─────────────────────────────────────────────
 // Atualiza contador do carrinho na nav
 function updateCartNav() {
-  const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  const cart = getCart();
   const total = cart.reduce((s,i) => s + i.qty, 0);
   const el = document.getElementById('navCartCount');
   if (el) el.textContent = total;

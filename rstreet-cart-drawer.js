@@ -12,16 +12,22 @@
 
   function getCart() {
     try {
-      return JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+      const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+      return Array.isArray(cart) ? cart.filter(item => item && typeof item === 'object' &&
+        Number.isSafeInteger(Number(item.id)) && Number(item.id) > 0 &&
+        Number.isSafeInteger(Number(item.qty)) && Number(item.qty) > 0)
+        .map(item => ({ ...item, id: Number(item.id), qty: Number(item.qty) })) : [];
     } catch {
       return [];
     }
   }
 
   function saveCart(cart) {
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+    catch { showDrawerNotice('Não foi possível salvar o carrinho neste navegador.'); return false; }
     updateBadges(cart);
     renderDrawer();
+    return true;
   }
 
   function getCartCount(cart = getCart()) {
@@ -155,8 +161,8 @@
         const ids = productIds.join(',');
         const headers = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
         const [prodRes, varRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/produtos?id=in.(${ids})&select=id,estoque,ativo,preco`, { headers }),
-          fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?produto_id=in.(${ids})&select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, { headers })
+          fetch(`${SUPABASE_URL}/rest/v1/produtos?id=in.(${ids})&select=id,estoque,ativo,preco`, { headers, signal: AbortSignal.timeout(12000) }),
+          fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?produto_id=in.(${ids})&select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, { headers, signal: AbortSignal.timeout(12000) })
         ]);
         if (!prodRes.ok || !varRes.ok) throw new Error('Falha ao consultar estoque.');
         const [products, variants] = await Promise.all([prodRes.json(), varRes.json()]);
@@ -218,7 +224,7 @@
         }).filter(Boolean);
 
         stockReady = true;
-        saveCart(next);
+        if (saveCart(next) === false) { stockReady = false; renderDrawer(); return; }
         if (notices.length) showDrawerNotice(notices[0]);
       } catch {
         stockReady = false;

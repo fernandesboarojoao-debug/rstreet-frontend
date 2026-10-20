@@ -297,10 +297,17 @@ let latestProducts = [];
 let latestVariants = [];
 let stockValidationOk = false;
 let stockErrorShown = false;
+let stockRequestVersion = 0;
 
 // ─── CARRINHO UTILS ─────────────────────────────────
 function getCart() {
-  return JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+  try {
+    const cart = JSON.parse(localStorage.getItem('rstreet_cart') || '[]');
+    return Array.isArray(cart) ? cart.filter(item => item && typeof item === 'object' &&
+      Number.isSafeInteger(Number(item.id)) && Number(item.id) > 0 &&
+      Number.isSafeInteger(Number(item.qty)) && Number(item.qty) > 0)
+      .map(item => ({ ...item, id: Number(item.id), qty: Number(item.qty) })) : [];
+  } catch { return []; }
 }
 function saveCart(cart) {
   localStorage.setItem('rstreet_cart', JSON.stringify(cart));
@@ -327,24 +334,32 @@ function escapeAttr(value) {
 }
 
 async function loadLatestProducts() {
+  if (document.activeElement?.matches('#cartItemsList input')) return;
+  const request = ++stockRequestVersion;
   try {
     const [prodRes, varRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo,preco`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }, signal: AbortSignal.timeout(12000)
       }),
       fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+        headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }, signal: AbortSignal.timeout(12000)
       })
     ]);
     if (!prodRes.ok || !varRes.ok) throw new Error('Falha ao consultar estoque.');
-    [latestProducts, latestVariants] = await Promise.all([prodRes.json(), varRes.json()]);
+    const [products, variants] = await Promise.all([prodRes.json(), varRes.json()]);
+    if (request !== stockRequestVersion) return;
+    if (!Array.isArray(products) || !Array.isArray(variants)) throw new Error('Resposta de estoque inválida.');
+    if (document.activeElement?.matches('#cartItemsList input')) return;
+    const changed = !stockValidationOk || JSON.stringify(products) !== JSON.stringify(latestProducts) || JSON.stringify(variants) !== JSON.stringify(latestVariants);
+    [latestProducts, latestVariants] = [products, variants];
     stockValidationOk = true;
     stockErrorShown = false;
     syncCartWithStock();
-    render();
+    if (changed) render();
   } catch {
+    if (request !== stockRequestVersion) return;
     stockValidationOk = false;
-    render();
+    if (!document.activeElement?.matches('#cartItemsList input')) render();
     if (!stockErrorShown) {
       stockErrorShown = true;
       toast('Não foi possível confirmar o estoque agora. Tente novamente em instantes.');
@@ -424,6 +439,9 @@ function render() {
   const empty = document.getElementById('cartEmpty');
   const checkoutBtn = document.getElementById('checkoutBtn');
   const clearBtn = document.getElementById('clearBtn');
+  const canCheckout = cart.length > 0 && stockValidationOk;
+  checkoutBtn.setAttribute('aria-disabled', String(!canCheckout));
+  checkoutBtn.tabIndex = canCheckout ? 0 : -1;
 
   if (cart.length === 0) {
     empty.classList.add('show');
@@ -448,8 +466,8 @@ function render() {
 
   document.getElementById('itemsLabel').textContent =
     cart.length === 1 ? '1 produto' : `${cart.length} produtos`;
-  document.getElementById('summaryCount').textContent =
-    cart.reduce((s,i)=>s+i.qty,0) + ' itens';
+  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+  document.getElementById('summaryCount').textContent = `${totalItems} ${totalItems === 1 ? 'item' : 'itens'}`;
 
   list.innerHTML = cart.map((item, idx) => `
     <div class="cart-item" id="item-${idx}">
@@ -492,6 +510,7 @@ function updateTotals(cart) {
 // ─── AÇÕES ──────────────────────────────────────────
 function changeQty(idx, delta) {
   const cart = getCart();
+  if (!cart[idx]) return;
   const estoque = Number(cart[idx].estoque);
   const max = Number.isFinite(estoque) && estoque >= 0 ? estoque : Math.max(1, Number(cart[idx].qty) || 1);
   if (delta > 0 && cart[idx].qty >= max) {
@@ -505,6 +524,7 @@ function changeQty(idx, delta) {
 
 function setQty(idx, val) {
   const cart = getCart();
+  if (!cart[idx]) return;
   const estoque = Number(cart[idx].estoque);
   const max = Number.isFinite(estoque) && estoque >= 0 ? estoque : Math.max(1, Number(cart[idx].qty) || 1);
   cart[idx].qty = Math.min(max, Math.max(1, parseInt(val) || 1));
@@ -550,6 +570,12 @@ function toast(msg) {
 }
 
 // ─── INIT ────────────────────────────────────────────
+document.getElementById('checkoutBtn').addEventListener('click', event => {
+  if (!stockValidationOk || !getCart().length) {
+    event.preventDefault();
+    toast('Aguarde a confirmação do estoque antes de continuar.');
+  }
+});
 render();
 loadLatestProducts();
 window.addEventListener('storage', e => {

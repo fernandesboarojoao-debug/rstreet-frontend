@@ -13,7 +13,7 @@ function setup(response, ok = false) {
   const session = new Map();
   const removed = [], alerts = [], requests = [];
   const scope = vm.createContext({
-    URL, BACKEND_URL: 'https://test.invalid', paymentMethod: 'pix', freteVal: 0, freteLabel: 'Entrega local', checkoutNeedsCartRefresh: false,
+    URL, AbortSignal, BACKEND_URL: 'https://test.invalid', paymentMethod: 'pix', freteVal: 0, freteLabel: 'Entrega local', checkoutNeedsCartRefresh: false,
     window: { location: {}, RStreetCheckoutState: { remember() {}, release: token => removed.push(token) } },
     document: {
       getElementById(id) {
@@ -99,4 +99,21 @@ test('repeated checkout activation while a request is pending sends only one req
   finish();
   await pending;
   assert.equal(context.elements.get('btnFinalizar').disabled, false);
+});
+
+test('payment timeout unlocks the form but preserves its original checkout attempt for a safe retry', async () => {
+  const context = setup({});
+  const controller = new AbortController();
+  context.scope.AbortSignal = { timeout(ms) { assert.equal(ms, 45000); return controller.signal; } };
+  context.scope.fetch = (_url, options) => new Promise((_resolve, reject) => {
+    options.signal.addEventListener('abort', () => reject(Object.assign(new Error('timeout'), { name: 'TimeoutError' })));
+  });
+  const request = context.scope.finalizarCompra();
+  controller.abort();
+  await request;
+  assert.equal(context.elements.get('btnFinalizar').disabled, false);
+  assert.equal(context.session.has('rstreet_checkout_attempt'), true);
+  assert.equal(context.removed.length, 0);
+  assert.equal(context.scope.window.location.href, undefined);
+  assert.match(context.alerts[0][0], /mesma tentativa/);
 });
