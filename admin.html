@@ -952,18 +952,18 @@
     <div class="modal-body">
       <div class="form-grid">
         <div class="form-group full">
-          <label>Nome do Produto *</label>
+          <label for="f-nome">Nome do Produto *</label>
           <input type="text" id="f-nome" placeholder="Ex: Camisa Slim Fit Premium">
         </div>
         <div class="form-group">
-          <label>Marca *</label>
+          <label for="f-marca">Marca *</label>
           <select id="f-marca">
             <option value="">Selecione...</option>
             <option>Acostamento</option><option>Aeropostale</option><option>Nike</option><option>TXC</option><option>Ogochi</option><option>Freeway</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Categoria</label>
+          <label for="f-categoria">Categoria</label>
           <select id="f-categoria">
             <option value="">Selecione...</option>
             <option>Camisa</option><option>Camiseta</option><option>Regata</option>
@@ -973,23 +973,23 @@
           </select>
         </div>
         <div class="form-group">
-          <label id="priceLabel">Preço (R$) *</label>
+          <label id="priceLabel" for="f-preco">Preço (R$) *</label>
           <input type="number" id="f-preco" step="0.01" min="0" placeholder="0,00">
         </div>
         <div class="form-group">
-          <label id="oldPriceLabel">Preço Antigo (R$)</label>
+          <label id="oldPriceLabel" for="f-preco-antigo">Preço Antigo (R$)</label>
           <input type="number" id="f-preco-antigo" step="0.01" min="0" placeholder="Deixe vazio se não houver">
         </div>
         <div class="form-group">
-          <label id="stockLabel">Estoque</label>
+          <label id="stockLabel" for="f-estoque">Estoque</label>
           <input type="number" id="f-estoque" min="0" placeholder="0">
         </div>
         <div class="form-group">
-          <label>Referência</label>
+          <label for="f-ref">Referência</label>
           <input type="text" id="f-ref" placeholder="Ex: ACO-001">
         </div>
         <div class="form-group full" id="sizesFormGroup">
-          <label id="sizesLabel">Tamanhos Disponíveis</label>
+          <label id="sizesLabel" for="sizeInput">Tamanhos Disponíveis</label>
           <div class="tag-input-wrap" id="sizesWrap" onclick="document.getElementById('sizeInput').focus()">
             <input type="text" class="tag-input-inner" id="sizeInput" placeholder="Digite e pressione Enter (P, M, G, 38...)" onkeydown="handleSizeInput(event)">
           </div>
@@ -1010,7 +1010,7 @@
           <div class="form-hint">Use esta área para cadastrar cada tamanho da cor selecionada e a quantidade em estoque de cada tamanho.</div>
         </div>
         <div class="form-group full">
-          <label id="imageUrlLabel">URL da Imagem</label>
+          <label id="imageUrlLabel" for="f-imagem">URL da Imagem</label>
           <input type="url" id="f-imagem" placeholder="https://...">
         </div>
         <!-- UPLOAD DE FOTO -->
@@ -1026,15 +1026,15 @@
           <div class="form-hint">As midias ficam salvas no Supabase Storage. Para URLs externas, use o campo acima.</div>
         </div>
         <div class="form-group full">
-          <label id="descLabel">Descrição</label>
+          <label id="descLabel" for="f-desc">Descrição</label>
           <textarea id="f-desc" placeholder="Descreva o produto..."></textarea>
         </div>
         <div class="form-group full">
-          <label>Especificações técnicas</label>
+          <label for="f-specs">Especificações técnicas</label>
           <textarea id="f-specs" placeholder="Material, composição, medidas, acabamento..."></textarea>
         </div>
         <div class="form-group full">
-          <label>Dicas de conservação</label>
+          <label for="f-care">Dicas de conservação</label>
           <textarea id="f-care" placeholder="Como lavar, guardar e cuidar do produto..."></textarea>
         </div>
         <div class="form-group full">
@@ -1179,6 +1179,7 @@ let allVariants = [];
 let adminLoadError = false;
 let adminRetryTimer = null;
 let editingId = null;
+let productSaveInProgress = false;
 let currentSizes = [];
 let currentVariants = [];
 let variantsLoaded = true;
@@ -1435,6 +1436,7 @@ async function sbFetch(path, opts = {}) {
 
   const res = await fetch(url, {
     ...opts,
+    signal: opts.signal || AbortSignal.timeout((opts.method || 'GET').toUpperCase() === 'GET' ? 20000 : 60000),
     headers: authHeaders({ 'Content-Type': 'application/json', ...(opts.headers || {}) })
   });
   if (!res.ok) {
@@ -1448,10 +1450,12 @@ async function sbFetch(path, opts = {}) {
 function notifyCatalogChanged() {
   const emit = () => {
     const payload = String(Date.now());
-    localStorage.setItem('rstreet_products_changed', payload);
+    try { localStorage.setItem('rstreet_products_changed', payload); } catch {}
+    let channel;
     try {
-      new BroadcastChannel('rstreet_products').postMessage({ type: 'products_changed', at: payload });
-    } catch {}
+      channel = new BroadcastChannel('rstreet_products');
+      channel.postMessage({ type: 'products_changed', at: payload });
+    } catch {} finally { channel?.close(); }
   };
   emit();
   setTimeout(emit, 1200);
@@ -1459,15 +1463,23 @@ function notifyCatalogChanged() {
 }
 
 const PEDIDOS_VISTOS_KEY = 'rstreet_pedidos_vistos';
+let pedidosVistosMemoria = new Set();
 
 function getPedidosVistos() {
-  return JSON.parse(localStorage.getItem(PEDIDOS_VISTOS_KEY) || '[]');
+  try {
+    const stored = JSON.parse(localStorage.getItem(PEDIDOS_VISTOS_KEY) || '[]');
+    const ids = Array.isArray(stored) ? stored.filter(id =>
+      (typeof id === 'string' || typeof id === 'number') && Number.isSafeInteger(Number(id)) && Number(id) > 0).map(id => String(Number(id))) : [];
+    return [...new Set([...ids, ...pedidosVistosMemoria])];
+  } catch { return [...pedidosVistosMemoria]; }
 }
 
 function setPedidoVisto(id) {
+  if (!Number.isSafeInteger(Number(id)) || Number(id) <= 0) return;
   const vistos = new Set(getPedidosVistos().map(String));
-  vistos.add(String(id));
-  localStorage.setItem(PEDIDOS_VISTOS_KEY, JSON.stringify([...vistos]));
+  vistos.add(String(Number(id)));
+  pedidosVistosMemoria = vistos;
+  try { localStorage.setItem(PEDIDOS_VISTOS_KEY, JSON.stringify([...vistos])); } catch {}
 }
 
 function isPedidoVisto(pedido) {
@@ -1493,6 +1505,7 @@ async function uploadProductPhotos() {
 
     const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
       method: 'POST',
+      signal: AbortSignal.timeout(60000),
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ dataUrl: photo.dataUrl, name: photo.name || 'produto.jpg' })
     });
@@ -1508,6 +1521,7 @@ async function uploadProductPhotos() {
 async function uploadMediaDataUrl(dataUrl, name = 'produto.jpg') {
   const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
     method: 'POST',
+    signal: AbortSignal.timeout(60000),
     headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ dataUrl, name })
   });
@@ -1568,6 +1582,7 @@ async function saveProductRemote(payload, id = null) {
 }
 
 function getFriendlySaveError(err) {
+  if (err?.name === 'TimeoutError') return 'A confirmação do salvamento demorou. Ele pode ter sido recebido. Atualize a lista e confira o produto antes de repetir.';
   const raw = String(err?.message || err || '').trim();
   try {
     const parsed = JSON.parse(raw);
@@ -1585,6 +1600,7 @@ function getFriendlySaveError(err) {
 async function productVariantsRequest(productId, opts = {}) {
   const res = await fetch(`${BACKEND_BASE}/produtos/${productId}/variantes`, {
     ...opts,
+    signal: opts.signal || AbortSignal.timeout((opts.method || 'GET').toUpperCase() === 'GET' ? 20000 : 60000),
     headers: authHeaders({
       'Content-Type': 'application/json',
       ...(opts.headers || {})
@@ -2338,6 +2354,7 @@ function buildRow(p, simple = false) {
 // MODAL PRODUTO
 // ─────────────────────────────────────────────────────
 function openProductModal(id = null) {
+  if (productSaveInProgress) return toast('Aguarde o salvamento deste produto.', 'info');
   variantLoadVersion++;
   variantsLoaded = !id;
   editingId = id;
@@ -2391,6 +2408,7 @@ function openProductModal(id = null) {
 }
 
 function closeProductModal() {
+  if (productSaveInProgress) return toast('Aguarde o salvamento deste produto.', 'info');
   variantLoadVersion++;
   document.getElementById('productModal').classList.remove('open');
   const tabs = document.getElementById('productColorTabs');
@@ -2454,13 +2472,14 @@ function removeSize(s) {
 }
 
 async function saveProduct() {
+  if (productSaveInProgress) return;
   if (!variantsLoaded) return toast('Aguarde o carregamento das variações ou reabra o produto antes de salvar.', 'error');
   const nome = document.getElementById('f-nome').value.trim();
   const marca = document.getElementById('f-marca').value;
   const preco = parseFloat(document.getElementById('f-preco').value);
   if (!nome) return toast('Informe o nome do produto.', 'error');
   if (!marca) return toast('Selecione a marca.', 'error');
-  if (isNaN(preco)) return toast('Informe um preço válido.', 'error');
+  if (!Number.isFinite(preco) || preco <= 0) return toast('Informe um preço maior que zero.', 'error');
 
   const btn = document.getElementById('saveBtn');
   btn.textContent = '⏳ Salvando...'; btn.disabled = true;
@@ -2492,6 +2511,14 @@ async function saveProduct() {
     return;
   }
 
+  const wasEditing = Boolean(editingId);
+  const modal = document.getElementById('productModal');
+  const editor = modal.querySelector('.modal-body');
+  const colorTabs = document.getElementById('productColorTabs');
+  productSaveInProgress = true;
+  modal.setAttribute('aria-busy', 'true');
+  editor.inert = true;
+  colorTabs.inert = true;
   try {
     syncActiveVariantEditorToState();
     const imageUrls = await uploadProductPhotos();
@@ -2517,19 +2544,28 @@ async function saveProduct() {
     } else {
       const res = await saveProductRemote(payload);
       const created = Array.isArray(res) ? res[0] : res;
-      savedProductId = created?.id || null;
-      allProducts.unshift(created || { ...payload, id: Date.now() });
+      savedProductId = Number(created?.id);
+      if (!Number.isSafeInteger(savedProductId) || savedProductId <= 0) throw new Error('Não foi possível confirmar o cadastro. Confira a lista de produtos antes de tentar novamente.');
+      // Retain the confirmed identity if saving variations fails afterward.
+      editingId = savedProductId;
+      document.getElementById('modalTitle').textContent = 'Editar Produto';
+      allProducts.unshift({ ...created, id: savedProductId });
     }
     if (savedProductId) await saveProductVariants(savedProductId, variantsToSave);
-    toast(editingId ? 'Produto atualizado!' : 'Produto criado!', 'success');
+    toast(wasEditing ? 'Produto atualizado!' : 'Produto criado!', 'success');
     notifyCatalogChanged();
     savedOk = true;
   } catch (err) {
     console.error('Erro ao salvar produto:', err);
     toast(getFriendlySaveError(err), 'error');
+  } finally {
+    productSaveInProgress = false;
+    editor.inert = false;
+    colorTabs.inert = false;
+    modal.removeAttribute('aria-busy');
+    btn.textContent = '💾 Salvar Produto'; btn.disabled = false;
   }
 
-  btn.textContent = '💾 Salvar Produto'; btn.disabled = false;
   if (!savedOk) return;
   closeProductModal();
   updateStats(); renderRecentTable(); renderAdminTable();
@@ -3830,22 +3866,25 @@ function getDemo() {
 document.getElementById('sqlCode').textContent = SQL_CODE;
 
 // Remove configurações antigas que poderiam ter guardado uma chave no navegador.
-localStorage.removeItem('rstreet_cfg');
+try { localStorage.removeItem('rstreet_cfg'); } catch {}
+verificarLogin();
 
 // Carrega pedidos em background ao abrir o admin
-setTimeout(() => loadPedidos(), 2000);
+setTimeout(() => { if (getAdminToken()) loadPedidos(); }, 2000);
 
 // ─── POLLING — verifica pedidos novos a cada 30 segundos ───
 let ultimoPedidoId = 0;
 
 async function verificarPedidosNovos() {
+  if (!getAdminToken() || document.hidden) return;
   try {
     const res = await fetch(`${BACKEND_BASE}/admin/pedidos`, {
-      headers: authHeaders({ 'Content-Type': 'application/json' })
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      signal: AbortSignal.timeout(15000)
     });
     if (!res.ok) return;
     const pedidos = await res.json();
-    if (!pedidos.length) return;
+    if (!Array.isArray(pedidos) || !pedidos.length) return;
 
     const maisRecente = pedidos[0].id;
 

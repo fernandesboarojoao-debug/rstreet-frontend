@@ -121,9 +121,10 @@
   .badge-out { background:rgba(255,255,255,0.1); color:var(--gray-200); }
 
   .gallery-thumbs { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
-  .thumb { width:72px; height:90px; background:var(--gray-800); border:2px solid var(--border); border-radius:3px; overflow:hidden; cursor:pointer; transition:border-color 0.2s; flex-shrink:0; }
+  .thumb { width:72px; height:90px; padding:0; background:var(--gray-800); border:2px solid var(--border); border-radius:3px; overflow:hidden; cursor:pointer; transition:border-color 0.2s; flex-shrink:0; }
   .thumb.active { border-color:var(--gold); }
   .thumb:hover { border-color:rgba(200,169,110,0.5); }
+  .thumb:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
   .thumb img, .thumb video { width:100%; height:100%; object-fit:cover; }
 
   .product-info { min-width:0; }
@@ -778,9 +779,9 @@ function renderProduct() {
   const thumbs = medias.length > 1 ? `
     <div class="gallery-thumbs">
       ${medias.map((media, i) => `
-        <div class="thumb ${i===activeMediaIndex?'active':''}" onclick="changeMedia(${jsStringAttr(media.url)}, ${jsStringAttr(media.type)}, this)">
+        <button type="button" class="thumb ${i===activeMediaIndex?'active':''}" aria-label="Ver ${media.type === 'video' ? 'vídeo' : 'foto'} ${i + 1}" aria-pressed="${i===activeMediaIndex}" onclick="changeMedia(${jsStringAttr(media.url)}, ${jsStringAttr(media.type)}, this)">
           ${renderThumbMedia(media, i)}
-        </div>`).join('')}
+        </button>`).join('')}
     </div>` : '';
 
   const discount = colorData.preco_antigo ? Math.round((1 - colorData.preco / colorData.preco_antigo) * 100) : 0;
@@ -1080,8 +1081,9 @@ function changeMedia(url, type, el) {
     wrap.innerHTML = `${renderMainMedia({ url, type }, product?.nome || 'Produto')}${arrows}${badge}`;
     prepareProductVideos(wrap);
   }
-  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.thumb').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-pressed', 'false'); });
   el?.classList.add('active');
+  el?.setAttribute('aria-pressed', 'true');
 }
 
 function getActiveMediaIndex(medias) {
@@ -1607,7 +1609,7 @@ function changeProductQty(delta) {
   const max = getCurrentPurchaseLimit();
   const next = Math.max(1, Math.min(max, selectedQty + delta));
   if (delta > 0 && selectedQty >= max) {
-    toast(`Temos apenas ${max} unidade(s) dispon&iacute;vel(is).`);
+    toast(`Temos apenas ${max} unidade(s) disponível(is).`);
     return;
   }
   selectedQty = next;
@@ -1617,7 +1619,7 @@ function changeProductQty(delta) {
 function setProductQty(value) {
   const max = getCurrentPurchaseLimit();
   const next = Math.max(1, Math.min(max, parseInt(value, 10) || 1));
-  if (next < Number(value || 0)) toast(`Temos apenas ${max} unidade(s) dispon&iacute;vel(is).`);
+  if (next < Number(value || 0)) toast(`Temos apenas ${max} unidade(s) disponível(is).`);
   selectedQty = next;
   renderProduct();
 }

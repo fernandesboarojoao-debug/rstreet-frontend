@@ -56,6 +56,45 @@ test('a blocked cart write is reported instead of showing a successful save', ()
   assert.match(notice, /salvar/);
 });
 
+test('full cart blocked writes preserve the old cart and do not announce success', () => {
+  let notice = '', badges = 0;
+  const scope = vm.createContext({ localStorage: { setItem() { throw Error('blocked'); } },
+    toast: value => { notice = value; }, updateCartBadge: () => { badges++; } });
+  load('carrinho.html', 'function saveCart(', 'function updateCartBadge()', scope);
+  assert.equal(scope.saveCart([]), false);
+  assert.match(notice, /itens anteriores foram mantidos/);
+  assert.equal(badges, 0);
+});
+
+test('failed stock synchronization write keeps checkout locked', () => {
+  const scope = vm.createContext({ stockValidationOk: true, window: {},
+    latestProducts: [{ id: 1, estoque: 3, preco: 20, ativo: true }], latestVariants: [],
+    getCart: () => [{ id: 1, qty: 1, estoque: 3, preco: 10 }], saveCart: () => false,
+    render() {}, toast() { throw Error('must not announce successful synchronization'); } });
+  load('carrinho.html', 'function syncCartWithStock()', '// ─── RENDER', scope);
+  scope.syncCartWithStock();
+  assert.equal(scope.stockValidationOk, false);
+});
+
+test('drawer failed removal never overwrites its save error with a success notice', () => {
+  const scope = vm.createContext({ getCart: () => [{ id: 1, qty: 1 }], saveCart: () => false,
+    showDrawerNotice() { throw Error('must not announce successful removal'); } });
+  load('rstreet-cart-drawer.js', '  function removeItem(', '  function renderDrawer()', scope);
+  scope.removeItem(0);
+  scope.removeItem(5);
+});
+
+test('product quantity limits use readable accents in text-only notices', () => {
+  const notices = [];
+  const scope = vm.createContext({ selectedQty: 1, getCurrentPurchaseLimit: () => 1,
+    toast: value => notices.push(value), renderProduct() {} });
+  load('produto.html', 'function changeProductQty(', 'function adicionarCarrinho()', scope);
+  scope.changeProductQty(1); scope.setProductQty('9');
+  assert.equal(scope.selectedQty, 1);
+  assert.equal(notices.length, 2);
+  assert.ok(notices.every(value => value.includes('disponível') && !value.includes('&')));
+});
+
 test('late stock responses cannot overwrite a newer cart refresh', async () => {
   const pending = [];
   const scope = vm.createContext({ AbortSignal, stockRequestVersion: 0, SUPABASE_URL: '', SUPABASE_KEY: '',

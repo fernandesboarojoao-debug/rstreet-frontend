@@ -11,6 +11,19 @@ function load(file, start, end, scope) {
 }
 const clone = value => JSON.parse(JSON.stringify(value));
 
+test('product gallery thumbnails use native buttons and keep selected state accessible', () => {
+  const html = read('produto.html');
+  assert.match(html, /<button type="button" class="thumb /);
+  assert.doesNotMatch(html, /<div class="thumb /);
+  const attributes = [{}, {}];
+  const thumbs = attributes.map(attrs => ({ classList: { remove() {}, add() {} }, setAttribute: (key, value) => { attrs[key] = value; } }));
+  const scope = vm.createContext({ selectedMediaUrl: '', selectedMediaType: '', document: { querySelector: () => null, querySelectorAll: () => thumbs } });
+  load('produto.html', 'function changeMedia(', 'function getActiveMediaIndex(', scope);
+  scope.changeMedia('fixture.jpg', 'image', thumbs[1]);
+  assert.equal(attributes[0]['aria-pressed'], 'false');
+  assert.equal(attributes[1]['aria-pressed'], 'true');
+});
+
 test('product quantity controls have accessible names without changing stock limits', () => {
   const html = read('produto.html');
   assert.match(html, /class="product-qty-num" aria-label="Quantidade do produto"[^>]+max="\$\{qtyMax\}"/);

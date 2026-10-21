@@ -311,8 +311,10 @@ function getCart() {
   } catch { return []; }
 }
 function saveCart(cart) {
-  localStorage.setItem('rstreet_cart', JSON.stringify(cart));
+  try { localStorage.setItem('rstreet_cart', JSON.stringify(cart)); }
+  catch { toast('Não foi possível salvar o carrinho neste navegador. Seus itens anteriores foram mantidos.'); return false; }
   updateCartBadge();
+  return true;
 }
 function updateCartBadge() {
   const cart = getCart();
@@ -427,7 +429,7 @@ function syncCartWithStock() {
     return { ...item, qty, estoque };
   }).filter(item => item && item.qty > 0);
   if (changed || next.length !== cart.length) {
-    saveCart(next);
+    if (saveCart(next) === false) { stockValidationOk = false; render(); return; }
     (notices.length ? notices : ['Carrinho atualizado conforme o estoque atual.']).slice(0, 3).forEach(toast);
     render();
   }
@@ -519,7 +521,7 @@ function changeQty(idx, delta) {
     return;
   }
   cart[idx].qty = Math.max(1, cart[idx].qty + delta);
-  saveCart(cart);
+  if (saveCart(cart) === false) return;
   render();
 }
 
@@ -529,7 +531,7 @@ function setQty(idx, val) {
   const estoque = Number(cart[idx].estoque);
   const max = Number.isFinite(estoque) && estoque >= 0 ? estoque : Math.max(1, Number(cart[idx].qty) || 1);
   cart[idx].qty = Math.min(max, Math.max(1, parseInt(val) || 1));
-  saveCart(cart);
+  if (saveCart(cart) === false) return;
   render();
 }
 
@@ -545,7 +547,7 @@ function removeItem(idx) {
       && (item.checkoutLineId || null) === (selected.checkoutLineId || null));
     if (currentIndex < 0) return;
     cart.splice(currentIndex, 1);
-    saveCart(cart);
+    if (saveCart(cart) === false) { el?.classList.remove('removing'); return; }
     render();
     toast('Produto removido do carrinho.');
   }, 300);
@@ -553,7 +555,7 @@ function removeItem(idx) {
 
 function clearCart() {
   if (!confirm('Remover todos os itens do carrinho?')) return;
-  saveCart([]);
+  if (saveCart([]) === false) return;
   render();
   toast('Carrinho esvaziado.');
 }
