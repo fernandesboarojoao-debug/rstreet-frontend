@@ -161,8 +161,8 @@
         const ids = productIds.join(',');
         const headers = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
         const [prodRes, varRes] = await Promise.all([
-          fetch(`${SUPABASE_URL}/rest/v1/produtos?id=in.(${ids})&select=id,estoque,ativo,preco`, { headers, signal: AbortSignal.timeout(12000) }),
-          fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?produto_id=in.(${ids})&select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, { headers, signal: AbortSignal.timeout(12000) })
+          (globalThis.RStreetCatalogData?.fetchAll || fetch)(`${SUPABASE_URL}/rest/v1/produtos?id=in.(${ids})&select=id,estoque,ativo,preco`, { headers, signal: AbortSignal.timeout(12000) }),
+          (globalThis.RStreetCatalogData?.fetchAll || fetch)(`${SUPABASE_URL}/rest/v1/produto_variantes?produto_id=in.(${ids})&select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, { headers, signal: AbortSignal.timeout(12000) })
         ]);
         if (!prodRes.ok || !varRes.ok) throw new Error('Falha ao consultar estoque.');
         const [products, variants] = await Promise.all([prodRes.json(), varRes.json()]);

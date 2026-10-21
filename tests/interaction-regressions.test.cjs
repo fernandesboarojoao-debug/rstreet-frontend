@@ -11,6 +11,22 @@ function load(file, start, end, scope) {
 }
 const clone = value => JSON.parse(JSON.stringify(value));
 
+test('product quantity controls have accessible names without changing stock limits', () => {
+  const html = read('produto.html');
+  assert.match(html, /class="product-qty-num" aria-label="Quantidade do produto"[^>]+max="\$\{qtyMax\}"/);
+  assert.match(html, /class="product-qty-btn" aria-label="Diminuir quantidade"/);
+  assert.match(html, /class="product-qty-btn" aria-label="Aumentar quantidade"/);
+});
+
+test('campaign banner leaves keyboard activation to its native links and buttons', () => {
+  const html = read('catalogo.html');
+  const banner = html.match(/<div class="catalog-theme-banner"[^>]+>/)[0];
+  assert.doesNotMatch(banner, /onkeydown|tabindex/);
+  assert.doesNotMatch(html, /banner\.setAttribute\('role', 'link'\)/);
+  assert.match(html, /banner\.setAttribute\('role', 'region'\)/);
+  assert.match(html, /<a class="catalog-theme-btn"[^>]+href=/);
+});
+
 test('rapid removal of two cart items removes the selected products despite shifted indexes', () => {
   let cart = [{ id: 1 }, { id: 2 }, { id: 3 }];
   const timers = [];

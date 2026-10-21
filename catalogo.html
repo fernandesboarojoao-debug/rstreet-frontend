@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <script src="rstreet-checkout-state.js"></script>
+<script src="rstreet-catalog-data.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Catálogo R Street | Moda Masculina Selecionada</title>
@@ -1546,7 +1547,7 @@
   </button>
 </section>
 
-<div class="catalog-theme-banner" id="catalogThemeBanner" onclick="openCatalogThemeBanner(event)" onkeydown="handleCatalogThemeBannerKey(event)">
+<div class="catalog-theme-banner" id="catalogThemeBanner" onclick="openCatalogThemeBanner(event)">
   <div class="catalog-theme-content">
     <a class="catalog-theme-back" id="catalogThemeBack" href="catalogo.html">← Voltar ao catálogo</a>
     <div class="catalog-theme-label" id="catalogThemeLabel">Campanha</div>
@@ -2009,7 +2010,7 @@ async function loadProducts(silent = false, retryAttempt = 0) {
   }
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/produtos?select=*&order=criado_em.desc`, {
+    const res = await (globalThis.RStreetCatalogData?.fetchAll || fetch)(`${SUPABASE_URL}/rest/v1/produtos?select=*&order=criado_em.desc`, {
       cache: 'no-store',
       signal: AbortSignal.timeout(15000),
       headers: {
@@ -2090,7 +2091,7 @@ function scheduleProductsRefresh(delay = 250) {
 
 async function loadProductVariants() {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&ativo=eq.true&order=ordem.asc,cor.asc,tamanho.asc`, {
+    const res = await (globalThis.RStreetCatalogData?.fetchAll || fetch)(`${SUPABASE_URL}/rest/v1/produto_variantes?select=*&ativo=eq.true&order=ordem.asc,cor.asc,tamanho.asc`, {
       cache: 'no-store',
       signal: AbortSignal.timeout(15000),
       headers: {
@@ -2138,9 +2139,8 @@ function applyCatalogThemeBanner(theme, isCampaignFilter = false) {
   banner.classList.add('is-linkable');
   banner.classList.toggle('is-campaign-page', Boolean(isCampaignFilter));
   banner.dataset.href = themeLink;
-  banner.setAttribute('role', 'link');
-  banner.setAttribute('tabindex', '0');
-  banner.setAttribute('aria-label', `Abrir campanha ${theme.nome || theme.titulo || ''}`.trim());
+  banner.setAttribute('role', 'region');
+  banner.setAttribute('aria-label', `Campanha ${theme.nome || theme.titulo || ''}`.trim());
   banner.style.borderColor = color;
   const oldImg = banner.querySelector('img');
   if (oldImg) oldImg.remove();
@@ -2179,12 +2179,6 @@ function handleCatalogThemeButton(event) {
   if (!currentCampaignTheme) return;
   event.preventDefault();
   document.querySelector('.catalog-layout')?.scrollIntoView({ behavior: 'smooth' });
-}
-
-function handleCatalogThemeBannerKey(event) {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
-  event.preventDefault();
-  openCatalogThemeBanner(event);
 }
 
 function renderCatalogMenuCampaigns() {

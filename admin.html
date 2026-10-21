@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script src="rstreet-backend-connection.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | R Street</title>
@@ -391,7 +392,9 @@
   }
 
   @media(max-width:560px){
-    .stats-row{grid-template-columns:1fr}
+    .stats-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .stat-card{min-width:0;padding:14px}
+    .stat-num{font-size:26px;overflow-wrap:anywhere}
     .content{padding:16px}
     .topbar{top:78px;display:block}
     .topbar-title{margin-bottom:10px}
@@ -1079,7 +1082,8 @@ const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn'; // chave publicável; escrita continua restrita ao backend
 
 function getAdminToken() {
-  return sessionStorage.getItem('rstreet_admin_token') || '';
+  try { return sessionStorage.getItem('rstreet_admin_token') || ''; }
+  catch { return ''; }
 }
 
 function authHeaders(extra = {}) {
@@ -1108,17 +1112,23 @@ async function fazerLogin() {
   const box   = document.getElementById('loginBox');
   const btn   = document.getElementById('loginBtn');
 
-  if (!senha) return;
+  if (btn.disabled || !senha) return;
 
   btn.textContent = 'Verificando...';
   btn.disabled = true;
   erro.classList.remove('show');
 
   try {
+    if (globalThis.RStreetBackendConnection) {
+      btn.textContent = 'Conectando à loja...';
+      await globalThis.RStreetBackendConnection.ready(BACKEND_URL_AUTH);
+      btn.textContent = 'Verificando...';
+    }
     const res = await fetch(`${BACKEND_URL_AUTH}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ senha }),
+      signal: AbortSignal.timeout(20000),
     });
 
     if (res.ok) {
@@ -1129,15 +1139,21 @@ async function fazerLogin() {
       sessionStorage.setItem('rstreet_admin_token', data.token);
       unlockAdminInterface();
       loadProducts();
-    } else {
+    } else if (res.status === 401) {
+      erro.textContent = 'Senha incorreta. Confira e tente novamente.';
       erro.classList.add('show');
       box.classList.add('shake');
       document.getElementById('loginInput').value = '';
       document.getElementById('loginInput').focus();
       setTimeout(() => box.classList.remove('shake'), 400);
+    } else {
+      const message = res.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.' : 'O servidor está indisponível no momento. Tente novamente; sua senha foi mantida.';
+      throw new Error(message);
     }
-  } catch {
-    erro.textContent = '❌ Erro de conexão com o servidor.';
+  } catch (error) {
+    erro.textContent = error.code === 'BACKEND_UNAVAILABLE'
+      ? 'A conexão com a loja demorou ou falhou. Aguarde e tente novamente; sua senha foi mantida.'
+      : error.message || 'Não foi possível entrar agora. Tente novamente.';
     erro.classList.add('show');
   }
 
@@ -1146,14 +1162,16 @@ async function fazerLogin() {
 }
 
 function verificarLogin() {
-  const expira = parseInt(sessionStorage.getItem('rstreet_auth') || '0');
-  if (Date.now() < expira && getAdminToken()) {
-    unlockAdminInterface();
-    loadProducts();
-  } else {
-    sessionStorage.removeItem('rstreet_auth');
-    sessionStorage.removeItem('rstreet_admin_token');
-  }
+  try {
+    const expira = parseInt(sessionStorage.getItem('rstreet_auth') || '0');
+    if (Date.now() < expira && getAdminToken()) {
+      unlockAdminInterface();
+      loadProducts();
+    } else {
+      sessionStorage.removeItem('rstreet_auth');
+      sessionStorage.removeItem('rstreet_admin_token');
+    }
+  } catch { /* Restricted storage leaves the admin locked. */ }
 }
 
 let allProducts = [];
@@ -3442,15 +3460,23 @@ async function exportarIntegracaoPedido(id, button) {
   finally { button.disabled = false; }
 }
 
+let pedidosRequest = 0;
 async function loadPedidos() {
-  document.getElementById('pedidosTableBody').innerHTML =
+  const request = ++pedidosRequest;
+  if (!allPedidos.length) document.getElementById('pedidosTableBody').innerHTML =
     '<tr><td colspan="8" class="table-empty"><div class="table-empty-icon">⏳</div>Carregando...</td></tr>';
   try {
     const res = await sbFetch('/pedidos?select=*&order=criado_em.desc');
-    allPedidos = res || [];
+    if (request !== pedidosRequest) return;
+    if (!Array.isArray(res)) throw new Error('Resposta de pedidos inválida.');
+    allPedidos = res;
   } catch {
-    allPedidos = [];
-    toast('Não foi possível carregar pedidos.', 'error');
+    if (request !== pedidosRequest) return;
+    toast('Não foi possível atualizar os pedidos. Os dados anteriores foram mantidos.', 'error');
+    if (!allPedidos.length) {
+      document.getElementById('pedidosTableBody').innerHTML = '<tr><td colspan="8" class="table-empty">Não foi possível carregar os pedidos. <button type="button" class="btn btn-outline btn-sm" onclick="loadPedidos()">Tentar novamente</button></td></tr>';
+    }
+    return;
   }
   updatePedidosStats();
   renderPedidosTable();
@@ -3499,6 +3525,13 @@ function updatePedidosStats() {
   else badge.style.display = 'none';
 }
 
+function formatAdminFrete(pedido) {
+  if (/retir/i.test(String(pedido.frete_tipo || ''))) return 'Retirada';
+  const value = Number(pedido.frete_valor);
+  if (pedido.frete_valor == null || pedido.frete_valor === '' || !Number.isFinite(value) || value < 0) return '—';
+  return value === 0 ? 'Grátis' : 'R$ ' + value.toFixed(2).replace('.', ',');
+}
+
 function renderPedidosTable() {
   const search = normalizeSearchText(document.getElementById('pedSearch')?.value || '');
   const status = document.getElementById('pedStatusFilter')?.value || '';
@@ -3538,13 +3571,13 @@ function renderPedidosTable() {
       <td class="td-name">${escapeHtml(p.cliente_nome || 'Cliente')}<small>${escapeHtml(p.cliente_email || '')}</small></td>
       <td style="font-size:12px;color:var(--gray1)">${escapeHtml(p.frete_tipo || '—')}</td>
       <td class="price-cell">R$ ${Number(p.total).toFixed(2).replace('.',',')}</td>
-      <td style="font-size:12px">${p.frete_valor > 0 ? 'R$ '+Number(p.frete_valor).toFixed(2).replace('.',',') : 'Retirada'}</td>
+      <td style="font-size:12px">${formatAdminFrete(p)}</td>
       <td>${statusHtml}</td>
       <td style="font-size:12px;color:var(--gray1)">${escapeHtml(formatDate(p.criado_em))}</td>
       <td><div class="actions-cell">
-        <button class="btn btn-outline btn-icon btn-sm" onclick="verPedido(${pedidoId})" title="Ver detalhes">🔍</button>
-        <button class="btn btn-outline btn-icon btn-sm" onclick="atualizarStatus(${pedidoId})" title="Alterar status">✏️</button>
-        <button class="btn btn-outline btn-icon btn-sm" onclick="abrirWhatsAppPedido(${pedidoId})" title="WhatsApp">W</button>
+        <button class="btn btn-outline btn-icon btn-sm" onclick="verPedido(${pedidoId})" title="Ver detalhes" aria-label="Ver detalhes do pedido ${pedidoId}">🔍</button>
+        <button class="btn btn-outline btn-icon btn-sm" onclick="atualizarStatus(${pedidoId})" title="Alterar status" aria-label="Alterar status do pedido ${pedidoId}">✏️</button>
+        <button class="btn btn-outline btn-icon btn-sm" onclick="abrirWhatsAppPedido(${pedidoId})" title="WhatsApp" aria-label="WhatsApp do pedido ${pedidoId}">W</button>
       </div></td>
     </tr>
   `}).join('');

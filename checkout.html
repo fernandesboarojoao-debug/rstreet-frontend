@@ -2,6 +2,8 @@
 <html lang="pt-BR">
 <head>
 <script src="rstreet-checkout-state.js"></script>
+<script src="rstreet-catalog-data.js"></script>
+<script src="rstreet-backend-connection.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout | R Street Moda Masculina</title>
@@ -428,6 +430,8 @@
         <span class="btn-text">🔒 Finalizar Compra</span>
       </button>
 
+      <p id="checkoutProgress" role="status" aria-live="polite" hidden style="font-size:13px;line-height:1.5;color:var(--gray-400);margin:12px 0 0"></p>
+
       <div class="security-badges">
         <div class="sec-badge"><span class="sec-badge-icon">🔒</span> Pagamento 100% seguro via Mercado Pago</div>
         <div class="sec-badge"><span class="sec-badge-icon">🛡</span> Seus dados estão protegidos</div>
@@ -613,10 +617,10 @@ async function validarCarrinhoAtual() {
   let variants;
   try {
     const [prodRes, varRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo,preco`, {
+      (globalThis.RStreetCatalogData?.fetchAll || fetch)(`${SUPABASE_URL}/rest/v1/produtos?select=id,estoque,ativo,preco`, {
         headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }, signal: AbortSignal.timeout(12000)
       }),
-      fetch(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, {
+      (globalThis.RStreetCatalogData?.fetchAll || fetch)(`${SUPABASE_URL}/rest/v1/produto_variantes?select=id,produto_id,estoque,ativo,preco,imagem_url,imagens`, {
         headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }, signal: AbortSignal.timeout(12000)
       })
     ]);
@@ -907,6 +911,13 @@ function validate() {
 }
 
 // ─── FINALIZAR ──────────────────────────────
+function setCheckoutProgress(message = '') {
+  const target = document.getElementById('checkoutProgress');
+  if (!target) return;
+  target.textContent = message;
+  target.hidden = !message;
+}
+
 async function finalizarCompra() {
   const btn = document.getElementById('btnFinalizar');
   if (btn.disabled || !validate()) return;
@@ -914,8 +925,23 @@ async function finalizarCompra() {
   btn.disabled = true;
   clearAlert();
   let redirecting = false;
+  let connectionTimer;
 
   try {
+  const cartBeforeConnection = JSON.stringify(getCart());
+  if (globalThis.RStreetBackendConnection) {
+    setCheckoutProgress('Preparando conexão segura...');
+    connectionTimer = setTimeout(() => setCheckoutProgress('A conexão está demorando um pouco. Nenhum novo pagamento foi enviado por esta tentativa.'), 8000);
+    await globalThis.RStreetBackendConnection.ready(BACKEND_URL);
+    clearTimeout(connectionTimer);
+    if (JSON.stringify(getCart()) !== cartBeforeConnection) {
+      renderSummary();
+      showAlert('Seu carrinho mudou em outra aba. Confira os itens e tente novamente.', 'info');
+      return;
+    }
+    if (!validate()) return;
+  }
+  setCheckoutProgress('Conferindo produtos e estoque...');
   const validacaoCarrinho = wasCheckoutAttemptSubmitted(getCart())
     ? { ok: true }
     : await validarCarrinhoAtual();
@@ -965,6 +991,7 @@ async function finalizarCompra() {
   };
 
     markCheckoutAttemptSubmitted(cart);
+    setCheckoutProgress('Abrindo pagamento seguro...');
     const res = await fetch(`${BACKEND_URL}/api/pagamento/criar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1001,10 +1028,12 @@ async function finalizarCompra() {
     redirecting = true;
     window.location.href = paymentUrl;
   } catch (err) {
-    showAlert(err.name === 'TimeoutError'
+    showAlert(err.code === 'BACKEND_UNAVAILABLE' ? err.message : err.name === 'TimeoutError'
       ? 'A confirmação demorou mais que o esperado. Não crie outra compra: tente novamente aqui para consultar ou retomar esta mesma tentativa de pagamento.'
       : 'Erro ao processar pedido: ' + err.message + '. Tente novamente ou entre em contato via WhatsApp.', 'error');
   } finally {
+    clearTimeout(connectionTimer);
+    setCheckoutProgress();
     btn.classList.remove('loading');
     btn.disabled = false;
     if (!redirecting && checkoutNeedsCartRefresh) handleCheckoutCartStorage({ key: 'rstreet_cart' }, false);
@@ -1047,6 +1076,7 @@ document.querySelectorAll('input[id]').forEach(input => {
 document.getElementById('f-cep').addEventListener('input', resetFrete);
 updateStoreHoursAlert();
 renderSummary();
+if (getCart().length) void globalThis.RStreetBackendConnection?.ready(BACKEND_URL).catch(() => {});
 window.addEventListener('storage', handleCheckoutCartStorage);
 </script>
 </body>

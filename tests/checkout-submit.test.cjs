@@ -13,7 +13,7 @@ function setup(response, ok = false) {
   const session = new Map();
   const removed = [], alerts = [], requests = [];
   const scope = vm.createContext({
-    URL, AbortSignal, BACKEND_URL: 'https://test.invalid', paymentMethod: 'pix', freteVal: 0, freteLabel: 'Entrega local', checkoutNeedsCartRefresh: false,
+    URL, AbortSignal, setTimeout, clearTimeout, setCheckoutProgress() {}, BACKEND_URL: 'https://test.invalid', paymentMethod: 'pix', freteVal: 0, freteLabel: 'Entrega local', checkoutNeedsCartRefresh: false,
     window: { location: {}, RStreetCheckoutState: { remember() {}, release: token => removed.push(token) } },
     document: {
       getElementById(id) {
@@ -116,4 +116,25 @@ test('payment timeout unlocks the form but preserves its original checkout attem
   assert.equal(context.removed.length, 0);
   assert.equal(context.scope.window.location.href, undefined);
   assert.match(context.alerts[0][0], /mesma tentativa/);
+});
+
+test('unavailable backend stops before sending payment and keeps the existing attempt', async () => {
+  const context = setup({});
+  context.scope.RStreetBackendConnection = { ready: async () => { throw Object.assign(new Error('Conexão indisponível.'), { code: 'BACKEND_UNAVAILABLE' }); } };
+  await context.scope.finalizarCompra();
+  assert.equal(context.requests.length, 0);
+  assert.equal(context.elements.get('btnFinalizar').disabled, false);
+  assert.equal(context.session.has('rstreet_checkout_attempt'), true);
+  assert.equal(context.alerts[0][0], 'Conexão indisponível.');
+});
+
+test('cart changes while the server wakes require review before payment', async () => {
+  const context = setup({});
+  const cart = [{ id: 1, qty: 1, preco: 100 }];
+  context.scope.getCart = () => cart;
+  context.scope.renderSummary = () => {};
+  context.scope.RStreetBackendConnection = { ready: async () => { cart[0].qty = 2; } };
+  await context.scope.finalizarCompra();
+  assert.equal(context.requests.length, 0);
+  assert.match(context.alerts[0][0], /carrinho mudou/);
 });
