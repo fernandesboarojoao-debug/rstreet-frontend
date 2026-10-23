@@ -327,6 +327,7 @@
   .home-highlight-media-main { left:2px; bottom:2px; }
   .home-highlight-media-remove { right:2px; top:2px; }
   .theme-admin-layout { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(300px,.95fr); gap:18px; align-items:start; }
+  .pedido-details-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-bottom:20px;overflow-wrap:anywhere; }
   .theme-preview-box { min-height:170px; border:1px solid var(--border); border-radius:6px; background:var(--surface2); overflow:hidden; position:relative; display:flex; align-items:flex-end; padding:18px; }
   .theme-preview-box::before { content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.78)); z-index:1; }
   .theme-preview-box img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
@@ -392,6 +393,7 @@
   }
 
   @media(max-width:560px){
+    .pedido-details-grid{grid-template-columns:1fr}
     .stats-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .stat-card{min-width:0;padding:14px}
     .stat-num{font-size:26px;overflow-wrap:anywhere}
@@ -531,6 +533,7 @@
     <div class="topbar-actions">
       <button class="btn btn-outline btn-sm" onclick="loadProducts()">🔄 Atualizar</button>
       <button class="btn btn-gold btn-sm" onclick="openProductModal()">+ Novo Produto</button>
+      <button class="btn btn-outline btn-sm" onclick="logoutAdmin()">Sair</button>
     </div>
   </div>
 
@@ -692,8 +695,8 @@
           <div class="table-empty">Carregando destaques...</div>
         </div>
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn btn-gold" onclick="saveHomeHighlights()">Salvar Destaques</button>
-          <button class="btn btn-outline btn-sm" onclick="loadHomeHighlightsAdmin()">Recarregar</button>
+          <button class="btn btn-gold" id="saveHomeHighlightsBtn" onclick="saveHomeHighlights()" disabled>Salvar Destaques</button>
+          <button class="btn btn-outline btn-sm" onclick="loadHomeHighlightsAdmin(true)">Recarregar</button>
         </div>
       </div>
 
@@ -802,7 +805,7 @@
             </div>
           </div>
           <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn btn-gold" onclick="saveTemaSite()">Salvar tema</button>
+            <button class="btn btn-gold" id="saveTemaBtn" onclick="saveTemaSite()">Salvar tema</button>
             <button class="btn btn-outline btn-sm" onclick="resetTemaSiteForm()">Limpar</button>
           </div>
         </div>
@@ -929,12 +932,12 @@
   <div class="modal-box" style="max-width:720px">
     <div class="modal-header">
       <h2 id="pedModalTitle">Pedido #</h2>
-      <button class="modal-close-btn" onclick="document.getElementById('pedidoModal').classList.remove('open')">✕</button>
+      <button class="modal-close-btn" onclick="closePedidoModal()" aria-label="Fechar detalhes do pedido">✕</button>
     </div>
     <div class="modal-body" id="pedModalBody"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="document.getElementById('pedidoModal').classList.remove('open')">Fechar</button>
-      <button class="btn btn-gold btn-sm" id="btnImprimir">🖨️ Imprimir</button>
+      <button class="btn btn-ghost" onclick="closePedidoModal()">Fechar</button>
+      <button class="btn btn-gold btn-sm" id="btnImprimir" disabled>🖨️ Imprimir</button>
     </div>
   </div>
 </div>
@@ -1081,9 +1084,46 @@ const API = 'https://rstreet-backend.onrender.com/api/admin';
 const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn'; // chave publicável; escrita continua restrita ao backend
 
+let adminSessionExpiryTimer;
 function getAdminToken() {
-  try { return sessionStorage.getItem('rstreet_admin_token') || ''; }
+  try {
+    const expires = Number(sessionStorage.getItem('rstreet_auth') || 0);
+    if (!Number.isFinite(expires) || Date.now() >= expires) return '';
+    return sessionStorage.getItem('rstreet_admin_token') || '';
+  }
   catch { return ''; }
+}
+
+function lockAdminSession(message = 'Sessão expirada. Entre novamente para continuar. Seus campos não salvos foram mantidos nesta página.') {
+  clearTimeout(adminSessionExpiryTimer);
+  try { sessionStorage.removeItem('rstreet_auth'); sessionStorage.removeItem('rstreet_admin_token'); } catch {}
+  closePedidoModal();
+  for (const id of ['adminSidebar', 'adminMain']) {
+    const target = document.getElementById(id);
+    target.setAttribute('inert', ''); target.setAttribute('aria-hidden', 'true');
+  }
+  const login = document.getElementById('loginScreen');
+  login.style.display = 'flex'; login.removeAttribute('aria-hidden');
+  document.getElementById('loginInput').value = '';
+  document.getElementById('loginError').textContent = message;
+  document.getElementById('loginError').classList.add('show');
+  document.getElementById('loginInput').focus();
+}
+
+function scheduleAdminSessionExpiry() {
+  clearTimeout(adminSessionExpiryTimer);
+  let expires = 0;
+  try { expires = Number(sessionStorage.getItem('rstreet_auth') || 0); } catch {}
+  const remaining = expires - Date.now();
+  if (!Number.isFinite(remaining) || remaining <= 0) return lockAdminSession();
+  adminSessionExpiryTimer = setTimeout(lockAdminSession, Math.min(remaining, 2147483647));
+}
+
+function logoutAdmin() {
+  if (productSaveInProgress || adminMediaUploading || homeHighlightsSaving || temaSaving) return toast('Aguarde o envio ou salvamento antes de sair.', 'info');
+  if (!confirm('Sair do painel? Alterações não salvas serão descartadas.')) return;
+  lockAdminSession('Sessão encerrada neste navegador.');
+  window.location.reload();
 }
 
 function authHeaders(extra = {}) {
@@ -1104,6 +1144,7 @@ function unlockAdminInterface() {
     element.removeAttribute('inert');
     element.removeAttribute('aria-hidden');
   });
+  scheduleAdminSessionExpiry();
 }
 
 async function fazerLogin() {
@@ -1180,6 +1221,12 @@ let adminLoadError = false;
 let adminRetryTimer = null;
 let editingId = null;
 let productSaveInProgress = false;
+let adminMediaUploading = false;
+let homeHighlightsSaving = false;
+let homeHighlightsLoaded = false;
+let homeHighlightsLoading = false;
+let temaSaving = false;
+let temaReadVersion = 0;
 let currentSizes = [];
 let currentVariants = [];
 let variantsLoaded = true;
@@ -1527,7 +1574,26 @@ async function uploadMediaDataUrl(dataUrl, name = 'produto.jpg') {
   });
   if (!res.ok) throw new Error(await res.text());
   const data = await res.json();
-  return data.url;
+  const url = safeHttpUrl(data.url);
+  if (!url) throw new Error('O envio não retornou um endereço válido. A imagem anterior foi mantida.');
+  return url;
+}
+
+async function runAdminMediaUpload(root, input, work) {
+  if (adminMediaUploading || productSaveInProgress || homeHighlightsSaving || homeHighlightsLoading || temaSaving) {
+    input.value = '';
+    return toast('Aguarde o envio ou salvamento atual.', 'info');
+  }
+  adminMediaUploading = true;
+  const wasInert = Boolean(root?.inert);
+  if (root) { root.inert = true; root.setAttribute('aria-busy', 'true'); }
+  input.disabled = true;
+  try { await work(); }
+  catch (error) { toast(getFriendlySaveError(error), 'error'); }
+  finally {
+    adminMediaUploading = false; input.disabled = false; input.value = '';
+    if (root) { root.inert = wasInert; root.removeAttribute('aria-busy'); }
+  }
 }
 
 async function uploadPendingVariantMedia() {
@@ -2032,35 +2098,22 @@ function readFileAsDataUrl(file) {
 
 async function uploadVariantMedia(groupIndex, event) {
   const files = Array.from(event.target.files || []);
-  event.target.value = '';
   if (!files.length) return;
-  try {
-    const uploaded = { imagens: [], videos: [] };
+  await runAdminMediaUpload(document.getElementById('productModal'), event.target, async () => {
+    files.forEach(validateMediaFile);
     for (const file of files) {
       const kind = validateMediaFile(file);
-      if (file.type.startsWith('image/') && file.size > 5 * 1024 * 1024) throw new Error(`Imagem "${file.name}" passa de 5MB.`);
-      if (file.type.startsWith('video/') && file.size > 30 * 1024 * 1024) throw new Error(`Video "${file.name}" passa de 30MB.`);
       const media = await prepareMediaForUpload(file, kind);
-      const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ dataUrl: media.dataUrl, name: media.name })
+      const url = await uploadMediaDataUrl(media.dataUrl, media.name);
+      updateColorVariants(groupIndex, variant => {
+        const key = kind === 'video' ? 'videos' : 'imagens';
+        variant[key] = uniqueMediaList([...(variant[key] || []), url]);
+        variant.imagem_url = getStoredMediaUrl(variant.imagens?.[0]) || null;
       });
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      if (kind === 'video') uploaded.videos.push(data.url);
-      else uploaded.imagens.push(data.url);
+      renderVariantGrid();
     }
-    updateColorVariants(groupIndex, (variant) => {
-      variant.imagens = uniqueMediaList([...(variant.imagens || []), ...uploaded.imagens]);
-      variant.videos = uniqueMediaList([...(variant.videos || []), ...uploaded.videos]);
-      variant.imagem_url = getStoredMediaUrl(variant.imagens[0]) || null;
-    });
-    renderVariantGrid();
     toast('Midia enviada para a cor.', 'success');
-  } catch (err) {
-    toast(err.message || 'Erro ao enviar midia da cor.', 'error');
-  }
+  });
 }
 
 function addSizeToColor(groupIndex) {
@@ -2354,7 +2407,7 @@ function buildRow(p, simple = false) {
 // MODAL PRODUTO
 // ─────────────────────────────────────────────────────
 function openProductModal(id = null) {
-  if (productSaveInProgress) return toast('Aguarde o salvamento deste produto.', 'info');
+  if (productSaveInProgress || adminMediaUploading) return toast('Aguarde o envio ou salvamento deste produto.', 'info');
   variantLoadVersion++;
   variantsLoaded = !id;
   editingId = id;
@@ -2408,7 +2461,7 @@ function openProductModal(id = null) {
 }
 
 function closeProductModal() {
-  if (productSaveInProgress) return toast('Aguarde o salvamento deste produto.', 'info');
+  if (productSaveInProgress || adminMediaUploading) return toast('Aguarde o envio ou salvamento deste produto.', 'info');
   variantLoadVersion++;
   document.getElementById('productModal').classList.remove('open');
   const tabs = document.getElementById('productColorTabs');
@@ -2473,6 +2526,7 @@ function removeSize(s) {
 
 async function saveProduct() {
   if (productSaveInProgress) return;
+  if (adminMediaUploading) return toast('Aguarde o envio dos arquivos antes de salvar.', 'info');
   if (!variantsLoaded) return toast('Aguarde o carregamento das variações ou reabra o produto antes de salvar.', 'error');
   const nome = document.getElementById('f-nome').value.trim();
   const marca = document.getElementById('f-marca').value;
@@ -2938,51 +2992,52 @@ function toggleHomeHighlight(i) {
   document.getElementById(`home-highlight-active-${i}`).classList.toggle('on');
 }
 
-async function loadHomeHighlightsAdmin() {
+async function loadHomeHighlightsAdmin(force = false) {
   const editor = document.getElementById('homeHighlightsEditor');
-  if (!editor) return;
-  editor.innerHTML = '<div class="table-empty">Carregando destaques...</div>';
+  if (!editor || (homeHighlightsLoaded && !force) || homeHighlightsLoading || homeHighlightsSaving || adminMediaUploading) return;
+  if (force && homeHighlightsLoaded && !confirm('Recarregar os destaques e descartar as alterações não salvas?')) return;
+  const wasLoaded = homeHighlightsLoaded;
+  homeHighlightsLoading = true; homeHighlightsLoaded = false;
+  editor.inert = true;
+  document.getElementById('saveHomeHighlightsBtn').disabled = true;
+  if (!wasLoaded) editor.innerHTML = '<div class="table-empty">Carregando destaques...</div>';
   try {
-    const res = await fetch(`${API}/home-destaques`, { headers: authHeaders({ 'Content-Type': 'application/json' }) });
+    const res = await fetch(`${API}/home-destaques`, { headers: authHeaders({ 'Content-Type': 'application/json' }), signal: AbortSignal.timeout(20000) });
     if (!res.ok) throw new Error(await res.text());
-    renderHomeHighlightsAdmin(await res.json());
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('Resposta inválida.');
+    renderHomeHighlightsAdmin(data);
+    homeHighlightsLoaded = true;
+    document.getElementById('saveHomeHighlightsBtn').disabled = false;
   } catch {
-    renderHomeHighlightsAdmin();
-    toast('Não foi possível carregar destaques. Mostrando padrão.', 'error');
-  }
+    homeHighlightsLoaded = wasLoaded;
+    if (!wasLoaded) editor.innerHTML = '<p role="alert">Não foi possível carregar os destaques. Os dados da loja não foram substituídos.</p><button type="button" class="btn btn-outline btn-sm" onclick="loadHomeHighlightsAdmin()">Tentar novamente</button>';
+    toast('Não foi possível carregar os destaques. Tente novamente.', 'error');
+  } finally { homeHighlightsLoading = false; editor.inert = false; document.getElementById('saveHomeHighlightsBtn').disabled = !homeHighlightsLoaded; }
 }
 
 async function handleHomeHighlightFile(i, event) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
-  try {
+  await runAdminMediaUpload(document.getElementById('homeHighlightsEditor'), event.target, async () => {
     const current = normalizeHomeHighlightMedia(homeHighlightsState[i] || {});
     const available = Math.max(0, 8 - current.length);
     if (!available) return toast('Limite de 8 midias por destaque.', 'error');
-    const added = [];
-    for (const file of files.slice(0, available)) {
+    const selected = files.slice(0, available);
+    selected.forEach(validateMediaFile);
+    const midias = [...current];
+    for (const file of selected) {
       const kind = validateMediaFile(file);
       const media = await prepareMediaForUpload(file, kind);
-      const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ dataUrl: media.dataUrl, name: media.name || file.name })
-      });
-      if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
-      added.push({ url: data.url, tipo: kind });
+      const url = await uploadMediaDataUrl(media.dataUrl, media.name || file.name);
+      midias.push({ url, tipo: kind });
+      homeHighlightsState[i] = { ...(homeHighlightsState[i] || {}), midias: [...midias], midia_url: midias[0]?.url || '', midia_tipo: midias[0]?.tipo || 'image' };
+      document.getElementById(`home-highlight-media-${i}`).value = midias[0]?.url || '';
+      document.getElementById(`home-highlight-media-type-${i}`).value = midias[0]?.tipo || 'image';
+      updateHomeHighlightPreview(i);
     }
-    const midias = [...current, ...added].slice(0, 8);
-    homeHighlightsState[i] = { ...(homeHighlightsState[i] || {}), midias, midia_url: midias[0]?.url || '', midia_tipo: midias[0]?.tipo || 'image' };
-    document.getElementById(`home-highlight-media-${i}`).value = midias[0]?.url || '';
-    document.getElementById(`home-highlight-media-type-${i}`).value = midias[0]?.tipo || 'image';
-    updateHomeHighlightPreview(i);
-    toast(`${added.length} midia(s) enviada(s) para o destaque.`, 'success');
-  } catch (err) {
-    toast(err.message || 'Erro ao enviar midia.', 'error');
-  } finally {
-    event.target.value = '';
-  }
+    toast(`${selected.length} midia(s) enviada(s) para o destaque.`, 'success');
+  });
 }
 
 function setHomeHighlightPrimary(i, mediaIndex) {
@@ -3006,22 +3061,30 @@ function removeHomeHighlightMedia(i, mediaIndex) {
 }
 
 async function saveHomeHighlights() {
+  if (homeHighlightsSaving) return;
+  if (!homeHighlightsLoaded || adminMediaUploading) return toast('Carregue os destaques e aguarde o envio dos arquivos antes de salvar.', 'info');
   const destaques = [0,1,2].map(getHomeHighlightFromForm);
   if (destaques.some(d => !d.marca || !d.titulo || !d.midia_url)) {
     return toast('Preencha marca, titulo e foto/video dos 3 destaques.', 'error');
   }
+  const editor = document.getElementById('homeHighlightsEditor');
+  const button = document.getElementById('saveHomeHighlightsBtn');
+  homeHighlightsSaving = true; editor.inert = true; button.disabled = true;
   try {
     const res = await fetch(`${API}/home-destaques`, {
       method: 'PUT',
+      signal: AbortSignal.timeout(60000),
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ destaques })
     });
     if (!res.ok) throw new Error(await res.text());
-    renderHomeHighlightsAdmin(await res.json());
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('Não foi possível confirmar os destaques. Confira antes de repetir.');
+    renderHomeHighlightsAdmin(data);
     toast('Destaques da home salvos!', 'success');
   } catch (err) {
-    toast('Erro ao salvar destaques: ' + (err.message || 'tente novamente.'), 'error');
-  }
+    toast('Erro ao salvar destaques: ' + getFriendlySaveError(err), 'error');
+  } finally { homeHighlightsSaving = false; editor.inert = false; button.disabled = false; }
 }
 
 // ─────────────────────────────────────────────────────
@@ -3119,6 +3182,7 @@ function updateTemaSitePreview() {
 }
 
 function resetTemaSiteForm() {
+  if (adminMediaUploading || temaSaving) return toast('Aguarde o envio ou salvamento da campanha.', 'info');
   editingThemeId = null;
   selectedThemeProductIds = [];
   ['tema-id','tema-nome','tema-titulo','tema-texto','tema-botao-link','tema-banner','tema-banner-mobile','tema-inicio','tema-fim'].forEach(id => {
@@ -3213,22 +3277,31 @@ function renderTemasSiteList() {
 }
 
 async function loadTemasSiteAdmin() {
+  if (adminMediaUploading || temaSaving) return;
+  const request = ++temaReadVersion;
   const list = document.getElementById('temasSiteList');
-  if (list) list.innerHTML = '<div class="table-empty">Carregando temas...</div>';
+  if (list && !siteThemesState.length) list.innerHTML = '<div class="table-empty">Carregando temas...</div>';
   try {
     if (!allProducts.length) await loadProducts();
-    const res = await fetch(`${API}/temas-site`, { headers: authHeaders({ 'Content-Type': 'application/json' }) });
+    if (request !== temaReadVersion) return;
+    const res = await fetch(`${API}/temas-site`, { headers: authHeaders({ 'Content-Type': 'application/json' }), signal: AbortSignal.timeout(20000) });
     if (!res.ok) throw new Error(await res.text());
-    siteThemesState = await res.json() || [];
+    const data = await res.json();
+    if (request !== temaReadVersion) return;
+    if (!Array.isArray(data)) throw new Error('Resposta inválida. A lista anterior foi mantida.');
+    siteThemesState = data;
     renderTemasSiteList();
     renderTemaProducts();
   } catch (err) {
-    if (list) list.innerHTML = '<div class="table-empty">Não foi possível carregar temas.</div>';
+    if (request !== temaReadVersion) return;
+    if (siteThemesState.length) renderTemasSiteList();
+    else if (list) list.innerHTML = '<div class="table-empty" role="alert">Não foi possível carregar temas. Tente recarregar.</div>';
     toast('Erro ao carregar temas: ' + (err.message || 'tente novamente.'), 'error');
   }
 }
 
 function editTemaSite(id) {
+  if (adminMediaUploading || temaSaving) return toast('Aguarde o envio ou salvamento da campanha.', 'info');
   const theme = siteThemesState.find(item => Number(item.id) === Number(id));
   if (!theme) return;
   setTemaSiteForm(theme);
@@ -3236,57 +3309,61 @@ function editTemaSite(id) {
 }
 
 async function deleteTemaSite(id) {
+  if (adminMediaUploading || temaSaving) return toast('Aguarde o envio ou salvamento da campanha.', 'info');
   if (!confirm('Excluir este tema?')) return;
+  temaSaving = true;
+  temaReadVersion++;
+  const editor = document.querySelector('.theme-admin-layout');
+  editor.inert = true;
   try {
     const res = await fetch(`${API}/temas-site/${id}`, {
       method: 'DELETE',
+      signal: AbortSignal.timeout(60000),
       headers: authHeaders({ 'Content-Type': 'application/json' })
     });
     if (!res.ok) throw new Error(await res.text());
     siteThemesState = siteThemesState.filter(theme => Number(theme.id) !== Number(id));
     renderTemasSiteList();
-    if (editingThemeId === Number(id)) resetTemaSiteForm();
+    if (editingThemeId === Number(id)) setTemaSiteForm();
     toast('Tema excluido.', 'success');
   } catch (err) {
-    toast('Erro ao excluir tema: ' + (err.message || 'tente novamente.'), 'error');
-  }
+    toast('Erro ao excluir tema: ' + getFriendlySaveError(err), 'error');
+  } finally { temaSaving = false; editor.inert = false; }
 }
 
 async function handleTemaBannerFile(event, targetId = 'tema-banner') {
   const file = event.target.files?.[0];
   if (!file) return;
-  try {
+  await runAdminMediaUpload(document.querySelector('.theme-admin-layout'), event.target, async () => {
     const kind = validateMediaFile(file);
     if (kind !== 'image') return toast('Use uma imagem para o banner.', 'error');
     const media = await prepareMediaForUpload(file, kind);
-    const res = await fetch(`${BACKEND_BASE}/produtos/upload-image`, {
-      method: 'POST',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ dataUrl: media.dataUrl, name: media.name || file.name || 'banner.jpg' })
-    });
-    if (!res.ok) throw new Error(await res.text());
-    const data = await res.json();
-    document.getElementById(targetId).value = data.url;
+    const url = await uploadMediaDataUrl(media.dataUrl, media.name || file.name || 'banner.jpg');
+    document.getElementById(targetId).value = url;
     updateTemaSitePreview();
     toast('Banner enviado.', 'success');
-  } catch (err) {
-    toast(err.message || 'Erro ao enviar banner.', 'error');
-  } finally {
-    event.target.value = '';
-  }
+  });
 }
 
 async function saveTemaSite() {
+  if (temaSaving) return;
+  if (adminMediaUploading) return toast('Aguarde o envio do banner antes de salvar.', 'info');
   const payload = getTemaSitePayload();
   if (!payload) return;
+  const editor = document.querySelector('.theme-admin-layout');
+  const button = document.getElementById('saveTemaBtn');
+  temaSaving = true; editor.inert = true; button.disabled = true;
+  temaReadVersion++;
   try {
     const res = await fetch(`${API}/temas-site`, {
       method: 'POST',
+      signal: AbortSignal.timeout(60000),
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error(await res.text());
     const saved = await res.json();
+    if (!Number.isSafeInteger(Number(saved?.id)) || Number(saved.id) <= 0) throw new Error('Não foi possível confirmar a campanha. Confira a lista antes de repetir.');
     const idx = siteThemesState.findIndex(theme => Number(theme.id) === Number(saved.id));
     if (idx >= 0) siteThemesState[idx] = saved;
     else siteThemesState.unshift(saved);
@@ -3294,12 +3371,13 @@ async function saveTemaSite() {
     renderTemasSiteList();
     toast('Tema salvo.', 'success');
   } catch (err) {
-    toast('Erro ao salvar tema: ' + (err.message || 'tente novamente.'), 'error');
-  }
+    toast('Erro ao salvar tema: ' + getFriendlySaveError(err), 'error');
+  } finally { temaSaving = false; editor.inert = false; button.disabled = false; }
 }
 
 const tabs = { dashboard:'Dashboard', produtos:'Produtos', importar:'Importar Produtos', pedidos:'Pedidos', avaliacoes:'Avaliações', metricas:'Métricas', temas:'Temas do Site', config:'Configurações' };
 function showTab(name) {
+  if (adminMediaUploading || homeHighlightsSaving || temaSaving) return toast('Aguarde o envio ou salvamento antes de trocar de área.', 'info');
   Object.keys(tabs).forEach(t => {
     document.getElementById('tab-' + t).style.display = t === name ? '' : 'none';
   });
@@ -3317,7 +3395,6 @@ function showTab(name) {
   }
   if (name === 'temas') {
     loadTemasSiteAdmin();
-    resetTemaSiteForm();
   }
   if (name === 'config') { loadHomeHighlightsAdmin(); loadOperacao(); }
   if (name === 'avaliacoes') loadAvaliacoes();
@@ -3619,23 +3696,55 @@ function renderPedidosTable() {
   `}).join('');
 }
 
+let pedidoDetalheRequest = 0;
+function closePedidoModal() {
+  pedidoDetalheRequest++;
+  document.getElementById('pedidoModal').classList.remove('open');
+  document.getElementById('pedModalBody').innerHTML = '';
+  document.getElementById('btnImprimir').disabled = true;
+  document.getElementById('btnImprimir').onclick = null;
+}
+
+function validPedidoItems(itens) {
+  return Array.isArray(itens) && itens.length > 0 && itens.every(item => item &&
+    [item.quantidade, item.preco_unitario, item.total].every(value => typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) &&
+    Number.isSafeInteger(Number(item.quantidade)) && Number(item.quantidade) > 0 &&
+    item.preco_unitario != null && Number.isFinite(Number(item.preco_unitario)) && Number(item.preco_unitario) >= 0 &&
+    item.total != null && Number.isFinite(Number(item.total)) && Number(item.total) >= 0);
+}
+
 async function verPedido(id) {
   const p = allPedidos.find(x => x.id === id);
   if (!p) return;
+  const request = ++pedidoDetalheRequest;
+  const printButton = document.getElementById('btnImprimir');
+  printButton.disabled = true;
+  printButton.onclick = null;
+  document.getElementById('pedModalTitle').textContent = `Pedido #${p.id}`;
+  document.getElementById('pedModalBody').innerHTML = '<p role="status">Carregando os itens do pedido...</p>';
+  document.getElementById('pedidoModal').classList.add('open');
   setPedidoVisto(id);
   updatePedidosStats();
   renderPedidosTable();
   let itens = [];
   try {
     const res = await fetch(`${BACKEND_BASE}/admin/pedidos/${id}/itens`, {
-      headers: authHeaders({ 'Content-Type': 'application/json' })
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      signal: AbortSignal.timeout(15000)
     });
-    if (res.ok) itens = await res.json();
-  } catch {}
+    if (!res.ok) throw new Error('Falha ao consultar itens.');
+    itens = await res.json();
+    if (!validPedidoItems(itens)) throw new Error('Itens incompletos.');
+  } catch {
+    if (request !== pedidoDetalheRequest) return;
+    document.getElementById('pedModalBody').innerHTML = `<p role="alert">Não foi possível confirmar os itens deste pedido. A impressão está bloqueada para evitar um comprovante incompleto.</p><button type="button" class="btn btn-outline btn-sm" onclick="verPedido(${Number(id) || 0})">Tentar novamente</button>`;
+    return;
+  }
+  if (request !== pedidoDetalheRequest) return;
   document.getElementById('pedModalTitle').textContent = `Pedido #${p.id}`;
   const trackingUrl = safeHttpUrl(p.rastreio_url);
   document.getElementById('pedModalBody').innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+    <div class="pedido-details-grid">
       <div>
         <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:10px">Cliente</div>
         <div style="font-size:14px;font-weight:600;margin-bottom:4px">${escapeHtml(p.cliente_nome || 'Cliente')}</div>
@@ -3653,7 +3762,7 @@ async function verPedido(id) {
       </div>
     </div>
     <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:12px">Itens</div>
-    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px">
+    <div style="overflow-x:auto"><table style="width:100%;min-width:420px;border-collapse:collapse;font-size:13px;margin-bottom:20px">
       <thead><tr style="border-bottom:1px solid var(--border)">
         <th style="text-align:left;padding:8px 0;color:var(--gray1);font-size:11px">Produto</th>
         <th style="text-align:center;padding:8px 0;color:var(--gray1);font-size:11px">Qtd</th>
@@ -3669,7 +3778,7 @@ async function verPedido(id) {
             <td style="text-align:right;padding:10px 0;font-weight:600;color:var(--gold)">R$ ${Number(i.total).toFixed(2).replace('.',',')}</td>
           </tr>`).join('') : '<tr><td colspan="4" style="padding:16px 0;color:var(--gray1)">Itens não disponíveis</td></tr>'}
       </tbody>
-    </table>
+    </table></div>
     <div style="background:var(--surface2);border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:8px">
       <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--gray1)">Subtotal</span><span>R$ ${Number(p.subtotal).toFixed(2).replace('.',',')}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--gray1)">Frete (${escapeHtml(p.frete_tipo || '—')})</span><span>${p.frete_valor > 0 ? 'R$ '+Number(p.frete_valor).toFixed(2).replace('.',',') : 'Grátis'}</span></div>
@@ -3695,6 +3804,7 @@ async function verPedido(id) {
       ${p.pago_em ? ' · 💳 Pago em: '+formatDate(p.pago_em) : ''}
     </div>`;
   document.getElementById('btnImprimir').onclick = () => imprimirPedido(p, itens);
+  document.getElementById('btnImprimir').disabled = false;
   document.getElementById('pedidoModal').classList.add('open');
 }
 
@@ -3788,6 +3898,7 @@ function abrirWhatsAppPedido(id) {
 }
 
 function imprimirPedido(p, itens) {
+  if (!validPedidoItems(itens)) return toast('Confirme os itens do pedido antes de imprimir.', 'error');
   const win = window.open('', '_blank');
   if (!win) return toast('Permita a abertura da janela para imprimir o pedido.', 'error');
   const pedidoId = Number(p.id) || 0;
@@ -3882,7 +3993,7 @@ async function verificarPedidosNovos() {
       headers: authHeaders({ 'Content-Type': 'application/json' }),
       signal: AbortSignal.timeout(15000)
     });
-    if (!res.ok) return;
+    if (!res.ok || !getAdminToken()) return;
     const pedidos = await res.json();
     if (!Array.isArray(pedidos) || !pedidos.length) return;
 
@@ -3928,6 +4039,9 @@ setTimeout(() => {
   verificarPedidosNovos();
   setInterval(verificarPedidosNovos, 30000);
 }, 5000);
+window.addEventListener('focus', () => {
+  if (document.getElementById('loginScreen').style.display === 'none' && !getAdminToken()) lockAdminSession();
+});
 
 </script>
 </body>

@@ -134,7 +134,7 @@ function productSaveScope() {
   field('f-nome').value = 'Produto de teste local';
   field('f-marca').value = 'Ogochi';
   field('f-preco').value = '159.90';
-  const scope = vm.createContext({ productSaveInProgress: false, variantsLoaded: true, editingId: null,
+  const scope = vm.createContext({ productSaveInProgress: false, adminMediaUploading: false, variantsLoaded: true, editingId: null,
     currentSizes: ['M'], allProducts: [], document: { getElementById: field },
     console: { error() {} }, toast: message => notices.push(message),
     syncActiveVariantEditorToState() {}, uploadProductPhotos: async () => ['fixture.jpg'],

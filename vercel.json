@@ -1,4 +1,5 @@
 {
+  "buildCommand": "node scripts/verify-release.cjs",
   "redirects": [
     {
       "source": "/",
