@@ -1,5 +1,5 @@
-const SUPABASE_URL = 'https://dxttqvmrpfwxsgrpancz.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_TxSQPVP-gFjgTst7fTj4tw_G2qw7ssn';
+const SUPABASE_URL = 'https://sbjgdtcmhqskgvymmawg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_346i0a9_TM5ZdrMfQO6oNQ_9tlqYDxC';
 const SITE_URL = 'https://www.rstreet.com.br';
 
 function xmlEscape(value) {

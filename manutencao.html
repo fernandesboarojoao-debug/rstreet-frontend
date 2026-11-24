@@ -23,7 +23,7 @@
     .page > * { min-width:0; }
     .backdrop { position:absolute; inset:0; z-index:-3; margin:0; background:var(--ink); }
     .backdrop img { width:100%; height:100%; object-fit:cover; object-position:center 42%; animation:photo-enter 1.6s ease-out both; }
-    .veil { position:absolute; inset:0; z-index:-2; background:rgba(8,10,8,.85); }
+    .veil { position:absolute; inset:0; z-index:-2; background:rgba(8,10,8,.84); }
     .topbar { width:100%; max-width:1320px; margin:auto; padding:28px 48px; display:flex; align-items:center; justify-content:space-between; gap:18px; border-bottom:1px solid #ffffff1a; }
     .wordmark { font-family:'Bebas Neue',Impact,sans-serif; font-size:30px; line-height:1; white-space:nowrap; }
     .gold { color:var(--gold); }
@@ -44,7 +44,11 @@
     .secondary { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:48px; font-size:13px; border-bottom:1px solid #ffffff60; transition:color .2s,border-color .2s; }
     .secondary:hover { color:var(--gold); border-color:var(--gold); }
     .secondary span { font-size:19px; }
-    .note { margin:24px 0 0; color:#aaaEA7; font-size:11px; line-height:1.6; animation:arrive .8s .55s both; }
+    .note { margin:24px auto 0; max-width:460px; color:#c3c5bf; font-size:12px; line-height:1.7; animation:arrive .8s .55s both; }
+    .note strong { color:var(--white); font-weight:500; }
+    .availability { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:9px 22px; margin:28px 0 0; padding:18px 0 0; border-top:1px solid #ffffff24; color:#d1d3cb; font-size:11px; animation:arrive .8s .6s both; }
+    .availability span { display:inline-flex; align-items:center; gap:8px; }
+    .availability i { display:block; width:5px; height:5px; border-radius:50%; background:var(--gold); }
     .bottom { background:#0b0c0bef; border-top:1px solid #ffffff1a; }
     .ribbon { padding:13px 0; overflow:hidden; border-bottom:1px solid #ffffff14; color:#c4c5ba; font-size:10px; font-weight:600; text-transform:uppercase; }
     .ribbon-track { display:flex; width:max-content; animation:drift 42s linear infinite; }
@@ -62,7 +66,7 @@
     @media (max-width:700px) {
       .topbar { padding:22px 22px; }
       .wordmark { font-size:26px; }
-      .status { font-size:9px; }
+      .status { font-size:9px; max-width:140px; line-height:1.6; }
       main { padding:45px 24px 42px; }
       h1 { font-size:100px; }
       h2 { max-width:440px; font-size:30px; }
@@ -79,7 +83,8 @@
       .divider { margin:20px auto 23px; }
       .actions { flex-direction:column; margin-top:25px; gap:9px; }
       .primary { width:100%; max-width:320px; }
-      .note { margin-top:18px; font-size:10px; }
+      .note { margin-top:18px; font-size:11px; }
+      .availability { gap:10px 18px; margin-top:22px; font-size:10px; }
       footer { align-items:flex-start; flex-direction:column; gap:8px; padding:18px 22px; }
       .ribbon-part { gap:25px; padding-right:25px; }
     }
@@ -94,20 +99,21 @@
     <div class="veil" aria-hidden="true"></div>
     <header class="topbar">
       <div class="wordmark" aria-label="R Street">R<span class="gold">.</span>STREET</div>
-      <div class="status"><span class="status-light" aria-hidden="true"></span>Loja online em atualização</div>
+      <div class="status"><span class="status-light" aria-hidden="true"></span>Loja online em manutenção</div>
     </header>
     <main>
       <div class="content">
-        <p class="eyebrow">Uma pausa para ir além.</p>
+        <p class="eyebrow">Estamos preparando o próximo capítulo.</p>
         <h1>R<span class="gold">.</span>STREET</h1>
         <div class="divider" aria-hidden="true"></div>
-        <h2>O próximo capítulo do seu estilo<br><span>está chegando.</span></h2>
-        <p class="copy">Nossa loja online está em manutenção para receber melhorias.<br>Enquanto isso, o atendimento continua. Fale com a nossa equipe e encontre sua próxima peça pelo WhatsApp.</p>
+        <h2>Uma pausa no site.<br><span>Seu estilo continua.</span></h2>
+        <p class="copy">Estamos atualizando nossa loja online com cuidado.<br>Enquanto isso, nossa equipe continua por perto para ajudar você a escolher sua próxima peça pelo WhatsApp.</p>
         <div class="actions">
           <a class="primary" href="https://wa.me/5519993111599?text=Ol%C3%A1!%20Vi%20que%20o%20site%20est%C3%A1%20em%20manuten%C3%A7%C3%A3o%20e%20quero%20conhecer%20os%20produtos%20da%20R%20Street." target="_blank" rel="noopener noreferrer"><img src="/whatsapp-floating.webp" alt="" width="26" height="27">Comprar pelo WhatsApp</a>
           <a class="secondary" href="/acompanhar.html">Acompanhar meu pedido <span aria-hidden="true">→</span></a>
         </div>
-        <p class="note">Já comprou? O acompanhamento do seu pedido continua disponível.</p>
+        <p class="note"><strong>Já fez uma compra?</strong> Consulte seu pedido pelo botão acima. Se precisar de ajuda, fale com a nossa equipe.</p>
+        <div class="availability" aria-label="Atendimento disponível"><span><i aria-hidden="true"></i>WhatsApp disponível</span><span><i aria-hidden="true"></i>Acompanhamento de pedidos</span></div>
       </div>
     </main>
     <div class="bottom">
