@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0b0c0b">
+  <title>Voltamos em breve | R Street</title>
+  <meta name="description" content="A loja online da R Street está em atualização. Nosso atendimento continua pelo WhatsApp e você pode acompanhar seu pedido normalmente.">
+  <link rel="icon" href="/favicon-48.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="/hero-catalogo-pc.webp" as="image">
+  <style>
+    :root { color-scheme:dark; --ink:#0b0c0b; --gold:#ddbc78; --white:#f7f8f5; --muted:#c3c5bf; }
+    * { box-sizing:border-box; letter-spacing:0; }
+    html { min-height:100%; background:var(--ink); }
+    body { margin:0; color:var(--white); font-family:'DM Sans',Arial,sans-serif; }
+    a { color:inherit; text-decoration:none; }
+    a:focus-visible { outline:3px solid var(--gold); outline-offset:6px; }
+    .page { min-height:100svh; display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:auto 1fr auto; position:relative; isolation:isolate; overflow:hidden; }
+    .page > * { min-width:0; }
+    .backdrop { position:absolute; inset:0; z-index:-3; margin:0; background:var(--ink); }
+    .backdrop img { width:100%; height:100%; object-fit:cover; object-position:center 42%; animation:photo-enter 1.6s ease-out both; }
+    .veil { position:absolute; inset:0; z-index:-2; background:rgba(8,10,8,.85); }
+    .topbar { width:100%; max-width:1320px; margin:auto; padding:28px 48px; display:flex; align-items:center; justify-content:space-between; gap:18px; border-bottom:1px solid #ffffff1a; }
+    .wordmark { font-family:'Bebas Neue',Impact,sans-serif; font-size:30px; line-height:1; white-space:nowrap; }
+    .gold { color:var(--gold); }
+    .status { display:flex; align-items:center; gap:9px; font-size:11px; font-weight:700; text-transform:uppercase; color:#dddcd5; }
+    .status-light { width:7px; height:7px; background:var(--gold); border-radius:50%; flex:0 0 7px; animation:signal 2.5s ease-in-out infinite; }
+    main { display:flex; justify-content:center; align-items:center; padding:52px 24px 56px; position:relative; }
+    .content { width:min(790px,100%); text-align:center; }
+    .eyebrow { margin:0 0 15px; color:var(--gold); font-size:12px; text-transform:uppercase; font-weight:700; animation:arrive .7s .1s both; }
+    h1 { font-family:'Bebas Neue',Impact,sans-serif; font-size:144px; line-height:.95; font-weight:400; margin:0; animation:arrive .9s .18s both; }
+    .divider { width:64px; height:3px; background:var(--gold); margin:25px auto 28px; transform-origin:left; animation:line-enter .8s .35s both; }
+    h2 { font-size:38px; font-weight:600; line-height:1.17; margin:0 auto 20px; max-width:690px; animation:arrive .8s .28s both; }
+    h2 span { color:var(--gold); }
+    .copy { margin:0 auto; max-width:510px; font-size:15px; line-height:1.8; color:var(--muted); animation:arrive .8s .38s both; }
+    .actions { display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:14px 28px; margin-top:30px; animation:arrive .8s .48s both; }
+    .primary { display:inline-flex; align-items:center; justify-content:center; gap:12px; min-height:54px; padding:13px 24px; color:var(--ink); background:var(--gold); font-size:14px; font-weight:700; border:1px solid var(--gold); border-radius:3px; transition:background .2s,transform .2s; }
+    .primary img { width:26px; height:27px; object-fit:contain; }
+    .primary:hover { background:#edcf97; transform:translateY(-2px); }
+    .secondary { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:48px; font-size:13px; border-bottom:1px solid #ffffff60; transition:color .2s,border-color .2s; }
+    .secondary:hover { color:var(--gold); border-color:var(--gold); }
+    .secondary span { font-size:19px; }
+    .note { margin:24px 0 0; color:#aaaEA7; font-size:11px; line-height:1.6; animation:arrive .8s .55s both; }
+    .bottom { background:#0b0c0bef; border-top:1px solid #ffffff1a; }
+    .ribbon { padding:13px 0; overflow:hidden; border-bottom:1px solid #ffffff14; color:#c4c5ba; font-size:10px; font-weight:600; text-transform:uppercase; }
+    .ribbon-track { display:flex; width:max-content; animation:drift 42s linear infinite; }
+    .ribbon-part { display:flex; align-items:center; gap:38px; padding-right:38px; white-space:nowrap; }
+    .ribbon b { color:var(--gold); font-size:15px; font-weight:400; }
+    footer { max-width:1320px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:20px; padding:20px 48px; color:#a7aaa2; font-size:11px; line-height:1.6; }
+    footer p { margin:0; }
+    footer strong { color:#e3e4de; font-weight:500; }
+    footer a:hover { color:var(--gold); }
+    @keyframes arrive { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes line-enter { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+    @keyframes photo-enter { from { opacity:0; transform:scale(1.035); } to { opacity:1; transform:scale(1); } }
+    @keyframes signal { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+    @keyframes drift { to { transform:translateX(-50%); } }
+    @media (max-width:700px) {
+      .topbar { padding:22px 22px; }
+      .wordmark { font-size:26px; }
+      .status { font-size:9px; }
+      main { padding:45px 24px 42px; }
+      h1 { font-size:100px; }
+      h2 { max-width:440px; font-size:30px; }
+      .copy { max-width:410px; font-size:14px; line-height:1.75; }
+      .actions { gap:13px 22px; }
+      footer { padding:20px 24px; font-size:10px; }
+      .veil { background:rgba(8,10,8,.88); }
+    }
+    @media (max-width:420px) {
+      main { padding:37px 22px 36px; }
+      h1 { font-size:88px; }
+      h2 { font-size:27px; line-height:1.2; }
+      .eyebrow { font-size:10px; }
+      .divider { margin:20px auto 23px; }
+      .actions { flex-direction:column; margin-top:25px; gap:9px; }
+      .primary { width:100%; max-width:320px; }
+      .note { margin-top:18px; font-size:10px; }
+      footer { align-items:flex-start; flex-direction:column; gap:8px; padding:18px 22px; }
+      .ribbon-part { gap:25px; padding-right:25px; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      *,*::before,*::after { animation:none !important; transition:none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <figure class="backdrop" aria-hidden="true"><img src="/hero-catalogo-pc.webp" alt="" fetchpriority="high" width="1901" height="651"></figure>
+    <div class="veil" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="wordmark" aria-label="R Street">R<span class="gold">.</span>STREET</div>
+      <div class="status"><span class="status-light" aria-hidden="true"></span>Loja online em atualização</div>
+    </header>
+    <main>
+      <div class="content">
+        <p class="eyebrow">Uma pausa para ir além.</p>
+        <h1>R<span class="gold">.</span>STREET</h1>
+        <div class="divider" aria-hidden="true"></div>
+        <h2>O próximo capítulo do seu estilo<br><span>está chegando.</span></h2>
+        <p class="copy">Nossa loja online está em manutenção para receber melhorias.<br>Enquanto isso, o atendimento continua. Fale com a nossa equipe e encontre sua próxima peça pelo WhatsApp.</p>
+        <div class="actions">
+          <a class="primary" href="https://wa.me/5519993111599?text=Ol%C3%A1!%20Vi%20que%20o%20site%20est%C3%A1%20em%20manuten%C3%A7%C3%A3o%20e%20quero%20conhecer%20os%20produtos%20da%20R%20Street." target="_blank" rel="noopener noreferrer"><img src="/whatsapp-floating.webp" alt="" width="26" height="27">Comprar pelo WhatsApp</a>
+          <a class="secondary" href="/acompanhar.html">Acompanhar meu pedido <span aria-hidden="true">→</span></a>
+        </div>
+        <p class="note">Já comprou? O acompanhamento do seu pedido continua disponível.</p>
+      </div>
+    </main>
+    <div class="bottom">
+      <div class="ribbon" aria-hidden="true">
+        <div class="ribbon-track">
+          <div class="ribbon-part"><span>R Street</span><b>✦</b><span>Seu estilo continua por aqui</span><b>✦</b><span>Atendimento pelo WhatsApp</span><b>✦</b><span>Voltamos em breve</span><b>✦</b></div>
+          <div class="ribbon-part"><span>R Street</span><b>✦</b><span>Seu estilo continua por aqui</span><b>✦</b><span>Atendimento pelo WhatsApp</span><b>✦</b><span>Voltamos em breve</span><b>✦</b></div>
+        </div>
+      </div>
+      <footer>
+        <p><strong>R Street Moda Masculina</strong><br>São José do Rio Pardo · SP</p>
+        <a href="/politica.html">Trocas, entrega e privacidade</a>
+      </footer>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,12 +1,8 @@
 {
   "buildCommand": "node scripts/verify-release.cjs",
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/catalogo.html",
-      "permanent": true
-    }
-  ],
+  "functions": {
+    "api/manutencao.js": { "includeFiles": "manutencao.html" }
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -21,6 +17,14 @@
     }
   ],
   "rewrites": [
+    { "source": "/", "destination": "/api/manutencao" },
+    { "source": "/index.html", "destination": "/api/manutencao" },
+    { "source": "/catalogo.html", "destination": "/api/manutencao" },
+    { "source": "/produto.html", "destination": "/api/manutencao" },
+    { "source": "/produto/:id", "destination": "/api/manutencao" },
+    { "source": "/carrinho.html", "destination": "/api/manutencao" },
+    { "source": "/checkout.html", "destination": "/api/manutencao" },
+    { "source": "/sobre.html", "destination": "/api/manutencao" },
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
@@ -28,10 +32,6 @@
     {
       "source": "/merchant-feed.xml",
       "destination": "/api/merchant-feed"
-    },
-    {
-      "source": "/produto/:id",
-      "destination": "/api/product-share?id=:id"
     }
   ]
 }
