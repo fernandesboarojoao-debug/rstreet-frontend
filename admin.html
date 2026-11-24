@@ -3529,6 +3529,9 @@ async function loadOperacao() {
     const config = configResponse?.ok ? await configResponse.json() : {};
     if (request !== operationRequest) return;
     const rows = [
+      ['Loja online', data.checkoutMaintenance ? 'Em manutenção; novas compras temporariamente pausadas.' : 'Novas compras liberadas no servidor.'],
+      ['Alterações no painel', data.migrationWriteLock ? 'Pausadas durante a conferência da migração.' : 'Disponíveis para administrar a loja.'],
+      ['Banco da loja', data.databaseProject === 'sbjgdtcmhqskgvymmawg' ? 'Projeto recuperado conectado.' : 'A conexão com o projeto recuperado ainda precisa ser conferida.'],
       ['Avisos por e-mail', data.email?.configurado ? 'Credenciais configuradas; confira o domínio remetente no Resend.' : 'Pendente: configurar remetente e chave no servidor.'],
       ['Google Analytics', /^G-[A-Z0-9]+$/.test(config.gaMeasurementId || '') ? 'ID configurado.' : 'ID não configurado no site.'],
       ['Meta Pixel', /^\d{5,25}$/.test(config.metaPixelId || '') ? 'ID configurado.' : 'ID não configurado no site.'],
