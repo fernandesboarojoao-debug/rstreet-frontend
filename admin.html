@@ -1134,6 +1134,10 @@ function authHeaders(extra = {}) {
   };
 }
 
+function checkAdminSessionResponse(response, requestToken) {
+  if (response.status === 401 && requestToken === getAdminToken()) lockAdminSession();
+}
+
 function unlockAdminInterface() {
   const login = document.getElementById('loginScreen');
   const sidebar = document.getElementById('adminSidebar');
@@ -1465,6 +1469,7 @@ function loadPhotosIntoPreview(imagens) {
 const BACKEND_BASE = 'https://rstreet-backend.onrender.com/api';
 
 async function sbFetch(path, opts = {}) {
+  const requestToken = getAdminToken();
   const clean = path.split('?')[0].replace(/^\//, ''); // ex: produtos
   const id    = path.match(/id=eq\.(\d+)/)?.[1];
 
@@ -1486,9 +1491,10 @@ async function sbFetch(path, opts = {}) {
     signal: opts.signal || AbortSignal.timeout((opts.method || 'GET').toUpperCase() === 'GET' ? 20000 : 60000),
     headers: authHeaders({ 'Content-Type': 'application/json', ...(opts.headers || {}) })
   });
+  checkAdminSessionResponse(res, requestToken);
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(err);
+    throw Object.assign(new Error(err), { status: res.status });
   }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
@@ -2237,6 +2243,7 @@ async function loadProducts(retryAttempt = 0) {
     toast('Produtos carregados do banco de dados.', 'success');
   } catch (err) {
     console.warn('Falha ao buscar produtos do Supabase:', err.message);
+    if (err.status === 401) { clearTimeout(adminRetryTimer); return; }
     // Mantem os dados reais ja exibidos e nunca troca o painel por dados ficticios.
     adminLoadError = allProducts.length === 0;
     if (retryAttempt < 3) {
@@ -3516,6 +3523,7 @@ async function loadMetricas() {
 
 let operationRequest = 0;
 async function loadOperacao() {
+  const requestToken = getAdminToken();
   const target = document.getElementById('operacaoStatus');
   const request = ++operationRequest;
   target.textContent = 'Conferindo integrações...';
@@ -3524,6 +3532,7 @@ async function loadOperacao() {
       fetch(`${API}/operacao`, { headers: authHeaders(), signal: AbortSignal.timeout(15000) }),
       fetch('/api/public-config', { signal: AbortSignal.timeout(15000) }).catch(() => null)
     ]);
+    checkAdminSessionResponse(response, requestToken);
     if (!response.ok) throw new Error();
     const data = await response.json();
     const config = configResponse?.ok ? await configResponse.json() : {};

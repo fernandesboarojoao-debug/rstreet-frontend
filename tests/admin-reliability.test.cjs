@@ -218,9 +218,11 @@ test('admin restores only an unexpired existing session and calls restoration on
 test('admin read and write requests have bounded timeouts without automatic retries', async () => {
   const durations = [], calls = [];
   const scope = vm.createContext({ BACKEND_BASE: 'https://fixture.invalid/api', authHeaders: value => value,
+    getAdminToken: () => 'fixture-token', lockAdminSession: () => { throw new Error('Unexpected login lock'); },
     AbortSignal: { timeout: milliseconds => { durations.push(milliseconds); return new AbortController().signal; } },
     fetch: async (url, options) => { calls.push({ url, options }); return { ok: true, text: async () => '[]' }; },
   });
+  vm.runInContext(extract('function checkAdminSessionResponse(', 'function unlockAdminInterface()'), scope);
   vm.runInContext(extract('async function sbFetch(', 'function notifyCatalogChanged()'), scope);
   vm.runInContext(extract('async function productVariantsRequest(', 'function escapeHtml('), scope);
   await scope.sbFetch('/produtos');
