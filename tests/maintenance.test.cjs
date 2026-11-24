@@ -20,11 +20,18 @@ test('maintenance returns temporary 503 without caching or database calls', () =
 });
 
 test('maintenance covers storefront links but preserves existing orders and admin access', () => {
-  const routes = config.rewrites.filter(route => route.destination === '/api/manutencao').map(route => route.source);
-  for (const page of ['/', '/index.html', '/catalogo.html', '/produto.html', '/produto/:id', '/carrinho.html', '/checkout.html', '/sobre.html']) assert.ok(routes.includes(page));
-  for (const page of ['/admin.html', '/acompanhar.html', '/confirmacao.html', '/politica.html', '/api/public-config']) assert.ok(!routes.includes(page));
+  const filesystemIndex = config.routes.findIndex(route => route.handle === 'filesystem');
+  assert.ok(filesystemIndex > 0);
+  const routes = config.routes.filter(route => route.dest === '/api/manutencao');
+  for (const route of routes) assert.ok(config.routes.indexOf(route) < filesystemIndex);
+  const matches = page => routes.some(route => new RegExp(route.src).test(page));
+  for (const page of ['/', '/index.html', '/catalogo.html', '/produto.html', '/produto/30', '/carrinho.html', '/checkout.html', '/sobre.html']) assert.ok(matches(page));
+  for (const page of ['/admin.html', '/acompanhar.html', '/confirmacao.html', '/politica.html', '/api/public-config', '/hero-catalogo-pc.webp']) assert.ok(!matches(page));
   assert.ok(!(config.redirects || []).some(route => route.source === '/'));
   assert.equal(config.functions['api/manutencao.js'].includeFiles, 'manutencao.html');
+  assert.equal(config.routes[0].continue, true);
+  assert.equal(config.routes[0].headers['X-Frame-Options'], 'DENY');
+  assert.match(config.routes[0].headers['Content-Security-Policy'], /frame-ancestors 'none'/);
 });
 
 test('maintenance keeps contact and order tracking available without tracking visitors', () => {
