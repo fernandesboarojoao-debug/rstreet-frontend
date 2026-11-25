@@ -675,6 +675,12 @@
       <section style="padding:0 0 24px;margin-bottom:24px;border-bottom:1px solid var(--border)">
         <div class="section-header"><h3>Integrações e operação</h3><button type="button" class="btn btn-outline btn-sm" onclick="loadOperacao()">Atualizar status</button></div>
         <div id="operacaoStatus" role="status">Abra esta tela para conferir as integrações.</div>
+        <form id="emailTestForm" onsubmit="event.preventDefault();sendDiagnosticEmail()" style="margin-top:20px;max-width:480px">
+          <label for="emailTestRecipient" style="display:block;margin-bottom:8px">Destinatário do teste de e-mail</label>
+          <input id="emailTestRecipient" type="email" required maxlength="254" autocomplete="email" class="form-input" style="width:100%;margin-bottom:10px">
+          <button id="emailTestButton" type="submit" class="btn btn-outline btn-sm" style="min-width:130px">Enviar teste</button>
+          <p id="emailTestStatus" role="status" aria-live="polite" style="margin-top:10px;font-size:13px"></p>
+        </form>
       </section>
       <div class="import-card">
         <h3>⚙️ Conexão protegida</h3>
@@ -3522,6 +3528,31 @@ async function loadMetricas() {
 }
 
 let operationRequest = 0;
+let emailTestAttempt = null;
+async function sendDiagnosticEmail() {
+  const input = document.getElementById('emailTestRecipient');
+  const button = document.getElementById('emailTestButton');
+  const status = document.getElementById('emailTestStatus');
+  if (button.disabled || !input.reportValidity()) return;
+  const email = input.value.trim();
+  if (!emailTestAttempt || emailTestAttempt.email !== email) emailTestAttempt = { email, request_id: crypto.randomUUID() };
+  const requestToken = getAdminToken();
+  button.disabled = true; input.disabled = true; button.textContent = 'Enviando...'; status.textContent = '';
+  try {
+    const response = await fetch(`${API}/operacao/teste-email`, {
+      method: 'POST', headers: authHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(emailTestAttempt), signal: AbortSignal.timeout(20000),
+    });
+    checkAdminSessionResponse(response, requestToken);
+    const data = await response.json();
+    if (!response.ok || data.accepted !== true) throw new Error(data.erro || 'O provedor não confirmou o envio.');
+    status.textContent = data.mensagem;
+    emailTestAttempt = null;
+  } catch (error) {
+    status.textContent = error.name === 'TimeoutError' ? 'A confirmação demorou. Confira sua caixa de entrada antes de repetir o teste.' : error.message || 'Não foi possível confirmar o envio.';
+  } finally { button.disabled = false; input.disabled = false; button.textContent = 'Enviar teste'; }
+}
+
 async function loadOperacao() {
   const requestToken = getAdminToken();
   const target = document.getElementById('operacaoStatus');
