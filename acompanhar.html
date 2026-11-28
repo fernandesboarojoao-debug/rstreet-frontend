@@ -31,6 +31,10 @@
   nav{padding:18px 7vw;border-bottom:1px solid rgba(200,169,110,.18);display:flex;justify-content:space-between;align-items:center}
   .logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px;color:var(--white);text-decoration:none}.logo span{color:var(--gold)}
   nav a{color:var(--gray);text-decoration:none;font-size:13px;text-transform:uppercase;letter-spacing:1px}
+  .catalog-return{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:11px 16px;border:1px solid var(--gold);border-radius:4px;background:var(--gold);color:#111;font-weight:700;letter-spacing:0;text-transform:none}
+  .catalog-return:hover{background:#e0c48e;border-color:#e0c48e}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+  @media(max-width:480px){nav{padding:14px 16px;gap:12px}.logo{font-size:24px;letter-spacing:2px}.catalog-return{font-size:12px;padding:10px}h1{font-size:42px}}
   main{max-width:760px;margin:0 auto;padding:52px 20px 70px}
   h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,8vw,72px);letter-spacing:2px;color:var(--gold);line-height:.95;margin-bottom:18px}
   .intro{color:var(--gray);line-height:1.7;margin-bottom:28px}
@@ -52,13 +56,15 @@
    .timeline-item{position:relative;padding:0 0 18px 22px;border-left:1px solid rgba(200,169,110,.35);margin-left:6px}
    .timeline-item:last-child{padding-bottom:0;border-left-color:transparent}
    .timeline-dot{position:absolute;left:-5px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(200,169,110,.12)}
-   .timeline-item strong{display:block;color:#fff;font-size:13px;margin-bottom:3px}.timeline-item p{color:var(--gray);font-size:12px;line-height:1.5}.timeline-date{display:block;color:#777;font-size:11px;margin-top:5px}
+   .timeline-item{overflow-wrap:anywhere}
+   .timeline-item strong{display:block;color:#fff;font-size:13px;margin-bottom:3px}.timeline-item p{color:var(--gray);font-size:12px;line-height:1.5}.timeline-date{display:block;color:#aaa;font-size:11px;margin-top:5px}
+   @media(max-width:560px){input{font-size:16px}}
 </style>
 </head>
 <body>
 <nav>
   <a class="logo" href="index.html">R<span>.</span>Street</a>
-  <a href="catalogo.html">Catálogo</a>
+  <a class="catalog-return" href="catalogo.html"><span aria-hidden="true">&#8592;</span> Voltar ao catálogo</a>
 </nav>
 <main>
   <h1>Acompanhar Pedido</h1>

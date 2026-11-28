@@ -4,7 +4,8 @@
 <script src="rstreet-checkout-state.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pedido Confirmado | R Street</title>
+<title>Situação do pedido | R Street</title>
+<meta name="referrer" content="no-referrer">
 <meta name="robots" content="noindex, nofollow">
 <link rel="canonical" href="https://www.rstreet.com.br/confirmacao.html">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
@@ -68,8 +69,14 @@
   /* CONTENT */
   .confirm-layout {
     max-width:900px; margin:0 auto; padding:48px 60px 80px;
-    display:grid; grid-template-columns:1fr 340px; gap:32px; align-items:start;
+    display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:24px; align-items:start;
   }
+  .confirm-layout:not(.has-order) { display:block; max-width:540px; }
+  .confirm-layout [hidden], .status-id:empty { display:none; }
+  .confirm-layout > div, .order-item-info { min-width:0; }
+  .order-item-name,.order-item-meta,.status-id,.total-row { overflow-wrap:anywhere; }
+  .total-row { gap:12px; }
+  .total-row > :last-child { text-align:right; }
 
   /* ORDER DETAILS */
   .detail-card {
@@ -164,7 +171,7 @@
   @media(max-width:900px){
     nav { padding:14px 20px; }
     .status-header { padding:60px 20px 40px; }
-    .confirm-layout { grid-template-columns:1fr; padding:24px 20px 60px; }
+    .confirm-layout { grid-template-columns:minmax(0,1fr); padding:24px 20px 60px; }
     .totals-card { position:static; }
     footer { padding:24px 20px; }
   }
@@ -196,17 +203,17 @@
 
 <!-- STATUS HEADER (preenchido por JS) -->
 <div class="status-header" id="statusHeader">
-  <div class="status-icon-wrap success" id="statusIcon">
-    <span class="status-icon">✅</span>
+  <div class="status-icon-wrap pending" id="statusIcon" aria-hidden="true">
+    <span class="status-icon">…</span>
   </div>
-  <h1 class="status-title success" id="statusTitle">Pedido Confirmado!</h1>
-  <p class="status-sub" id="statusSub">Seu pagamento foi aprovado. Em breve você receberá um e-mail com os detalhes do seu pedido.</p>
+  <h1 class="status-title pending" id="statusTitle">Situação do pedido</h1>
+  <p class="status-sub" id="statusSub" role="status">Consulte o pagamento em Acompanhar pedido.</p>
   <div class="status-id" id="statusId"></div>
 </div>
 
 <div class="confirm-layout" id="confirmLayout">
   <!-- DETALHES -->
-  <div>
+  <div id="orderDetails" hidden>
     <div class="detail-card">
       <div class="detail-card-title">📦 Itens do Pedido</div>
       <div class="items-list" id="orderItems">
@@ -214,17 +221,7 @@
       </div>
     </div>
 
-    <div class="detail-card">
-      <div class="detail-card-title">👤 Dados do Cliente</div>
-      <div id="clienteInfo"></div>
-    </div>
-
-    <div class="detail-card">
-      <div class="detail-card-title">📍 Endereço de Entrega</div>
-      <div id="enderecoInfo"></div>
-    </div>
-
-    <div class="next-steps">
+    <div class="next-steps" id="nextSteps" hidden>
       <div class="next-title">Próximos Passos</div>
       <div class="next-step">
         <div class="next-step-num">1</div>
@@ -236,17 +233,18 @@
       </div>
       <div class="next-step">
         <div class="next-step-num">3</div>
-        <div class="next-step-text"><strong>Envio</strong><br>Você receberá o código de rastreio assim que seu pedido for postado.</div>
+        <div class="next-step-text" id="deliveryStep"><strong>Entrega</strong><br>Consulte as próximas atualizações em Acompanhar pedido.</div>
       </div>
     </div>
   </div>
 
   <!-- TOTALS + ACTIONS -->
   <div>
-    <div class="totals-card">
+    <div class="totals-card" id="orderTotals" hidden>
       <div class="totals-title">Resumo</div>
       <div class="total-row"><span class="lbl">Subtotal</span><span id="cfSubtotal">—</span></div>
       <div class="total-row"><span class="lbl">Frete</span><span id="cfFrete">—</span></div>
+      <div class="total-row" id="discountRow" hidden><span class="lbl">Desconto</span><span id="cfDesconto"></span></div>
       <div class="total-row"><span class="lbl">Pagamento</span><span id="cfPagamento">—</span></div>
       <div class="grand-total">
         <span class="lbl">Total</span>
@@ -256,9 +254,8 @@
 
     <div class="actions-card">
       <a href="catalogo.html" class="btn-gold">🛍 Continuar Comprando</a>
-      <a href="acompanhar.html" class="btn-outline">Acompanhar pedido</a>
+      <a href="acompanhar.html" class="btn-outline" id="trackingLink">Acompanhar pedido</a>
       <a href="https://wa.me/5519993111599" target="_blank" rel="noopener noreferrer" class="btn-wpp">💬 Dúvidas? WhatsApp</a>
-      <a href="catalogo.html" class="btn-outline">← Voltar ao catálogo</a>
     </div>
   </div>
 </div>
@@ -304,6 +301,9 @@ const PAYMENT_LABELS = {
 };
 
 const STATUS_MAP = {
+  checking: { icon:'…', cls:'pending', title:'Consultando pagamento', sub:'Estamos conferindo o retorno do pagamento.' },
+  unavailable: { icon:'…', cls:'pending', title:'Consulte seu pedido', sub:'Não foi possível confirmar o pagamento por este link. Consulte o pedido com o e-mail da compra antes de tentar pagar novamente.' },
+  no_order: { icon:'…', cls:'pending', title:'Situação do pedido', sub:'Para consultar uma compra, use o número do pedido e o e-mail informado no checkout.' },
   approved: { icon:'✅', cls:'success', title:'Pedido Confirmado!', sub:'Seu pagamento foi aprovado. Em breve você receberá os detalhes por e-mail.' },
   pending:  { icon:'⏳', cls:'pending', title:'Aguardando Pagamento', sub:'Seu pedido foi criado! Complete o pagamento para confirmarmos.' },
   cancelled: { icon:'⏳', cls:'pending', title:'Pagamento não Finalizado', sub:'Seu pagamento não foi concluído. Seu carrinho foi mantido para você tentar novamente.' },
@@ -362,14 +362,6 @@ function statusFromPedido(pedido, fallback) {
   return fallback || 'pending';
 }
 
-function statusFromUrl(value) {
-  const status = String(value || '').toLowerCase();
-  if (['pending', 'in_process', 'cancelled', 'failure'].includes(status)) return status;
-  if (['rejected'].includes(status)) return 'failure';
-  if (['approved', 'success'].includes(status)) return 'pending';
-  return 'pending';
-}
-
 function renderStatus(status, pedidoId = '') {
   const safeStatus = STATUS_MAP[status] ? status : 'pending';
   const data = STATUS_MAP[safeStatus];
@@ -385,16 +377,6 @@ function normalizeBackendPedido(pedido, itens) {
   if (!pedido) return null;
   return {
     pedido_id: pedido.id,
-    cliente: { nome: pedido.cliente_nome, email: pedido.cliente_email, telefone: pedido.cliente_telefone, cpf: pedido.cliente_cpf },
-    endereco: {
-      cep: pedido.endereco_cep,
-      rua: pedido.endereco_rua,
-      numero: pedido.endereco_numero,
-      complemento: pedido.endereco_complemento,
-      bairro: pedido.endereco_bairro,
-      cidade: pedido.endereco_cidade,
-      estado: pedido.endereco_estado,
-    },
     itens: (itens || []).map(item => ({
       id: item.produto_id,
       produto_id: item.produto_id,
@@ -413,7 +395,7 @@ function normalizeBackendPedido(pedido, itens) {
 }
 
 async function loadPedidoFromBackend(pedidoId, paymentId) {
-  if (!pedidoId || !paymentId) return null;
+  if (!/^[1-9]\d*$/.test(pedidoId) || !/^\d{1,30}$/.test(paymentId)) return null;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
@@ -426,8 +408,10 @@ async function loadPedidoFromBackend(pedidoId, paymentId) {
       });
       if (res.ok) {
         const data = await res.json();
+        if (String(data?.pedido?.id) !== String(pedidoId) || !Array.isArray(data.itens)) return null;
         return normalizeBackendPedido(data.pedido, data.itens);
       }
+      if ([400,401,403,404,429].includes(res.status)) return null;
     } catch {}
     finally {
       clearTimeout(timeout);
@@ -443,8 +427,10 @@ async function restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus, pedido, pedi
     const localMatches = String(pedidoLocal?.pedido_id || '') === String(orderId);
     const token = localMatches ? pedidoLocal?.checkout_token : null;
     await window.RStreetCheckoutState?.complete(orderId, token);
-    const attempt = readStoredJson(sessionStorage, 'rstreet_checkout_attempt', null);
-    if (token && attempt?.token === token) sessionStorage.removeItem('rstreet_checkout_attempt');
+    try {
+      const attempt = readStoredJson(sessionStorage, 'rstreet_checkout_attempt', null);
+      if (token && attempt?.token === token) sessionStorage.removeItem('rstreet_checkout_attempt');
+    } catch { /* O comprovante continua disponível quando o navegador bloqueia o armazenamento. */ }
     return;
   }
   // Failed payments keep their reserved checkout available for a safe retry.
@@ -463,26 +449,29 @@ function trackApprovedPurchase(pedido) {
 
 async function init() {
   updateStoreHoursStep();
-  // Pega status do Mercado Pago da URL
   const params = new URLSearchParams(window.location.search);
-  const statusUrl = params.get('collection_status') || params.get('status') || 'pending';
-  const returnStatus = statusFromUrl(statusUrl);
-  const status = returnStatus === 'approved' ? 'pending' : returnStatus;
-  const pedidoLocal = readStoredJson(sessionStorage, 'rstreet_pedido', null);
+  let pedidoLocal;
+  try { pedidoLocal = readStoredJson(sessionStorage, 'rstreet_pedido', null); } catch {}
   const pedidoId = params.get('pedido_id') || params.get('external_reference') || pedidoLocal?.pedido_id || '';
+  if (!/^[1-9]\d*$/.test(pedidoId) || !Number.isSafeInteger(Number(pedidoId))) return renderStatus('no_order');
+  document.getElementById('trackingLink').href = 'acompanhar.html?pedido=' + pedidoId;
   const paymentId = params.get('payment_id') || params.get('collection_id') || params.get('id') || '';
-  let finalStatus = status;
-
-  // Atualiza header de status
-  renderStatus(status, pedidoId);
+  renderStatus('checking', pedidoId);
 
   // Only a verified backend response can confirm payment; URL parameters are untrusted.
   const pedidoBackend = await loadPedidoFromBackend(pedidoId, paymentId);
-  let pedido = pedidoBackend || (String(pedidoLocal?.pedido_id || '') === String(pedidoId) ? pedidoLocal : null);
+  const pedido = pedidoBackend || (String(pedidoLocal?.pedido_id || '') === String(pedidoId) && Array.isArray(pedidoLocal?.itens) ? pedidoLocal : null);
+  const finalStatus = pedidoBackend ? statusFromPedido(pedidoBackend, 'unavailable') : 'unavailable';
+  renderStatus(finalStatus, pedidoId);
 
   if (pedido) {
-    finalStatus = pedidoBackend ? statusFromPedido(pedidoBackend, status) : status;
-    renderStatus(finalStatus, pedido.pedido_id || pedidoId);
+    document.getElementById('confirmLayout').classList.add('has-order');
+    document.getElementById('orderDetails').hidden = false;
+    document.getElementById('orderTotals').hidden = false;
+    document.getElementById('nextSteps').hidden = finalStatus !== 'approved';
+    if (/retirada/i.test(pedido.frete?.tipo || '')) {
+      document.getElementById('deliveryStep').innerHTML = '<strong>Retirada na loja</strong><br>Aguarde o aviso de que seu pedido está pronto antes de vir à loja.';
+    }
 
     // Itens
     document.getElementById('orderItems').innerHTML = pedido.itens.map(item => {
@@ -501,26 +490,13 @@ async function init() {
     `;
     }).join('');
 
-    // Cliente
-    const c = pedido.cliente;
-    document.getElementById('clienteInfo').innerHTML = `
-      <div class="info-row"><span class="info-key">Nome</span><span class="info-val">${escapeHtml(c.nome)}</span></div>
-      <div class="info-row"><span class="info-key">E-mail</span><span class="info-val">${escapeHtml(c.email)}</span></div>
-      <div class="info-row"><span class="info-key">Telefone</span><span class="info-val">${escapeHtml(c.telefone)}</span></div>
-      ${c.cpf ? `<div class="info-row"><span class="info-key">CPF</span><span class="info-val">${escapeHtml(c.cpf)}</span></div>` : ''}
-    `;
-
-    // Endereço
-    const e = pedido.endereco;
-    document.getElementById('enderecoInfo').innerHTML = `
-      <div class="info-row"><span class="info-key">Endereço</span><span class="info-val">${escapeHtml(e.rua)}, ${escapeHtml(e.numero)}${e.complemento ? ', '+escapeHtml(e.complemento) : ''}</span></div>
-      <div class="info-row"><span class="info-key">Bairro</span><span class="info-val">${escapeHtml(e.bairro)}</span></div>
-      <div class="info-row"><span class="info-key">Cidade</span><span class="info-val">${escapeHtml(e.cidade)} - ${escapeHtml(e.estado)}</span></div>
-      <div class="info-row"><span class="info-key">CEP</span><span class="info-val">${escapeHtml(e.cep)}</span></div>
-    `;
-
     // Totais
     const subtotal = pedido.itens.reduce((s,i) => s + i.preco_unitario * i.quantidade, 0);
+    const discount = Math.round((subtotal + pedido.frete.valor - pedido.total) * 100) / 100;
+    if (discount > 0) {
+      document.getElementById('discountRow').hidden = false;
+      document.getElementById('cfDesconto').textContent = '− ' + fmt(discount);
+    }
     document.getElementById('cfSubtotal').textContent = fmt(subtotal);
     document.getElementById('cfFrete').textContent = pedido.frete.valor > 0 ? fmt(pedido.frete.valor) : 'Grátis';
     document.getElementById('cfPagamento').textContent = PAYMENT_LABELS[pedido.metodo_pagamento] || String(pedido.metodo_pagamento || '');
@@ -529,8 +505,10 @@ async function init() {
 
   if (pedidoBackend) await restaurarCarrinhoSePagamentoNaoConcluiu(finalStatus, pedidoBackend, pedidoLocal);
   if (finalStatus === 'approved' && pedidoBackend) {
-    trackApprovedPurchase(pedido);
-    if (String(pedidoLocal?.pedido_id || '') === String(pedido?.pedido_id || '')) sessionStorage.removeItem('rstreet_pedido');
+    try { trackApprovedPurchase(pedido); } catch {}
+    if (String(pedidoLocal?.pedido_id || '') === String(pedido?.pedido_id || '')) {
+      try { sessionStorage.removeItem('rstreet_pedido'); } catch {}
+    }
   }
 }
 

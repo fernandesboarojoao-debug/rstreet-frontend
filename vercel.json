@@ -16,6 +16,15 @@
       },
       "continue": true
     },
+    {
+      "src": "^/(?:admin|acompanhar|confirmacao|checkout)\\.html$",
+      "headers": {
+        "Cache-Control": "private, no-store",
+        "Referrer-Policy": "no-referrer",
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
     { "src": "^/$", "dest": "/api/manutencao" },
     { "src": "^/(?:index|catalogo|produto|carrinho|checkout|sobre)\\.html$", "dest": "/api/manutencao" },
     { "src": "^/produto/[^/]+/?$", "dest": "/api/manutencao" },
