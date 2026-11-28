@@ -145,15 +145,31 @@ test('restricted browser storage does not break order confirmation', async () =>
 test('an approved return URL cannot confirm or track a purchase without backend verification', async () => {
   const source = read('confirmacao.html');
   const rendered = [], tracked = [];
+  const trackingLink = {};
   const scope = vm.createContext({ URLSearchParams, window: { location: { search: '?status=approved&pedido_id=42&payment_id=123' } },
+    document: { getElementById: id => { assert.equal(id, 'trackingLink'); return trackingLink; } },
     sessionStorage: {}, updateStoreHoursStep() {}, readStoredJson: () => null,
-    statusFromUrl: value => value, renderStatus: status => rendered.push(status),
+    renderStatus: status => rendered.push(status),
     loadPedidoFromBackend: async () => null, trackApprovedPurchase: order => tracked.push(order),
     restaurarCarrinhoSePagamentoNaoConcluiu() { throw new Error('Unverified payment must not consume the cart'); },
   });
   const from = source.indexOf('async function init()');
   vm.runInContext(source.slice(from, source.indexOf('\ninit();', from)), scope);
   await scope.init();
-  assert.deepEqual(rendered, ['pending']);
+  assert.deepEqual(rendered, ['checking','unavailable']);
+  assert.equal(trackingLink.href, 'acompanhar.html?pedido=42');
   assert.equal(tracked.length, 0);
+});
+
+test('the confirmation page ignores other orders and never retries a definitive not-found response', async () => {
+  const source = read('confirmacao.html'), from = source.indexOf('async function loadPedidoFromBackend');
+  for (const response of [{ ok:false, status:404 }, { ok:true, json:async()=>({ pedido:{id:43}, itens:[] }) }]) {
+    let calls = 0;
+    const scope = vm.createContext({ AbortController, setTimeout, clearTimeout, BACKEND_BASE:'http://localhost',
+      fetch: async()=>{ calls++; return response; } });
+    vm.runInContext(source.slice(from,source.indexOf('async function restaurarCarrinho',from)),scope);
+    assert.equal(await scope.loadPedidoFromBackend('42','123'),null);
+    assert.equal(await scope.loadPedidoFromBackend('42','null'),null);
+    assert.equal(calls,1);
+  }
 });
