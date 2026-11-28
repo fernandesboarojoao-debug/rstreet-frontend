@@ -1188,8 +1188,24 @@ async function fazerLogin() {
       const expira = Number(data.expires_at) || (Date.now() + 2 * 60 * 60 * 1000);
       sessionStorage.setItem('rstreet_auth', expira);
       sessionStorage.setItem('rstreet_admin_token', data.token);
+      document.getElementById('loginInput').value = '';
       unlockAdminInterface();
       loadProducts();
+    } else if (res.status === 429 && Number(res.headers?.get('Retry-After')) > 0) {
+      const seconds = Number(res.headers.get('Retry-After'));
+      document.getElementById('loginInput').value = '';
+      erro.textContent = 'Acesso temporariamente bloqueado nesta conexão. Aguarde o tempo indicado.';
+      erro.classList.add('show');
+      const until = Date.now() + seconds * 1000;
+      const tick = () => {
+        const left = Math.max(0, Math.ceil((until - Date.now()) / 1000));
+        btn.disabled = left > 0;
+        btn.textContent = left ? `Tente em ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : 'Entrar';
+        if (left) setTimeout(tick, 1000);
+        else erro.classList.remove('show');
+      };
+      tick();
+      return;
     } else if (res.status === 401) {
       erro.textContent = 'Senha incorreta. Confira e tente novamente.';
       erro.classList.add('show');

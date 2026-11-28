@@ -72,6 +72,29 @@ test('admin server preparation failure never sends the password', async () => {
   assert.match(fixture.element('loginError').textContent, /conexão/);
 });
 
+test('admin countdown honors the server expiry and does not submit twice', async () => {
+  let now = 0, tick, calls = 0;
+  const fixture = loginScope(async () => {
+    calls++;
+    return { ok:false, status:429, headers:{ get:() => '900' } };
+  });
+  fixture.scope.Date = { now:() => now };
+  fixture.scope.setTimeout = callback => { tick = callback; };
+  await fixture.scope.fazerLogin();
+  assert.equal(fixture.element('loginBtn').disabled,true);
+  assert.match(fixture.element('loginBtn').textContent,/15:00/);
+  assert.equal(fixture.element('loginInput').value,'');
+  fixture.element('loginInput').value = 'local-fixture-password';
+  await fixture.scope.fazerLogin();
+  assert.equal(calls,1);
+  now = 899000;
+  tick();
+  assert.match(fixture.element('loginBtn').textContent,/0:01/);
+  now = 900000;
+  tick();
+  assert.equal(fixture.element('loginBtn').disabled,false);
+});
+
 test('order refresh preserves previous orders on failure and ignores older responses', async () => {
   const pending = [];
   let renders = 0;
