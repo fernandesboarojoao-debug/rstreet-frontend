@@ -169,3 +169,39 @@ test('notification order links prefill only valid IDs and never submit customer 
   assert.equal(trackingSetup('?pedido=-1').element('pedidoId').value, '42');
   assert.equal(trackingSetup('?pedido=%3Cscript%3E').element('pedidoId').value, '42');
 });
+
+test('tracking never displays a mismatched or incomplete order', async () => {
+  const pedido = { id: 42, total: '95.00', status: 'pago' };
+  for (const data of [null, { pedido: { ...pedido, id: 41 }, itens: [] }, { pedido, itens: {} },
+    { pedido, itens: [null] }, { pedido: { ...pedido, total: null }, itens: [] }]) {
+    const { scope, pending, element } = trackingSetup();
+    const done = scope.consultarPedido();
+    pending[0](data);
+    await done;
+    assert.equal(element('resultado').innerHTML, '');
+    assert.match(element('msg').textContent, /Tente novamente/);
+  }
+});
+
+test('tracking timeout during receipt of the response body does not fail silently', async () => {
+  const { scope, timers, element } = trackingSetup();
+  scope.fetch = async () => ({ ok: true, json: async () => { timers[0](); return {}; } });
+  await scope.consultarPedido();
+  assert.match(element('msg').textContent, /demorou/);
+  assert.equal(element('btnConsultar').disabled, false);
+});
+
+test('changing to a color without media clears the old photo and arrows', () => {
+  const slot = { innerHTML:'old photo' };
+  let removed = 0;
+  const card = { dataset: { selectedColor:'Vinho', mediaIndex:'1' }, querySelector: () => slot,
+    querySelectorAll: () => [{ remove() { removed++; } }, { remove() { removed++; } }] };
+  const scope = vm.createContext({ document:{ querySelector:() => card }, allProducts:[{ id:1 }],
+    getCatalogColorGroups:() => [], getCatalogGroupMedia:() => [], clampCatalogMediaIndex:() => 0,
+    catalogMediaState:{}, prepareCatalogVideos() {} });
+  load('catalogo.html','function renderMissingCatalogPhoto()', 'function sameCatalogText(',scope);
+  scope.updateCatalogMedia(1);
+  assert.match(slot.innerHTML,/Foto indisponível/);
+  assert.equal(card.dataset.mediaIndex,'0');
+  assert.equal(removed,2);
+});

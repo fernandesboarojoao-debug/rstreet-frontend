@@ -3897,7 +3897,7 @@ async function atualizarEnvio(id) {
   if (url === null) return;
   const cleanTrackingUrl = url.trim();
   if (cleanTrackingUrl && !safeHttpUrl(cleanTrackingUrl)) {
-    return toast('O link de rastreio precisa começar com https:// ou http://.', 'error');
+    return toast('Use um link de rastreio HTTPS, sem usuário nem senha no endereço.', 'error');
   }
 
   try {
@@ -3927,7 +3927,7 @@ function safeHttpUrl(value) {
   if (!clean) return '';
   try {
     const url = new URL(clean);
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
   } catch {
     return '';
   }

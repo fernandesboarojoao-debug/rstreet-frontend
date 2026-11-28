@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Acompanhar Pedido | R Street</title>
 <meta name="description" content="Acompanhe o status do seu pedido R Street usando o número do pedido e e-mail.">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="noindex, nofollow">
 <link rel="canonical" href="https://www.rstreet.com.br/acompanhar.html">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -113,7 +113,7 @@ function safeHttpUrl(value) {
   if (!clean) return '';
   try {
     const url = new URL(clean);
-    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
   } catch {
     return '';
   }
@@ -124,6 +124,7 @@ function fmtMoney(value) {
 }
 
 function fmtDate(value) {
+  if (!value) return '';
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
@@ -187,13 +188,20 @@ async function consultarPedido(event) {
       body: JSON.stringify({ id, email }),
       signal: controller.signal,
     });
-    const data = await res.json().catch(() => ({}));
-    if (trackingController !== controller || controller.signal.aborted) return;
-    if (!res.ok) throw new Error(data.erro || 'Pedido não encontrado.');
-
-    const p = data.pedido;
-    const itens = data.itens || [];
-    const updates = data.atualizacoes || [];
+    if (trackingController !== controller) return;
+    if (!res.ok) return showError(res.status === 404 ? 'Pedido não encontrado. Confira o número e o e-mail da compra.'
+      : res.status === 429 ? 'Muitas consultas. Aguarde um pouco e tente novamente.'
+      : 'Não foi possível consultar agora. Tente novamente em instantes.');
+    const data = await res.json();
+    if (trackingController !== controller) return;
+    if (controller.signal.aborted) throw new Error();
+    const p = data?.pedido;
+    const itens = data?.itens;
+    const updates = data?.atualizacoes ?? [];
+    const rows = list => Array.isArray(list) && list.every(row => row && typeof row === 'object' && !Array.isArray(row));
+    if (String(p?.id) !== id || typeof p.status !== 'string' || !p.status.trim()
+        || !['number', 'string'].includes(typeof p.total) || !String(p.total).trim()
+        || !Number.isFinite(Number(p.total)) || Number(p.total) < 0 || !rows(itens) || !rows(updates)) throw new Error();
     const trackingUrl = safeHttpUrl(p.rastreio_url);
     resultado.innerHTML = `
       <div class="row"><span>Pedido</span><strong>#${escapeHtml(p.id)}</strong></div>
@@ -208,10 +216,10 @@ async function consultarPedido(event) {
        </div>
        ${renderTimeline(p, updates)}`;
     resultado.className = 'result open';
-  } catch (err) {
+  } catch {
     if (trackingController === controller) showError(controller.signal.aborted
       ? 'A consulta demorou mais que o esperado. Tente novamente.'
-      : err.message || 'Não foi possível consultar o pedido.');
+      : 'Não foi possível consultar agora. Tente novamente em instantes.');
   } finally {
     clearTimeout(timeout);
     if (trackingController === controller) {

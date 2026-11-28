@@ -596,7 +596,7 @@ function safeMercadoPagoUrl(value) {
     const host = url.hostname.toLowerCase();
     const isMercadoPago = host === 'mercadopago.com' || host.endsWith('.mercadopago.com') ||
       host === 'mercadopago.com.br' || host.endsWith('.mercadopago.com.br');
-    return url.protocol === 'https:' && isMercadoPago ? url.href : '';
+    return url.protocol === 'https:' && !url.username && !url.password && !url.port && isMercadoPago ? url.href : '';
   } catch {
     return '';
   }

@@ -2695,6 +2695,7 @@ function updateCatalogActiveArea() {
 
   const chips = getCatalogActiveChips();
   const hasArea = chips.length > 0;
+  if (!hasArea) toggleCatalogSmartFilters(false);
   area.classList.toggle('is-visible', hasArea);
   title.textContent = hasArea ? label : 'Catálogo completo';
   sub.textContent = hasArea ? `${subText} ${filtered.length} produto(s) encontrado(s).` : 'Mostrando todos os produtos disponíveis.';
@@ -3369,7 +3370,7 @@ function renderCard(p) {
 
   const imgContent = initialMedia
     ? renderCatalogMedia(p, initialMedia)
-    : `<div class="product-img-placeholder">👕<span>${escapeHtml(p.marca || 'R Street')}</span></div>`;
+    : renderMissingCatalogPhoto();
 
   const wppUrl = catalogWhatsAppUrl(p, initialColor, initialPrice.preco);
 
@@ -3447,7 +3448,7 @@ function renderShowcaseCard(product, badge = '', preferSale = false, showcaseKey
     <div class="showcase-card" data-showcase-key="${escapeAttr(showcaseKey)}" data-product-id="${Number(product.id) || 0}" data-selected-color="${escapeAttr(color)}" data-media-index="${mediaIndex}" onclick="openShowcaseProduct(${jsStringAttr(showcaseKey)})">
       <div class="showcase-card-media">
         <div class="showcase-media-slot" id="showcase-media-${escapeAttr(showcaseKey)}">
-          ${activeMedia ? renderShowcaseMedia(product, activeMedia) : `<div class="product-img-placeholder">${escapeHtml(product.marca || 'R Street')}</div>`}
+          ${activeMedia ? renderShowcaseMedia(product, activeMedia) : renderMissingCatalogPhoto()}
         </div>
         ${medias.length > 1 ? renderShowcaseMediaArrows(showcaseKey) : ''}
         ${badge ? `<span class="showcase-card-badge">${escapeHtml(badge)}</span>` : ''}
@@ -3542,7 +3543,7 @@ function updateShowcaseCard(showcaseKey) {
   if (slot) {
     slot.innerHTML = medias[index]
       ? renderShowcaseMedia(product, medias[index])
-      : `<div class="product-img-placeholder">${escapeHtml(product.marca || 'R Street')}</div>`;
+      : renderMissingCatalogPhoto();
     prepareCatalogVideos(slot);
   }
   const price = getCatalogGroupPrice(group, product);
@@ -4002,6 +4003,10 @@ function moveCatalogMedia(event, productId, delta) {
   updateCatalogMedia(productId);
 }
 
+function renderMissingCatalogPhoto() {
+  return '<div class="product-img-placeholder"><span>Foto indisponível</span></div>';
+}
+
 function updateCatalogMedia(productId) {
   const card = document.querySelector(`.product-card[data-product-id="${productId}"]`);
   if (!card) return;
@@ -4010,14 +4015,14 @@ function updateCatalogMedia(productId) {
   const group = getCatalogColorGroups(productId).find(g => sameCatalogText(g.cor, card.dataset.selectedColor));
   const medias = getCatalogGroupMedia(group, product);
   const slot = card.querySelector(`#catalog-media-${productId}`);
-  if (!slot || !medias.length) return;
+  if (!slot) return;
   let index = clampCatalogMediaIndex(card.dataset.mediaIndex, medias);
   card.dataset.mediaIndex = String(index);
   catalogMediaState[productId] = {
     color: card.dataset.selectedColor || '',
     mediaIndex: index
   };
-  slot.innerHTML = renderCatalogMedia(product, medias[index]);
+  slot.innerHTML = medias.length ? renderCatalogMedia(product, medias[index]) : renderMissingCatalogPhoto();
   prepareCatalogVideos(slot);
   const arrows = card.querySelectorAll('.catalog-media-arrow');
   if (medias.length > 1 && !arrows.length) {
